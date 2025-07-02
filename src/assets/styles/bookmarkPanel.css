@@ -1,0 +1,48 @@
+/*   width: 100%; */
+/*   margin: 0; */
+/*   padding: 0; */
+/*   box-sizing: border-box; */
+/* } */
+/**/
+/* #cf-mentor-container .roundbox { */
+/*   width: 100%; */
+/*   box-sizing: border-box; */
+/*   margin: 0; */
+/* } */
+/**/
+/* #cf-mentor-container .rtable { */
+/*   width: 100%; */
+/*   border-collapse: collapse; */
+/*   margin: 0; */
+/* } */
+/**/
+/* .vote-wrapper { */
+/*   display: flex; */
+/*   align-items: center; */
+/*   font-size: 1.2rem; */
+/*   gap: 1em; */
+/*   margin: 0.7em 0; */
+/* } */
+/**/
+/* .vote-wrapper label { */
+/*   font-weight: bold; */
+/* } */
+/**/
+/* .vote-item { */
+/*   cursor: pointer; */
+/*   transition: transform 0.2s ease; */
+/*   text-decoration: none; */
+/*   display: inline-block; */
+/* } */
+/**/
+/* .vote-item:hover { */
+/*   transform: scale(1.3); */
+/* } */
+/**/
+/* .vote-item.selected { */
+/*   transform: scale(1.2); */
+/* } */
+/**/
+/* .vote-item.selected:hover { */
+/*   transform: scale(1.4); */
+/* } */

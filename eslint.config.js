@@ -7,6 +7,9 @@ import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
 
 export default [
+	{
+		ignores: ["dist/**", "node_modules/**"],
+	},
 	js.configs.recommended,
 	{
 		files: ["**/*.{js,jsx,ts,tsx}"],
@@ -20,6 +23,7 @@ export default [
 			parser: typescriptParser,
 			globals: {
 				...globals.browser,
+				...globals.chrome,
 			},
 			parserOptions: {
 				ecmaFeatures: {
@@ -36,6 +40,8 @@ export default [
 			...typescript.configs.recommended.rules,
 			...react.configs.recommended.rules,
 			...reactHooks.configs.recommended.rules,
+			"react/react-in-jsx-scope": "off",
+			"no-undef": "off",
 			"simple-import-sort/imports": "error",
 			"simple-import-sort/exports": "error",
 		},

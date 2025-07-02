@@ -10,9 +10,6 @@
 		"default_title": "Your Personalized CF Mentor",
 		"default_popup": "src/popup/index.html"
 	},
-	"side_panel": {
-		"default_path": "src/sidepanel/index.html"
-	},
 	"content_scripts": [
 		{
 			"matches": [
