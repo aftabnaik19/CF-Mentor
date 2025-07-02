@@ -3,7 +3,7 @@
 	"name": "Codeforces Mentor",
 	"version": "0.1.0",
 	"description": "Your Coderforces AI mentor, who will select you problems for best suited for your rating growth, with subtle hints and personalized training plan for each problem",
-	"permissions": ["activeTab", "storage", "sidePanel", "scripting", "tabs"],
+	"permissions": ["activeTab", "storage", "scripting", "tabs"],
 	"host_permissions": ["<all_urls>"],
 
 	"action": {

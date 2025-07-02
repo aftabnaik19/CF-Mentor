@@ -1,8 +1,11 @@
-import { useState } from "react";
+import React from "react";
 
-const Notes: React.FC = () => {
-	const [note, setNote] = useState("");
+interface NotesProps {
+	value: string;
+	onChange: (value: string) => void;
+}
 
+const Notes: React.FC<NotesProps> = ({ value, onChange }) => {
 	return (
 		<div style={{ marginTop: "1em" }}>
 			<label htmlFor="userNotes" style={{ fontWeight: "bold" }}>
@@ -11,8 +14,8 @@ const Notes: React.FC = () => {
 			<textarea
 				id="userNotes"
 				placeholder="Write something..."
-				value={note}
-				onChange={(e) => setNote(e.target.value)}
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
 				style={{
 					width: "100%",
 					height: "60px",

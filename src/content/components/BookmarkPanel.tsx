@@ -1,21 +1,175 @@
-import { useState } from "react";
+import React, { useEffect,useState } from "react";
 
+import { BookmarkStorageManager } from "../utils/bookmarkStorage";
 import DifficultySelector from "./DifficultySelector";
 import Notes from "./Notes";
 import Stopwatch from "./Stopwatch";
 
+const DRAFT_KEY = "cf_mentor_draft";
+const DROPDOWN_SESSION_KEY = "cf_mentor_dropdown_open";
+
 const BookmarkPanel: React.FC = () => {
 	const [difficulty, setDifficulty] = useState(0);
-	const [showDropdown, setShowDropdown] = useState(false);
+	const [notes, setNotes] = useState("");
 	const [bookmarked, setBookmarked] = useState(false);
+	const [showDropdown, setShowDropdown] = useState(false);
+	const [loading, setLoading] = useState(true);
+
+	// Determine current problem key
+	const problemInfo = BookmarkStorageManager.getCurrentProblemInfo();
+	const key = problemInfo
+		? BookmarkStorageManager.getProblemKey(
+				problemInfo.contestId,
+				problemInfo.problemIdx,
+			)
+		: null;
+
+	// chrome.storage.local helpers for drafts
+	const getDrafts = async (): Promise<
+		Record<string, { difficulty: number; notes: string }>
+	> => {
+		return new Promise((resolve) => {
+			chrome.storage.local.get([DRAFT_KEY], (result) => {
+				resolve(result[DRAFT_KEY] ?? {});
+			});
+		});
+	};
+
+	const setDrafts = async (
+		all: Record<string, { difficulty: number; notes: string }>,
+	) => {
+		return new Promise<void>((resolve) => {
+			chrome.storage.local.set({ [DRAFT_KEY]: all }, () => resolve());
+		});
+	};
+
+	// Remove draft entry
+	const removeDraft = async () => {
+		if (!key) return;
+		const all = await getDrafts();
+		delete all[key];
+		await setDrafts(all);
+	};
+
+	// Save or remove draft
+	const saveDraft = async (d: number, n: string) => {
+		if (!key) return;
+		const isEmptyDraft = !bookmarked && d === 0 && n.trim() === "";
+		const all = await getDrafts();
+		if (isEmptyDraft) {
+			delete all[key];
+			await setDrafts(all);
+		} else {
+			all[key] = { difficulty: d, notes: n };
+			await setDrafts(all);
+		}
+	};
+
+	// Load initial data (bookmark or draft), and dropdown state
+	useEffect(() => {
+		(async () => {
+			try {
+				if (!key) throw new Error("Not on problem page");
+				const isBk = await BookmarkStorageManager.isCurrentProblemBookmarked();
+				setBookmarked(isBk);
+
+				if (isBk) {
+					const bk = await BookmarkStorageManager.getCurrentProblemBookmark();
+					if (bk) {
+						setDifficulty(bk.difficultyRating ?? 0);
+						setNotes(bk.notes ?? "");
+					}
+				} else {
+					const all = await getDrafts();
+					if (all[key]) {
+						setDifficulty(all[key].difficulty);
+						setNotes(all[key].notes);
+					}
+				}
+				// restore dropdown open state from sessionStorage
+				const saved = sessionStorage.getItem(DROPDOWN_SESSION_KEY);
+				setShowDropdown(saved === "true");
+			} catch {
+				// ignore
+			} finally {
+				setLoading(false);
+			}
+		})();
+	}, []);
+
+	// Toggle bookmark without confirm; tooltip on hover explains retention
+	const handleBookmarkToggle = async () => {
+		if (!key) return;
+		if (bookmarked) {
+			await BookmarkStorageManager.removeCurrentProblemBookmark();
+			setBookmarked(false);
+		} else {
+			await BookmarkStorageManager.bookmarkCurrentProblem(
+				difficulty || null,
+				notes || null,
+			);
+			setBookmarked(true);
+		}
+	};
+
+	// Handle dropdown toggle and persist in sessionStorage
+	const toggleDropdown = () => {
+		const next = !showDropdown;
+		setShowDropdown(next);
+		sessionStorage.setItem(DROPDOWN_SESSION_KEY, next ? "true" : "false");
+	};
+
+	// Difficulty change
+	const handleDifficultyChange = async (d: number) => {
+		setDifficulty(d);
+		await saveDraft(d, notes);
+		if (bookmarked) {
+			await BookmarkStorageManager.updateCurrentProblemBookmark({
+				difficultyRating: d || null,
+			});
+		}
+	};
+
+	// Reset difficulty
+	const handleDifficultyReset = async () => {
+		setDifficulty(0);
+		await saveDraft(0, notes);
+		if (bookmarked) {
+			await BookmarkStorageManager.updateCurrentProblemBookmark({
+				difficultyRating: null,
+			});
+		}
+	};
+
+	// Notes change
+	const handleNotesChange = async (n: string) => {
+		setNotes(n);
+		await saveDraft(difficulty, n);
+		if (bookmarked) {
+			await BookmarkStorageManager.updateCurrentProblemBookmark({
+				notes: n || null,
+			});
+		}
+	};
+
+	if (loading) {
+		return (
+			<div
+				className="roundbox sidebox borderTopRound"
+				style={{ padding: "1em" }}
+			>
+				<div style={{ textAlign: "center" }}>Loading...</div>
+			</div>
+		);
+	}
 
 	return (
-		<div className="roundbox sidebox borderTopRound" style={{ padding: "0" }}>
-			<table className="rtable" style={{ width: "100%", margin: "0" }}>
+		<div className="roundbox sidebox borderTopRound" style={{ padding: 0 }}>
+			<table className="rtable" style={{ width: "100%", margin: 0 }}>
 				<tbody>
 					<tr>
 						<th className="left" style={{ padding: "0.5em" }}>
-							<a href="https://www.youtube.com/" style={{ color: "black" }}>
+							<a href="https://codeforces.com/" style={{ color: "black" }}>
 								<u>CF Mentor</u>
 							</a>
 						</th>
@@ -30,24 +184,28 @@ const BookmarkPanel: React.FC = () => {
 									width: "100%",
 								}}
 							>
-								<div style={{ flex: 1 }}></div>
+								<div style={{ flex: 1 }} />
 								<span
 									role="button"
 									tabIndex={0}
 									className="contest-state-phase"
+									title="Removing the bookmark will not remove difficulty or notes"
 									style={{
 										display: "flex",
 										alignItems: "center",
 										gap: "0.4em",
 										cursor: "pointer",
 										whiteSpace: "nowrap",
+										color: bookmarked ? "#4CAF50" : "inherit",
 									}}
-									onClick={() => setBookmarked(!bookmarked)}
+									onClick={handleBookmarkToggle}
 								>
-									Bookmark Question
+									{bookmarked ? "Bookmarked!" : "Bookmark Problem"}
 									<img
 										alt="Bookmark icon"
-										src={`//codeforces.org/s/46398/images/icons/star_${bookmarked ? "yellow" : "gray"}_24.png`}
+										src={`//codeforces.org/s/46398/images/icons/star_${
+											bookmarked ? "yellow" : "gray"
+										}_24.png`}
 										style={{ height: "1em" }}
 									/>
 								</span>
@@ -58,7 +216,7 @@ const BookmarkPanel: React.FC = () => {
 										justifyContent: "flex-end",
 										cursor: "pointer",
 									}}
-									onClick={() => setShowDropdown(!showDropdown)}
+									onClick={toggleDropdown}
 								>
 									{showDropdown ? "▲" : "▼"}
 								</span>
@@ -68,17 +226,17 @@ const BookmarkPanel: React.FC = () => {
 					{showDropdown && (
 						<>
 							<tr>
-								<td className="left" style={{ padding: "0 1em 0 1em" }}>
+								<td className="left" style={{ padding: "0 1em" }}>
 									<DifficultySelector
 										difficulty={difficulty}
-										onChange={setDifficulty}
-										onReset={() => setDifficulty(0)}
+										onChange={handleDifficultyChange}
+										onReset={handleDifficultyReset}
 									/>
 								</td>
 							</tr>
 							<tr>
-								<td className="left" style={{ padding: "0 1em 1em 1em" }}>
-									<Notes />
+								<td className="left" style={{ padding: "0 1em 1em" }}>
+									<Notes value={notes} onChange={handleNotesChange} />
 								</td>
 							</tr>
 						</>
@@ -90,7 +248,7 @@ const BookmarkPanel: React.FC = () => {
 					</tr>
 					<tr>
 						<td className="left dark" style={{ padding: "0.5em 1em" }}>
-							<span className="contest-state-regular">Time is running..!</span>
+							<span className="contest-state-regular">Time is running..! </span>
 						</td>
 					</tr>
 				</tbody>
