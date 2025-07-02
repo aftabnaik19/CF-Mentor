@@ -1,0 +1,42 @@
+{
+	"manifest_version": 3,
+	"name": "Codeforces Mentor",
+	"version": "0.1.0",
+	"description": "Your Coderforces AI mentor, who will select you problems for best suited for your rating growth, with subtle hints and personalized training plan for each problem",
+	"permissions": ["activeTab", "storage", "sidePanel", "scripting", "tabs"],
+	"host_permissions": ["<all_urls>"],
+
+	"action": {
+		"default_title": "Your Personalized CF Mentor",
+		"default_popup": "src/popup/index.html"
+	},
+	"side_panel": {
+		"default_path": "src/sidepanel/index.html"
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"https://codeforces.com/problemset/problem/*",
+				"https://codeforces.com/contest/*/problem/*"
+			],
+			"js": ["src/content/index.ts"],
+			"run_at": "document_end"
+		}
+	],
+
+	"background": {
+		"service_worker": "src/background/index.ts"
+	},
+	"web_accessible_resources": [
+		{
+			"resources": ["src/assets/*"],
+			"matches": ["<all_urls>"]
+		}
+	],
+	"icons": {
+		"16": "src/assets/icons/icon16.png",
+		"32": "src/assets/icons/icon32.png",
+		"48": "src/assets/icons/icon48.png",
+		"128": "src/assets/icons/icon128.png"
+	}
+}

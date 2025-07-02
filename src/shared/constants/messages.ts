@@ -1,0 +1,9 @@
+export const MESSAGE_TYPES = {
+	ANALYZE_PAGE: "ANALYZE_PAGE",
+	PAGE_DATA: "PAGE_DATA",
+	CHAT_MESSAGE: "CHAT_MESSAGE",
+	TOGGLE_PANEL: "TOGGLE_PANEL",
+	HIGHLIGHT_TEXT: "HIGHLIGHT_TEXT",
+} as const;
+
+export type MessageType = (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES];
