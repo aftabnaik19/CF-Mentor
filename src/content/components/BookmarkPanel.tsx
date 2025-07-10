@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BookmarkStorageManager } from "../utils/bookmarkStorage";
 import DifficultySelector from "./DifficultySelector";
@@ -242,7 +242,7 @@ const BookmarkPanel: React.FC = () => {
 						</>
 					)}
 					<tr>
-						<td className="left" style={{ padding: "0.5em 1em" }}>
+						<td className="left" style={{ padding: "0em 1em" }}>
 							<Stopwatch />
 						</td>
 					</tr>

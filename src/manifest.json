@@ -2,19 +2,32 @@
 	"manifest_version": 3,
 	"name": "Codeforces Mentor",
 	"version": "0.1.0",
-	"description": "Your Coderforces AI mentor, who will select you problems for best suited for your rating growth, with subtle hints and personalized training plan for each problem",
-	"permissions": ["activeTab", "storage", "scripting", "tabs"],
-	"host_permissions": ["<all_urls>"],
+	"description": "The CF-Mentor selects problems best suited for your rating growth, gives subtle hints, and provides insights into your CF journey.",
+	"permissions": ["storage", "scripting", "identity"],
+	"host_permissions": ["https://codeforces.com/*", "https://myserver.com"],
+	"optional_host_permissions": [
+		"https://sheets.googleapis.com/*",
+		"https://atcoder.jp/*",
+		"https://leetcode.com/*",
+		"https://codechef.com/*",
+		"https://hackerrank.com/*"
+	],
+	"oauth2": {
+		"client_id": "314365019689-1uchb9nrqjtqnc3d8n744mtjhm5f46f3.apps.googleusercontent.com",
+		"scopes": ["https://www.googleapis.com/auth/spreadsheets"]
+	},
 
 	"action": {
-		"default_title": "Your Personalized CF Mentor",
+		"default_title": "Personalized CF Mentor",
 		"default_popup": "src/popup/index.html"
 	},
 	"content_scripts": [
 		{
 			"matches": [
+				"https://codeforces.com/problemset",
 				"https://codeforces.com/problemset/problem/*",
-				"https://codeforces.com/contest/*/problem/*"
+				"https://codeforces.com/contest/*/problem/*",
+				"https://codeforces.com/profile/*"
 			],
 			"js": ["src/content/index.ts"],
 			"run_at": "document_end"
@@ -27,7 +40,7 @@
 	"web_accessible_resources": [
 		{
 			"resources": ["src/assets/*"],
-			"matches": ["<all_urls>"]
+			"matches": ["https://codeforces.com/*"]
 		}
 	],
 	"icons": {
