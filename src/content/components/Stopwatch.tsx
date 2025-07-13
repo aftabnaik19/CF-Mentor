@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY_START = "cfMentorStopwatchStartTime";
 const STORAGE_KEY_ACC = "cfMentorStopwatchAccumulatedTime";

@@ -8,7 +8,7 @@ import Stopwatch from "./Stopwatch";
 const DRAFT_KEY = "cf_mentor_draft";
 const DROPDOWN_SESSION_KEY = "cf_mentor_dropdown_open";
 
-const BookmarkPanel: React.FC = () => {
+const ProblemAssistantPanel: React.FC = () => {
 	const [difficulty, setDifficulty] = useState(0);
 	const [notes, setNotes] = useState("");
 	const [bookmarked, setBookmarked] = useState(false);
@@ -43,14 +43,14 @@ const BookmarkPanel: React.FC = () => {
 		});
 	};
 
-	// Remove draft entry
-	const removeDraft = async () => {
-		if (!key) return;
-		const all = await getDrafts();
-		delete all[key];
-		await setDrafts(all);
-	};
-
+	// // Remove draft entry
+	// const removeDraft = async () => {
+	// 	if (!key) return;
+	// 	const all = await getDrafts();
+	// 	delete all[key];
+	// 	await setDrafts(all);
+	// };
+	//
 	// Save or remove draft
 	const saveDraft = async (d: number, n: string) => {
 		if (!key) return;
@@ -257,4 +257,4 @@ const BookmarkPanel: React.FC = () => {
 	);
 };
 
-export default BookmarkPanel;
+export default ProblemAssistantPanel;
