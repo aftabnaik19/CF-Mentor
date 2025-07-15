@@ -1,14 +1,11 @@
 import AdvanceFilterPanel from "../components/AdvanceFilterPanel";
 import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
-const CONTAINER_ID = "cf-mentor-advance-filters-panel";
+const CONTAINER_ID = "cf-mentor-advance-filters-panel-host";
+
+let originalContent: string | null = null;
 
 function isProblemsetPage(url: string): boolean {
-	return (
-		url === "https://codeforces.com/problemset" ||
-		url === "https://codeforces.com/problemset/#" ||
-		/^https:\/\/codeforces\.com\/problemset\?/.test(url) ||
-		/^https:\/\/codeforces\.com\/problemset\/page\/[\d]+/.test(url)
-	);
+	return /^https:\/\/codeforces\.com\/problemset/.test(url);
 }
 
 export function mountAdvanceFilterPanel() {
@@ -17,12 +14,14 @@ export function mountAdvanceFilterPanel() {
 	) as HTMLElement | null;
 
 	const isOnProblemsetPage = isProblemsetPage(window.location.href);
-
 	if (
 		targetDiv &&
 		isOnProblemsetPage &&
 		!document.getElementById(CONTAINER_ID)
 	) {
+		// Store the original content
+		originalContent = targetDiv.innerHTML;
+
 		// Clear its contents and styles
 		targetDiv.innerHTML = "";
 		targetDiv.removeAttribute("style");
@@ -30,26 +29,30 @@ export function mountAdvanceFilterPanel() {
 		// Create host and shadow DOM
 		const host = document.createElement("div");
 		host.id = CONTAINER_ID;
-		const shadowRoot = host.attachShadow({ mode: "open" });
 		targetDiv.appendChild(host);
+		const shadowRoot = host.attachShadow({ mode: "open" });
 
 		// Mount into shadow root
-		const shadowMount = document.createElement("div");
-		shadowRoot.appendChild(shadowMount);
-		MountComponent(shadowMount, <AdvanceFilterPanel />);
+		MountComponent(shadowRoot, <AdvanceFilterPanel />);
 	}
 }
 
 export function unmountAdvanceFilterPanel() {
-	const container = document.getElementById(CONTAINER_ID);
-	if (container) {
-		const shadowRoot = container.shadowRoot;
-		if (shadowRoot) {
-			const shadowMount = shadowRoot.firstElementChild as HTMLElement | null;
+	const host = document.getElementById(CONTAINER_ID) as HTMLElement | null;
+	if (host) {
+		const targetDiv = host.parentElement as HTMLElement | null;
+		if (host.shadowRoot) {
+			const shadowMount = host.shadowRoot
+				.firstElementChild as HTMLElement | null;
 			if (shadowMount) {
 				UnmountComponent(shadowMount);
 			}
 		}
-		container.remove();
+		host.remove();
+
+		if (targetDiv && originalContent) {
+			targetDiv.innerHTML = originalContent;
+			originalContent = null;
+		}
 	}
 }

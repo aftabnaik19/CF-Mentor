@@ -95,7 +95,7 @@ const ProblemAssistantPanel: React.FC = () => {
 				setLoading(false);
 			}
 		})();
-	}, []);
+	}, [key]);
 
 	// Toggle bookmark without confirm; tooltip on hover explains retention
 	const handleBookmarkToggle = async () => {

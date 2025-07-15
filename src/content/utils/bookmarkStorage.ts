@@ -264,7 +264,7 @@ export class BookmarkStorageManager {
 			};
 
 			await this.saveBookmarks(mergedData);
-		} catch (error) {
+		} catch (_error) {
 			throw new Error("Invalid JSON data for import");
 		}
 	}

@@ -1,9 +1,5 @@
 import { mountAdvanceFilterPanel } from "./mount/AdvanceFilterPanel";
-import { mountChatPanel, unmountChatPanel } from "./mount/chatPanel";
-import {
-	mountProblemAssistant,
-	unmountProblemAssistant,
-} from "./mount/ProblemAssistant";
+import { mountProblemAssistant } from "./mount/ProblemAssistant";
 // Wrap in async function to handle await
 async function initializeComponents() {
 	mountProblemAssistant();
@@ -13,3 +9,13 @@ async function initializeComponents() {
 
 // Call the async function
 initializeComponents().catch(console.error);
+
+// let isMounted = false;
+// setInterval(() => {
+// 	if (isMounted) {
+// 		unmountAdvanceFilterPanel();
+// 	} else {
+// 		mountAdvanceFilterPanel();
+// 	}
+// 	isMounted = !isMounted;
+// }, 5000);

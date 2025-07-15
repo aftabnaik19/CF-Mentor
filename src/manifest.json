@@ -24,7 +24,7 @@
 	"content_scripts": [
 		{
 			"matches": [
-				"https://codeforces.com/problemset",
+				"https://codeforces.com/problemset*",
 				"https://codeforces.com/problemset/problem/*",
 				"https://codeforces.com/contest/*/problem/*",
 				"https://codeforces.com/profile/*"
