@@ -1,8 +1,23 @@
-import PropTypes from "prop-types";
-
+import React from "react";
 import { styles } from "../styles";
 
-export const TagsSelector = ({
+interface Tag {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface TagsSelectorProps {
+  filteredTags: Tag[];
+  selectedTags: string[];
+  onTagToggle: (value: string) => void;
+  hoverState: Record<string, boolean>;
+  handleMouseEnter: (key: string) => void;
+  handleMouseLeave: (key: string) => void;
+  getTagGridStyle: () => React.CSSProperties;
+}
+
+export const TagsSelector: React.FC<TagsSelectorProps> = ({
 	filteredTags,
 	selectedTags,
 	onTagToggle,
@@ -56,14 +71,4 @@ export const TagsSelector = ({
 			</div>
 		</div>
 	);
-};
-
-TagsSelector.propTypes = {
-	filteredTags: PropTypes.array.isRequired,
-	selectedTags: PropTypes.array.isRequired,
-	onTagToggle: PropTypes.func.isRequired,
-	hoverState: PropTypes.object.isRequired,
-	handleMouseEnter: PropTypes.func.isRequired,
-	handleMouseLeave: PropTypes.func.isRequired,
-	getTagGridStyle: PropTypes.func.isRequired,
 };

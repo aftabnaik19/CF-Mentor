@@ -6,6 +6,10 @@
 		"module": "ESNext",
 		"skipLibCheck": true,
 		"types": ["chrome", "vite/client"],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["src/*"]
+		},
 
 		/* Bundler mode */
 		"moduleResolution": "bundler",

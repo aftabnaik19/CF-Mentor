@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
 
 const CHAT_ROOT_ID = "cf-chat-host";

@@ -2,13 +2,12 @@ import {
 	ALGORITHM_TAGS,
 	CONTEST_TYPES,
 	PROBLEM_SHEETS,
-} from "../../../data/filter-panel-data";
+} from "@/shared/data/filter-panel-data";
 import { DropdownSelector } from "./components/DropdownSelector";
 import { ProblemIndexSelector } from "./components/ProblemIndexSelector";
 import { TagsSelector } from "./components/TagsSelector";
 import { useAdvancedFilter } from "./hooks/useAdvanceFilter";
 import { styles } from "./styles";
-
 export default function AdvanceFilterPanel() {
 	const {
 		minDifficulty,
@@ -112,7 +111,7 @@ export default function AdvanceFilterPanel() {
 									type="number"
 									placeholder="Min"
 									value={minDifficulty}
-									onChange={(e) => setMinDifficulty(e.target.value)}
+									onChange={(e) => setMinDifficulty((e.target as HTMLInputElement).value)}
 									style={{
 										...styles.input,
 										width: "6rem",
@@ -129,7 +128,7 @@ export default function AdvanceFilterPanel() {
 									type="number"
 									placeholder="Max"
 									value={maxDifficulty}
-									onChange={(e) => setMaxDifficulty(e.target.value)}
+									onChange={(e) => setMaxDifficulty((e.target as HTMLInputElement).value)}
 									style={{
 										...styles.input,
 										width: "6rem",
@@ -324,7 +323,7 @@ export default function AdvanceFilterPanel() {
 									<input
 										placeholder="Search algorithm tags..."
 										value={tagSearchQuery}
-										onChange={(e) => setTagSearchQuery(e.target.value)}
+										onChange={(e) => setTagSearchQuery((e.target as HTMLInputElement).value)}
 										style={{
 											...styles.input,
 											...(focusState.tagSearch && styles.inputFocus),

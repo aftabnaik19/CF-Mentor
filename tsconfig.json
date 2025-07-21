@@ -5,9 +5,9 @@
 		"lib": ["ES2023"],
 		"module": "ESNext",
 		"skipLibCheck": true,
-		"baseUrl": "./src",
+		"baseUrl": ".",
 		"paths": {
-			"@/*": ["*"]
+			"@/*": ["src/*"]
 		},
 
 		/* Bundler mode */
@@ -23,5 +23,5 @@
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"include": ["vite.config.ts"]
+	"include": ["src", "vite.config.ts"]
 }

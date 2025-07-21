@@ -1,27 +1,27 @@
 import { useEffect, useState } from "react";
 
-import { ALGORITHM_TAGS } from "../../../../data/filter-panel-data";
+import { ALGORITHM_TAGS } from "@/shared/data/filter-panel-data";
 export const useAdvancedFilter = () => {
-	const [minDifficulty, setMinDifficulty] = useState("");
-	const [maxDifficulty, setMaxDifficulty] = useState("");
-	const [selectedTags, setSelectedTags] = useState([]);
-	const [selectedSheets, setSelectedSheets] = useState([]);
-	const [combineMode, setCombineMode] = useState("and");
-	const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-	const [tagSearchQuery, setTagSearchQuery] = useState("");
-	const [selectedContestTypes, setSelectedContestTypes] = useState([]);
-	const [selectedProblemIndices, setSelectedProblemIndices] = useState([]);
-	const [showContestTypeDropdown, setShowContestTypeDropdown] = useState(false);
+	const [minDifficulty, setMinDifficulty] = useState<string>("");
+	const [maxDifficulty, setMaxDifficulty] = useState<string>("");
+	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
+	const [combineMode, setCombineMode] = useState<"and" | "or">("and");
+	const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false);
+	const [tagSearchQuery, setTagSearchQuery] = useState<string>("");
+	const [selectedContestTypes, setSelectedContestTypes] = useState<string[]>([]);
+	const [selectedProblemIndices, setSelectedProblemIndices] = useState<string[]>([]);
+	const [showContestTypeDropdown, setShowContestTypeDropdown] = useState<boolean>(false);
 	const [showProblemIndexDropdown, setShowProblemIndexDropdown] =
-		useState(false);
-	const [showSheetsDropdown, setShowSheetsDropdown] = useState(false);
+		useState<boolean>(false);
+	const [showSheetsDropdown, setShowSheetsDropdown] = useState<boolean>(false);
 
 	// State for managing hover and focus effects for inline styling
-	const [hoverState, setHoverState] = useState({});
-	const [focusState, setFocusState] = useState({});
+	const [hoverState, setHoverState] = useState<Record<string, boolean>>({});
+	const [focusState, setFocusState] = useState<Record<string, boolean>>({});
 
 	// State for managing window width for responsive inline styles
-	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+	const [windowWidth, setWindowWidth] = useState<number>(window.innerWidth);
 
 	// Effect to listen for window resize to apply responsive styles
 	useEffect(() => {
@@ -31,13 +31,13 @@ export const useAdvancedFilter = () => {
 	}, []);
 
 	// Handlers to toggle hover and focus states
-	const handleMouseEnter = (key) =>
+	const handleMouseEnter = (key: string) =>
 		setHoverState((prev) => ({ ...prev, [key]: true }));
-	const handleMouseLeave = (key) =>
+	const handleMouseLeave = (key: string) =>
 		setHoverState((prev) => ({ ...prev, [key]: false }));
-	const handleFocus = (key) =>
+	const handleFocus = (key: string) =>
 		setFocusState((prev) => ({ ...prev, [key]: true }));
-	const handleBlur = (key) =>
+	const handleBlur = (key: string) =>
 		setFocusState((prev) => ({ ...prev, [key]: false }));
 
 	const filteredTags = ALGORITHM_TAGS.filter(
@@ -46,7 +46,7 @@ export const useAdvancedFilter = () => {
 			tag.description.toLowerCase().includes(tagSearchQuery.toLowerCase()),
 	);
 
-	const handleTagToggle = (tagValue) => {
+	const handleTagToggle = (tagValue: string) => {
 		setSelectedTags((prev) =>
 			prev.includes(tagValue)
 				? prev.filter((t) => t !== tagValue)
@@ -54,7 +54,7 @@ export const useAdvancedFilter = () => {
 		);
 	};
 
-	const handleSheetToggle = (sheetValue) => {
+	const handleSheetToggle = (sheetValue: string) => {
 		setSelectedSheets((prev) =>
 			prev.includes(sheetValue)
 				? prev.filter((s) => s !== sheetValue)
@@ -62,7 +62,7 @@ export const useAdvancedFilter = () => {
 		);
 	};
 
-	const handleContestTypeToggle = (contestType) => {
+	const handleContestTypeToggle = (contestType: string) => {
 		setSelectedContestTypes((prev) =>
 			prev.includes(contestType)
 				? prev.filter((c) => c !== contestType)
@@ -70,7 +70,7 @@ export const useAdvancedFilter = () => {
 		);
 	};
 
-	const handleProblemIndexToggle = (problemIndex) => {
+	const handleProblemIndexToggle = (problemIndex: string) => {
 		setSelectedProblemIndices((prev) =>
 			prev.includes(problemIndex)
 				? prev.filter((p) => p !== problemIndex)
@@ -78,7 +78,7 @@ export const useAdvancedFilter = () => {
 		);
 	};
 
-	const removeTag = (tagValue) => {
+	const removeTag = (tagValue: string) => {
 		setSelectedTags((prev) => prev.filter((t) => t !== tagValue));
 	};
 

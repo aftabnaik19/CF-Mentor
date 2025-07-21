@@ -1,9 +1,18 @@
-import PropTypes from "prop-types";
-
-import { PROBLEM_INDICES } from "../../../../data/filter-panel-data";
+import React from "react";
+import { PROBLEM_INDICES } from "@/shared/data/filter-panel-data";
 import { styles } from "../styles";
 
-export const ProblemIndexSelector = ({
+interface ProblemIndexSelectorProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  selectedIndices: string[];
+  onIndexToggle: (value: string) => void;
+  hoverState: Record<string, boolean>;
+  handleMouseEnter: (key: string) => void;
+  handleMouseLeave: (key: string) => void;
+}
+
+export const ProblemIndexSelector: React.FC<ProblemIndexSelectorProps> = ({
 	isOpen,
 	setIsOpen,
 	selectedIndices,
@@ -54,7 +63,6 @@ export const ProblemIndexSelector = ({
 								<div
 									key={problemIndex.value}
 									onClick={() => onIndexToggle(problemIndex.value)}
-									title={problemIndex.description}
 									style={{
 										...styles.problemIndexItem,
 										...(selectedIndices.includes(problemIndex.value) &&
@@ -81,14 +89,4 @@ export const ProblemIndexSelector = ({
 			</div>
 		</div>
 	);
-};
-
-ProblemIndexSelector.propTypes = {
-	isOpen: PropTypes.bool.isRequired,
-	setIsOpen: PropTypes.func.isRequired,
-	selectedIndices: PropTypes.array.isRequired,
-	onIndexToggle: PropTypes.func.isRequired,
-	hoverState: PropTypes.object.isRequired,
-	handleMouseEnter: PropTypes.func.isRequired,
-	handleMouseLeave: PropTypes.func.isRequired,
 };

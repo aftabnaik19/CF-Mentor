@@ -1,5 +1,11 @@
+import React from 'react';
+
+type StyleObject = {
+  [key: string]: React.CSSProperties;
+};
+
 // Centralized style object for all inline styles
-export const styles = {
+export const styles: StyleObject = {
 	card: {
 		borderWidth: "2px",
 		borderStyle: "solid",
@@ -218,7 +224,7 @@ export const styles = {
 	radioItem: {
 		display: "flex",
 		alignItems: "center",
-		gap: "0.5rem",
+gap: "0.5rem",
 		cursor: "pointer",
 	},
 	radio: { width: "1rem", height: "1rem" },

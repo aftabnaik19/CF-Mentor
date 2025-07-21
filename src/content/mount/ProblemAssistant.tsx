@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import ProblemAssistantPanel from "../components/ProblemAssistantPanel";
 import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
 

@@ -1,8 +1,25 @@
-import PropTypes from "prop-types";
-
+import React from "react";
 import { styles } from "../styles";
 
-export const DropdownSelector = ({
+interface Item {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface DropdownSelectorProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  title: string;
+  selectedItems: string[];
+  items: Item[];
+  onItemToggle: (value: string) => void;
+  hoverState: Record<string, boolean>;
+  handleMouseEnter: (key: string) => void;
+  handleMouseLeave: (key: string) => void;
+}
+
+export const DropdownSelector: React.FC<DropdownSelectorProps> = ({
 	isOpen,
 	setIsOpen,
 	title,
@@ -99,16 +116,4 @@ export const DropdownSelector = ({
 			</div>
 		</div>
 	);
-};
-
-DropdownSelector.propTypes = {
-	isOpen: PropTypes.bool.isRequired,
-	setIsOpen: PropTypes.func.isRequired,
-	title: PropTypes.string.isRequired,
-	selectedItems: PropTypes.array.isRequired,
-	items: PropTypes.array.isRequired,
-	onItemToggle: PropTypes.func.isRequired,
-	hoverState: PropTypes.object.isRequired,
-	handleMouseEnter: PropTypes.func.isRequired,
-	handleMouseLeave: PropTypes.func.isRequired,
 };

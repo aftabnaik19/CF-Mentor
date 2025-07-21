@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import AdvanceFilterPanel from "../components/AdvanceFilterPanel";
 import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
 const CONTAINER_ID = "cf-mentor-advance-filters-panel-host";
@@ -31,9 +32,11 @@ export function mountAdvanceFilterPanel() {
 		host.id = CONTAINER_ID;
 		targetDiv.appendChild(host);
 		const shadowRoot = host.attachShadow({ mode: "open" });
+		const shadowMount = document.createElement("div");
+		shadowRoot.appendChild(shadowMount);
 
 		// Mount into shadow root
-		MountComponent(shadowRoot, <AdvanceFilterPanel />);
+		MountComponent(shadowMount, <AdvanceFilterPanel />);
 	}
 }
 

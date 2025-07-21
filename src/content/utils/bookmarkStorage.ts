@@ -1,3 +1,9 @@
+/// <reference lib="dom" />
+import {
+	BookmarkedProblem,
+	BookmarkStorage,
+} from "@/shared/types/bookmark";
+
 // utils/bookmarkStorage.ts
 export class BookmarkStorageManager {
 	private static readonly STORAGE_KEY = "cf_mentor_bookmarks";
@@ -29,7 +35,7 @@ export class BookmarkStorageManager {
 	// Extract problem rating from tags
 	static extractProblemRating(): string | null {
 		const tagElements = document.querySelectorAll(".tag-box");
-		for (const tag of tagElements) {
+		for (const tag of Array.from(tagElements)) {
 			const text = tag.textContent?.trim();
 			if (text && text.match(/^\*\d+$/)) {
 				return text;
@@ -43,7 +49,7 @@ export class BookmarkStorageManager {
 		const tagElements = document.querySelectorAll(".tag-box");
 		const tags: string[] = [];
 
-		for (const tag of tagElements) {
+		for (const tag of Array.from(tagElements)) {
 			const text = tag.textContent?.trim();
 			if (text && !text.match(/^\*\d+$/)) {
 				// Exclude rating tags

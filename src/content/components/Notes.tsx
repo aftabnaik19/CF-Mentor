@@ -15,7 +15,7 @@ const Notes: React.FC<NotesProps> = ({ value, onChange }) => {
 				id="userNotes"
 				placeholder="Write something..."
 				value={value}
-				onChange={(e) => onChange(e.target.value)}
+				onChange={(e) => onChange((e.target as HTMLTextAreaElement).value)}
 				style={{
 					width: "100%",
 					height: "60px",

@@ -7,7 +7,7 @@ const STORAGE_KEY_RUNNING = "cfMentorStopwatchRunning";
 const Stopwatch: React.FC = () => {
 	const [elapsed, setElapsed] = useState(0);
 	const [isRunning, setIsRunning] = useState(false);
-	const intervalRef = useRef<number | null>(null);
+	const intervalRef = useRef<any | null>(null);
 	const accumulatedTimeRef = useRef<number>(0);
 	const startTimeRef = useRef<number>(0);
 
@@ -39,7 +39,7 @@ const Stopwatch: React.FC = () => {
 			localStorage.setItem(STORAGE_KEY_START, startTimeRef.current.toString());
 			localStorage.setItem(STORAGE_KEY_RUNNING, "true");
 
-			intervalRef.current = window.setInterval(() => {
+			intervalRef.current = setInterval(() => {
 				const now = Date.now();
 				const sessionTime = now - startTimeRef.current;
 				const totalTime = accumulatedTimeRef.current + sessionTime;
@@ -101,12 +101,11 @@ const Stopwatch: React.FC = () => {
 		lineHeight: "normal",
 		textAlign: "left" as const,
 		textDecoration: "none",
-		textTransform: "none",
+		textTransform: "none" as const,
 		letterSpacing: "normal",
 		wordSpacing: "normal",
 		whiteSpace: "normal",
 		direction: "ltr" as const,
-		unicodeBidi: "normal",
 		verticalAlign: "baseline",
 		background: "transparent",
 		border: "none",
@@ -117,7 +116,7 @@ const Stopwatch: React.FC = () => {
 		padding: "0",
 		position: "static" as const,
 		display: "inline",
-		visibility: "visible",
+		visibility: "visible" as const,
 		overflow: "visible",
 		zIndex: "auto",
 		opacity: "1",
@@ -144,8 +143,6 @@ const Stopwatch: React.FC = () => {
 		fontWeight: "normal",
 		fontStretch: "normal",
 		fontFeatureSettings: "normal",
-		fontKerning: "auto",
-		textRendering: "auto",
 	};
 
 	return (
