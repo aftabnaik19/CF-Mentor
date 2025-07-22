@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { BookmarkStorageManager } from "../utils/bookmarkStorage";
+import { BookmarkStorageManager } from "../utils/bookmark-storage";
 import DifficultySelector from "./DifficultySelector";
 import Notes from "./Notes";
 import Stopwatch from "./Stopwatch";

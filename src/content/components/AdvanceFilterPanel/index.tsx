@@ -6,7 +6,7 @@ import {
 import { DropdownSelector } from "./components/DropdownSelector";
 import { ProblemIndexSelector } from "./components/ProblemIndexSelector";
 import { TagsSelector } from "./components/TagsSelector";
-import { useAdvancedFilter } from "./hooks/useAdvanceFilter";
+import { useAdvancedFilter } from "./hooks/use-advance-filter";
 import { styles } from "./styles";
 export default function AdvanceFilterPanel() {
 	const {

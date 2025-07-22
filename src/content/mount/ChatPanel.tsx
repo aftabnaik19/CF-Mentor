@@ -20,7 +20,7 @@ export async function mountChatPanel() {
 	shadowRoot.appendChild(shadowMount);
 
 	// Dynamically import the ChatPanel component
-	const { default: ChatPanel } = await import("../chatpanel/Main");
+	const { default: ChatPanel } = await import("../ChatPanel/Main");
 
 	// Mount the React component using your existing utility
 	MountComponent(shadowMount, <ChatPanel />);
