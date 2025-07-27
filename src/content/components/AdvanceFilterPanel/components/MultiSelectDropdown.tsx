@@ -1,5 +1,7 @@
 import Select, { StylesConfig } from "react-select";
+
 import { ALGORITHM_TAGS } from "@/shared/data/filter-panel-data";
+
 import { styles as globalStyles } from "../styles"; // Import the shared styles
 
 interface OptionType {

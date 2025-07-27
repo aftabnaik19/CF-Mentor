@@ -1,30 +1,35 @@
-import AdvanceFilterPanel from "../components/AdvanceFilterPanel";
+import Datatable from "../components/Datatable";
 import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
-const CONTAINER_ID = "cf-mentor-advance-filters-panel-host";
+const CONTAINER_ID = "cf-mentor-datatable";
 
 let originalContent: string | null = null;
+let originalStyle: string | null = null;
+let originalClassName: string | null = null;
+const paginationDiv = document.querySelector(
+	".pagination",
+) as HTMLElement | null;
 
 function isProblemsetPage(url: string): boolean {
 	return /^https:\/\/codeforces\.com\/problemset/.test(url);
 }
 
-export function mountAdvanceFilterPanel() {
-	const targetDiv = document.querySelector(
-		".roundbox.sidebox._FilterByTagsFrame_main.borderTopRound",
-	) as HTMLElement | null;
-
+export function mountDatatable() {
+	const targetDiv = document.querySelector(".datatable") as HTMLElement | null;
 	const isOnProblemsetPage = isProblemsetPage(window.location.href);
 	if (
 		targetDiv &&
 		isOnProblemsetPage &&
 		!document.getElementById(CONTAINER_ID)
 	) {
-		// Store the original content
+		// Store the original content, style and class
 		originalContent = targetDiv.innerHTML;
-
+		originalStyle = targetDiv.getAttribute("style");
+		originalClassName = targetDiv.className;
+		if (paginationDiv) paginationDiv.style.display = "none";
 		// Clear its contents and styles
 		targetDiv.innerHTML = "";
 		targetDiv.removeAttribute("style");
+		targetDiv.className = "";
 
 		// Create host and shadow DOM
 		const host = document.createElement("div");
@@ -35,11 +40,11 @@ export function mountAdvanceFilterPanel() {
 		shadowRoot.appendChild(shadowMount);
 
 		// Mount into shadow root
-		MountComponent(shadowMount, <AdvanceFilterPanel />);
+		MountComponent(shadowMount, <Datatable />);
 	}
 }
 
-export function unmountAdvanceFilterPanel() {
+export function unmountDatatable() {
 	const host = document.getElementById(CONTAINER_ID) as HTMLElement | null;
 	if (host) {
 		const targetDiv = host.parentElement as HTMLElement | null;
@@ -54,7 +59,19 @@ export function unmountAdvanceFilterPanel() {
 
 		if (targetDiv && originalContent) {
 			targetDiv.innerHTML = originalContent;
+			if (originalStyle) {
+				targetDiv.setAttribute("style", originalStyle);
+			}
+			if (originalClassName) {
+				targetDiv.className = originalClassName;
+			}
 			originalContent = null;
+			originalStyle = null;
+			originalClassName = null;
 		}
 	}
+	if (paginationDiv) {
+		paginationDiv.style.display = "block";
+	}
 }
+

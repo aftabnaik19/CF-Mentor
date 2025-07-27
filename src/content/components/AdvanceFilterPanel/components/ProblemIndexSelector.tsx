@@ -1,5 +1,7 @@
 import React from "react";
+
 import { PROBLEM_INDICES } from "@/shared/data/filter-panel-data";
+
 import { styles } from "../styles";
 
 interface ProblemIndexSelectorProps {

@@ -4,7 +4,7 @@
 	"version": "0.1.0",
 	"description": "The CF-Mentor selects problems best suited for your rating growth, gives subtle hints, and provides insights into your CF journey.",
 	"permissions": ["storage", "scripting", "identity"],
-	"host_permissions": ["https://codeforces.com/*", "https://myserver.com/"],
+	"host_permissions": ["https://codeforces.com/*", "https://cf-mentor.me/"],
 	"optional_host_permissions": [
 		"https://sheets.googleapis.com/*",
 		"https://atcoder.jp/*",
