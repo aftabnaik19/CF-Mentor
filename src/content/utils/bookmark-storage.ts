@@ -1,277 +1,288 @@
-/// <reference lib="dom" />
-import {
-	BookmarkedProblem,
-	BookmarkStorage,
-} from "@/shared/types/bookmark";
+import { BookmarkedProblem, BookmarkStorage } from "@/shared/types/bookmark";
 
-// utils/bookmarkStorage.ts
-export class BookmarkStorageManager {
-	private static readonly STORAGE_KEY = "cf_mentor_bookmarks";
+const BASE_STORAGE_KEY = "cf_mentor_bookmarks";
 
-	// Get unique problem key
-	static getProblemKey(contestId: string, problemIdx: string): string {
-		return `${contestId}-${problemIdx}`;
+// Get the current Codeforces user handle from the page header
+export const getCurrentUserHandle = (): string | null => {
+	const profileLink = document.querySelector(
+		"#header a[href^='/profile/']",
+	) as HTMLAnchorElement;
+	return profileLink?.innerText ?? null;
+};
+
+// Get the user-specific storage key
+const getUserStorageKey = (): string | null => {
+	const handle = getCurrentUserHandle();
+	if (!handle) return null;
+	return `${BASE_STORAGE_KEY}_${handle}`;
+};
+
+// Get unique problem key
+export const getProblemKey = (
+	contestId: string,
+	problemIdx: string,
+): string => {
+	return contestId + problemIdx;
+};
+
+// Get current problem info from URL and DOM
+export const getCurrentProblemInfo = (): {
+	contestId: string;
+	problemIdx: string;
+} | null => {
+	const url = window.location.href;
+	const match =
+		url.match(/\/contest\/(\d+)\/problem\/([A-Z]\d*)/i) ||
+		url.match(/\/problemset\/problem\/(\d+)\/([A-Z]\d*)/i);
+
+	if (match) {
+		return {
+			contestId: match[1],
+			problemIdx: match[2].toUpperCase(),
+		};
 	}
+	return null;
+};
 
-	// Get current problem info from URL and DOM
-	static getCurrentProblemInfo(): {
-		contestId: string;
-		problemIdx: string;
-	} | null {
-		const url = window.location.href;
-		const match =
-			url.match(/\/contest\/(\d+)\/problem\/([A-Z]\d*)/i) ||
-			url.match(/\/problemset\/problem\/(\d+)\/([A-Z]\d*)/i);
-
-		if (match) {
-			return {
-				contestId: match[1],
-				problemIdx: match[2].toUpperCase(),
-			};
+// Extract problem rating from tags
+export const extractProblemRating = (): string | null => {
+	const tagElements = document.querySelectorAll(".tag-box");
+	for (const tag of Array.from(tagElements)) {
+		const text = tag.textContent?.trim();
+		if (text && text.match(/^\*\d+$/)) {
+			return text;
 		}
-		return null;
 	}
+	return null;
+};
 
-	// Extract problem rating from tags
-	static extractProblemRating(): string | null {
-		const tagElements = document.querySelectorAll(".tag-box");
-		for (const tag of Array.from(tagElements)) {
-			const text = tag.textContent?.trim();
-			if (text && text.match(/^\*\d+$/)) {
-				return text;
-			}
+// Extract problem tags
+export const extractProblemTags = (): string[] => {
+	const tagElements = document.querySelectorAll(".tag-box");
+	const tags: string[] = [];
+
+	for (const tag of Array.from(tagElements)) {
+		const text = tag.textContent?.trim();
+		if (text && !text.match(/^\*\d+$/)) {
+			// Exclude rating tags
+			tags.push(text);
 		}
-		return null;
 	}
+	return tags;
+};
 
-	// Extract problem tags
-	static extractProblemTags(): string[] {
-		const tagElements = document.querySelectorAll(".tag-box");
-		const tags: string[] = [];
+// --- User-Scoped Storage Functions ---
 
-		for (const tag of Array.from(tagElements)) {
-			const text = tag.textContent?.trim();
-			if (text && !text.match(/^\*\d+$/)) {
-				// Exclude rating tags
-				tags.push(text);
-			}
+// Get bookmark data for the current user
+const getUserData = async (): Promise<BookmarkStorage> => {
+	const userStorageKey = getUserStorageKey();
+	if (!userStorageKey) return { bookmarkedProblems: {} }; // Return empty if not logged in
+
+	return new Promise((resolve) => {
+		const storage = chrome.storage?.sync || chrome.storage?.local;
+		if (storage) {
+			storage.get([userStorageKey], (result) => {
+				resolve(result[userStorageKey] || { bookmarkedProblems: {} });
+			});
+		} else {
+			const stored = localStorage.getItem(userStorageKey);
+			resolve(stored ? JSON.parse(stored) : { bookmarkedProblems: {} });
 		}
-		return tags;
-	}
+	});
+};
 
-	// Get all bookmarked problems
-	static async getAllBookmarks(): Promise<BookmarkStorage> {
-		return new Promise((resolve) => {
-			// Try chrome.storage.sync first, fallback to chrome.storage.local
-			const storage = chrome.storage?.sync || chrome.storage?.local;
+// Save bookmark data for the current user
+const saveUserData = async (userData: BookmarkStorage): Promise<void> => {
+	const userStorageKey = getUserStorageKey();
+	if (!userStorageKey) return; // Do nothing if not logged in
 
-			if (storage) {
-				storage.get([this.STORAGE_KEY], (result) => {
-					const data = result[this.STORAGE_KEY] || { bookmarkedProblems: {} };
-					resolve(data);
-				});
-			} else {
-				// Fallback to regular localStorage for testing
-				const stored = localStorage.getItem(this.STORAGE_KEY);
-				const data = stored ? JSON.parse(stored) : { bookmarkedProblems: {} };
-				resolve(data);
-			}
-		});
-	}
+	return new Promise((resolve, reject) => {
+		const storage = chrome.storage?.sync || chrome.storage?.local;
+		if (storage) {
+			storage.set({ [userStorageKey]: userData }, () => {
+				if (chrome.runtime.lastError) {
+					reject(chrome.runtime.lastError);
+				} else {
+					resolve();
+				}
+			});
+		} else {
+			localStorage.setItem(userStorageKey, JSON.stringify(userData));
+			resolve();
+		}
+	});
+};
 
-	// Save bookmark data
-	static async saveBookmarks(data: BookmarkStorage): Promise<void> {
-		return new Promise((resolve, reject) => {
-			const storage = chrome.storage?.sync || chrome.storage?.local;
+// --- Public API ---
 
-			if (storage) {
-				storage.set({ [this.STORAGE_KEY]: data }, () => {
-					if (chrome.runtime.lastError) {
-						reject(chrome.runtime.lastError);
-					} else {
-						resolve();
-					}
-				});
-			} else {
-				// Fallback to localStorage
-				localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-				resolve();
-			}
-		});
-	}
+// Check if current problem is bookmarked
+export const isCurrentProblemBookmarked = async (): Promise<boolean> => {
+	const problemInfo = getCurrentProblemInfo();
+	if (!problemInfo) return false;
 
-	// Check if current problem is bookmarked
-	static async isCurrentProblemBookmarked(): Promise<boolean> {
-		const problemInfo = this.getCurrentProblemInfo();
-		if (!problemInfo) return false;
+	const userData = await getUserData();
+	const key = getProblemKey(problemInfo.contestId, problemInfo.problemIdx);
+	return key in userData.bookmarkedProblems;
+};
 
-		const data = await this.getAllBookmarks();
-		const key = this.getProblemKey(
-			problemInfo.contestId,
-			problemInfo.problemIdx,
-		);
-		return key in data.bookmarkedProblems;
-	}
-
-	// Get current problem bookmark data
-	static async getCurrentProblemBookmark(): Promise<BookmarkedProblem | null> {
-		const problemInfo = this.getCurrentProblemInfo();
+// Get current problem bookmark data
+export const getCurrentProblemBookmark =
+	async (): Promise<BookmarkedProblem | null> => {
+		const problemInfo = getCurrentProblemInfo();
 		if (!problemInfo) return null;
 
-		const data = await this.getAllBookmarks();
-		const key = this.getProblemKey(
-			problemInfo.contestId,
-			problemInfo.problemIdx,
-		);
-		return data.bookmarkedProblems[key] || null;
+		const userData = await getUserData();
+		const key = getProblemKey(problemInfo.contestId, problemInfo.problemIdx);
+		return userData.bookmarkedProblems[key] || null;
+	};
+
+// Add/Update bookmark for current problem
+export const bookmarkCurrentProblem = async (
+	difficultyRating: number | null = null,
+	notes: string | null = null,
+	timeRequiredSeconds: number | null = null,
+): Promise<void> => {
+	const problemInfo = getCurrentProblemInfo();
+	if (!problemInfo)
+		throw new Error("Could not extract problem info from current page");
+
+	const userData = await getUserData();
+	const key = getProblemKey(problemInfo.contestId, problemInfo.problemIdx);
+	const now = Date.now();
+
+	const existingBookmark = userData.bookmarkedProblems[key];
+
+	const bookmark: BookmarkedProblem = {
+		contestId: problemInfo.contestId,
+		problemIdx: problemInfo.problemIdx,
+		difficultyRating,
+		notes,
+		timeRequiredSeconds,
+		problemRating: extractProblemRating(),
+		problemTags: extractProblemTags(),
+		bookmarkedAt: existingBookmark?.bookmarkedAt || now,
+		lastUpdated: now,
+	};
+
+	userData.bookmarkedProblems[key] = bookmark;
+	await saveUserData(userData);
+};
+
+// Remove bookmark for current problem
+export const removeCurrentProblemBookmark = async (): Promise<void> => {
+	const problemInfo = getCurrentProblemInfo();
+	if (!problemInfo) return;
+
+	const userData = await getUserData();
+	const key = getProblemKey(problemInfo.contestId, problemInfo.problemIdx);
+
+	if (key in userData.bookmarkedProblems) {
+		delete userData.bookmarkedProblems[key];
+		await saveUserData(userData);
 	}
+};
 
-	// Add/Update bookmark for current problem
-	static async bookmarkCurrentProblem(
-		difficultyRating: number | null = null,
-		notes: string | null = null,
-		timeRequiredSeconds: number | null = null,
-	): Promise<void> {
-		const problemInfo = this.getCurrentProblemInfo();
-		if (!problemInfo)
-			throw new Error("Could not extract problem info from current page");
+// Update specific fields for current problem
+export const updateCurrentProblemBookmark = async (
+	updates: Partial<
+		Pick<
+			BookmarkedProblem,
+			"difficultyRating" | "notes" | "timeRequiredSeconds"
+		>
+	>,
+): Promise<void> => {
+	const problemInfo = getCurrentProblemInfo();
+	if (!problemInfo) return;
 
-		const data = await this.getAllBookmarks();
-		const key = this.getProblemKey(
-			problemInfo.contestId,
-			problemInfo.problemIdx,
-		);
-		const now = Date.now();
+	const userData = await getUserData();
+	const key = getProblemKey(problemInfo.contestId, problemInfo.problemIdx);
 
-		const existingBookmark = data.bookmarkedProblems[key];
+	if (key in userData.bookmarkedProblems) {
+		userData.bookmarkedProblems[key] = {
+			...userData.bookmarkedProblems[key],
+			...updates,
+			lastUpdated: Date.now(),
+		};
+		await saveUserData(userData);
+	}
+};
 
-		const bookmark: BookmarkedProblem = {
-			contestId: problemInfo.contestId,
-			problemIdx: problemInfo.problemIdx,
-			difficultyRating,
-			notes,
-			timeRequiredSeconds,
-			problemRating: this.extractProblemRating(),
-			problemTags: this.extractProblemTags(),
-			bookmarkedAt: existingBookmark?.bookmarkedAt || now,
-			lastUpdated: now,
+// Get all bookmarked problems as array for the current user
+export const getBookmarkedProblemsArray = async (): Promise<
+	BookmarkedProblem[]
+> => {
+	const userData = await getUserData();
+	return Object.values(userData.bookmarkedProblems).sort(
+		(a, b) => b.bookmarkedAt - a.bookmarkedAt,
+	); // Latest first
+};
+
+// Search bookmarked problems for the current user
+export const searchBookmarks = async (query: {
+	tags?: string[];
+	difficultyRating?: number;
+	problemRating?: string;
+	contestId?: string;
+}): Promise<BookmarkedProblem[]> => {
+	const problems = await getBookmarkedProblemsArray();
+
+	return problems.filter((problem) => {
+		if (
+			query.tags &&
+			!query.tags.some((tag) => problem.problemTags.includes(tag))
+		) {
+			return false;
+		}
+		if (
+			query.difficultyRating &&
+			problem.difficultyRating !== query.difficultyRating
+		) {
+			return false;
+		}
+		if (query.problemRating && problem.problemRating !== query.problemRating) {
+			return false;
+		}
+		if (query.contestId && problem.contestId !== query.contestId) {
+			return false;
+		}
+		return true;
+	});
+};
+
+// Export bookmarks as JSON for the current user
+export const exportBookmarks = async (): Promise<string> => {
+	const userData = await getUserData();
+	return JSON.stringify(userData, null, 2);
+};
+
+// Import bookmarks from JSON for the current user
+export const importBookmarks = async (jsonData: string): Promise<void> => {
+	const userStorageKey = getUserStorageKey();
+	if (!userStorageKey) throw new Error("User not logged in");
+
+	try {
+		const importedData: BookmarkStorage = JSON.parse(jsonData);
+
+		// Validate imported data structure
+		if (!importedData || typeof importedData.bookmarkedProblems !== "object") {
+			throw new Error("Invalid JSON structure");
+		}
+
+		const currentUserData = await getUserData();
+
+		// Merge with existing data (imported data takes precedence)
+		const mergedData: BookmarkStorage = {
+			bookmarkedProblems: {
+				...currentUserData.bookmarkedProblems,
+				...importedData.bookmarkedProblems,
+			},
 		};
 
-		data.bookmarkedProblems[key] = bookmark;
-		await this.saveBookmarks(data);
-	}
-
-	// Remove bookmark for current problem
-	static async removeCurrentProblemBookmark(): Promise<void> {
-		const problemInfo = this.getCurrentProblemInfo();
-		if (!problemInfo) return;
-
-		const data = await this.getAllBookmarks();
-		const key = this.getProblemKey(
-			problemInfo.contestId,
-			problemInfo.problemIdx,
-		);
-
-		if (key in data.bookmarkedProblems) {
-			delete data.bookmarkedProblems[key];
-			await this.saveBookmarks(data);
+		await saveUserData(mergedData);
+	} catch (error) {
+		if (error instanceof Error) {
+			throw new Error(`Invalid JSON data for import: ${error.message}`);
 		}
+		throw new Error("Invalid JSON data for import");
 	}
-
-	// Update specific fields for current problem
-	static async updateCurrentProblemBookmark(
-		updates: Partial<
-			Pick<
-				BookmarkedProblem,
-				"difficultyRating" | "notes" | "timeRequiredSeconds"
-			>
-		>,
-	): Promise<void> {
-		const problemInfo = this.getCurrentProblemInfo();
-		if (!problemInfo) return;
-
-		const data = await this.getAllBookmarks();
-		const key = this.getProblemKey(
-			problemInfo.contestId,
-			problemInfo.problemIdx,
-		);
-
-		if (key in data.bookmarkedProblems) {
-			data.bookmarkedProblems[key] = {
-				...data.bookmarkedProblems[key],
-				...updates,
-				lastUpdated: Date.now(),
-			};
-			await this.saveBookmarks(data);
-		}
-	}
-
-	// Get all bookmarked problems as array (for display/export)
-	static async getBookmarkedProblemsArray(): Promise<BookmarkedProblem[]> {
-		const data = await this.getAllBookmarks();
-		return Object.values(data.bookmarkedProblems).sort(
-			(a, b) => b.bookmarkedAt - a.bookmarkedAt,
-		); // Latest first
-	}
-
-	// Search bookmarked problems
-	static async searchBookmarks(query: {
-		tags?: string[];
-		difficultyRating?: number;
-		problemRating?: string;
-		contestId?: string;
-	}): Promise<BookmarkedProblem[]> {
-		const problems = await this.getBookmarkedProblemsArray();
-
-		return problems.filter((problem) => {
-			if (
-				query.tags &&
-				!query.tags.some((tag) => problem.problemTags.includes(tag))
-			) {
-				return false;
-			}
-			if (
-				query.difficultyRating &&
-				problem.difficultyRating !== query.difficultyRating
-			) {
-				return false;
-			}
-			if (
-				query.problemRating &&
-				problem.problemRating !== query.problemRating
-			) {
-				return false;
-			}
-			if (query.contestId && problem.contestId !== query.contestId) {
-				return false;
-			}
-			return true;
-		});
-	}
-
-	// Export bookmarks as JSON
-	static async exportBookmarks(): Promise<string> {
-		const data = await this.getAllBookmarks();
-		return JSON.stringify(data, null, 2);
-	}
-
-	// Import bookmarks from JSON
-	static async importBookmarks(jsonData: string): Promise<void> {
-		try {
-			const importedData: BookmarkStorage = JSON.parse(jsonData);
-			const currentData = await this.getAllBookmarks();
-
-			// Merge with existing data (imported data takes precedence)
-			const mergedData: BookmarkStorage = {
-				bookmarkedProblems: {
-					...currentData.bookmarkedProblems,
-					...importedData.bookmarkedProblems,
-				},
-			};
-
-			await this.saveBookmarks(mergedData);
-		} catch (_error) {
-			throw new Error("Invalid JSON data for import");
-		}
-	}
-}
+};

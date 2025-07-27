@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { BookmarkStorageManager } from "../utils/bookmark-storage";
+import * as bookmarkStorage from "../utils/bookmark-storage";
 import DifficultySelector from "./DifficultySelector";
 import Notes from "./Notes";
 import Stopwatch from "./Stopwatch";
 
 const DRAFT_KEY = "cf_mentor_draft";
 const DROPDOWN_SESSION_KEY = "cf_mentor_dropdown_open";
-
 const ProblemAssistantPanel: React.FC = () => {
 	const [difficulty, setDifficulty] = useState(0);
 	const [notes, setNotes] = useState("");
@@ -16,9 +15,9 @@ const ProblemAssistantPanel: React.FC = () => {
 	const [loading, setLoading] = useState(true);
 
 	// Determine current problem key
-	const problemInfo = BookmarkStorageManager.getCurrentProblemInfo();
-	const key = problemInfo
-		? BookmarkStorageManager.getProblemKey(
+	const problemInfo = bookmarkStorage.getCurrentProblemInfo();
+	const PROBLEM_KEY = problemInfo
+		? bookmarkStorage.getProblemKey(
 				problemInfo.contestId,
 				problemInfo.problemIdx,
 			)
@@ -53,14 +52,14 @@ const ProblemAssistantPanel: React.FC = () => {
 	//
 	// Save or remove draft
 	const saveDraft = async (d: number, n: string) => {
-		if (!key) return;
+		if (!PROBLEM_KEY) return;
 		const isEmptyDraft = !bookmarked && d === 0 && n.trim() === "";
 		const all = await getDrafts();
 		if (isEmptyDraft) {
-			delete all[key];
+			delete all[PROBLEM_KEY];
 			await setDrafts(all);
 		} else {
-			all[key] = { difficulty: d, notes: n };
+			all[PROBLEM_KEY] = { difficulty: d, notes: n };
 			await setDrafts(all);
 		}
 	};
@@ -69,21 +68,21 @@ const ProblemAssistantPanel: React.FC = () => {
 	useEffect(() => {
 		(async () => {
 			try {
-				if (!key) throw new Error("Not on problem page");
-				const isBk = await BookmarkStorageManager.isCurrentProblemBookmarked();
+				if (!PROBLEM_KEY) throw new Error("Not on problem page");
+				const isBk = await bookmarkStorage.isCurrentProblemBookmarked();
 				setBookmarked(isBk);
 
 				if (isBk) {
-					const bk = await BookmarkStorageManager.getCurrentProblemBookmark();
+					const bk = await bookmarkStorage.getCurrentProblemBookmark();
 					if (bk) {
 						setDifficulty(bk.difficultyRating ?? 0);
 						setNotes(bk.notes ?? "");
 					}
 				} else {
 					const all = await getDrafts();
-					if (all[key]) {
-						setDifficulty(all[key].difficulty);
-						setNotes(all[key].notes);
+					if (all[PROBLEM_KEY]) {
+						setDifficulty(all[PROBLEM_KEY].difficulty);
+						setNotes(all[PROBLEM_KEY].notes);
 					}
 				}
 				// restore dropdown open state from sessionStorage
@@ -95,16 +94,16 @@ const ProblemAssistantPanel: React.FC = () => {
 				setLoading(false);
 			}
 		})();
-	}, [key]);
+	}, [PROBLEM_KEY]);
 
 	// Toggle bookmark without confirm; tooltip on hover explains retention
 	const handleBookmarkToggle = async () => {
-		if (!key) return;
+		if (!PROBLEM_KEY) return;
 		if (bookmarked) {
-			await BookmarkStorageManager.removeCurrentProblemBookmark();
+			await bookmarkStorage.removeCurrentProblemBookmark();
 			setBookmarked(false);
 		} else {
-			await BookmarkStorageManager.bookmarkCurrentProblem(
+			await bookmarkStorage.bookmarkCurrentProblem(
 				difficulty || null,
 				notes || null,
 			);
@@ -124,7 +123,7 @@ const ProblemAssistantPanel: React.FC = () => {
 		setDifficulty(d);
 		await saveDraft(d, notes);
 		if (bookmarked) {
-			await BookmarkStorageManager.updateCurrentProblemBookmark({
+			await bookmarkStorage.updateCurrentProblemBookmark({
 				difficultyRating: d || null,
 			});
 		}
@@ -135,7 +134,7 @@ const ProblemAssistantPanel: React.FC = () => {
 		setDifficulty(0);
 		await saveDraft(0, notes);
 		if (bookmarked) {
-			await BookmarkStorageManager.updateCurrentProblemBookmark({
+			await bookmarkStorage.updateCurrentProblemBookmark({
 				difficultyRating: null,
 			});
 		}
@@ -146,7 +145,7 @@ const ProblemAssistantPanel: React.FC = () => {
 		setNotes(n);
 		await saveDraft(difficulty, n);
 		if (bookmarked) {
-			await BookmarkStorageManager.updateCurrentProblemBookmark({
+			await bookmarkStorage.updateCurrentProblemBookmark({
 				notes: n || null,
 			});
 		}
@@ -169,7 +168,7 @@ const ProblemAssistantPanel: React.FC = () => {
 				<tbody>
 					<tr>
 						<th className="left" style={{ padding: "0.5em" }}>
-							<a href="https://codeforces.com/" style={{ color: "black" }}>
+							<a href="https://cf-mentor.me/" style={{ color: "black" }}>
 								<u>CF Mentor</u>
 							</a>
 						</th>
@@ -243,7 +242,7 @@ const ProblemAssistantPanel: React.FC = () => {
 					)}
 					<tr>
 						<td className="left" style={{ padding: "0em 1em" }}>
-							<Stopwatch />
+							<Stopwatch problemKey={PROBLEM_KEY} />
 						</td>
 					</tr>
 					<tr>
