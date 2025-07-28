@@ -1,6 +1,6 @@
 import React from "react";
+import { PrimeReactProvider } from "primereact/api";
 import ReactDOM from "react-dom/client";
-
 // Augment the global Window interface so TypeScript recognizes our custom property
 declare global {
 	interface Window {
@@ -27,7 +27,13 @@ export function MountComponent(
 ) {
 	const root = ReactDOM.createRoot(target);
 	roots.set(target, root);
-	root.render(<React.StrictMode>{Component}</React.StrictMode>);
+	root.render(
+		<React.StrictMode>
+			<PrimeReactProvider value={{ ripple: true, inputStyle: "outlined" }}>
+				{Component}
+			</PrimeReactProvider>
+		</React.StrictMode>,
+	);
 }
 
 /**
