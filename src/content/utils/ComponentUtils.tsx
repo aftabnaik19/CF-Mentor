@@ -1,5 +1,5 @@
-import React from "react";
 import { PrimeReactProvider } from "primereact/api";
+import React from "react";
 import ReactDOM from "react-dom/client";
 // Augment the global Window interface so TypeScript recognizes our custom property
 declare global {
