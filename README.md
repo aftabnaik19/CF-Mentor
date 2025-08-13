@@ -1,72 +1,85 @@
 # CF Mentor Extension 🚀
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.4.1-blue.svg)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-A Chrome extension designed to supercharge your Codeforces experience. CF Mentor adds a suite of powerful tools directly into the Codeforces interface, helping you train smarter and stay organized.
+
+**CF Mentor** is a Chrome extension designed to **supercharge your Codeforces practice**. It seamlessly integrates into the Codeforces interface, giving you advanced problem filtering, in-page notes, ratings, bookmarks, and a stopwatch — all without leaving the site.
+
+## 📸 Screenshots
+
+**Problems Page with Filters & Ratings**
+![Problems Page](screenshots/problemset.jpg)
+
+**In-Page Notes & Stopwatch**
+![Problem Page](screenshots/problem.jpg)
 
 ## ✨ Features
 
-CF Mentor enhances the Codeforces website with the following key features:
+CF Mentor enhances your Codeforces experience with:
 
-* ⏱ **Stopwatch & Session Tracking:** Time your problem-solving sessions to improve speed and track your progress over time.
-* ⭐ **Bookmarks & Difficulty Ratings:** Never lose a problem again. Bookmark problems for later and assign your own difficulty rating to tailor your training.
-* 📝 **In-Page Notes:** Jot down ideas, approaches, and learnings directly on the problem page. Your notes are saved and synced automatically.
-* 🔍 **Advanced Filtering:** Quickly find the perfect problems to solve with advanced filters for tags, difficulty, and solved status.
+* ⏱ **Stopwatch & Session Tracking** Time your problem-solving sessions, pause/resume anytime, and track how long you spend on each problem.
+* ⭐ **Bookmarks & Custom Difficulty Ratings** Save problems for later and assign difficulty ratings that fit your training style.
+* 📊 **Two Rating Modes** Choose between **Codeforces original rating** or **Clist rating** for problem difficulty display.
+* 📝 **In-Page Notes** Write and save notes directly on problem pages — ideas, solutions, or reminders are always right where you need them.
+* 🔍 **Advanced Problem Filtering** Search by tags, difficulty range, solved status, problem index, and even combine tags with AND/OR logic.
+* 📅 **Before Contest Reminder** A small heads-up before upcoming Codeforces contests so you never miss them.
 
-## 🛠️ Setup & Installation
+## 🛠 Installation & Setup
 
-Follow these steps to get the extension up and running on your local machine.
+1. **Clone the Repository**
 
-1.  **Clone the Repository:**
-    ```bash
-    git clone [https://github.com/your-username/cf-mentor-extension.git](https://github.com/your-username/cf-mentor-extension.git)
-    cd cf-mentor-extension
-    ```
+```bash
+git clone https://github.com/your-username/CF-Mentor.git
+cd CF-Mentor
+```
 
-2.  **Install Dependencies:**
-    ```bash
-    npm install
-    ```
+2. **Install Dependencies**
 
-3.  **Build the Extension:**
-    This command will watch for file changes and rebuild the extension automatically.
-    ```bash
-    npm run dev
-    ```
-    This will generate the necessary distributable files inside the `dist/` directory.
+```bash
+npm install
+```
 
-4.  **Load the Extension in Chrome:**
-    * Navigate to `chrome://extensions/` in your Chrome browser.
-    * Enable **Developer Mode** using the toggle in the top-right corner.
-    * Click the **"Load unpacked"** button.
-    * Select the `dist` directory from the project folder.
+3. **Build the Extension**
 
-🎉 You're all set! The CF Mentor Extension icon should now appear in your browser's toolbar, and its features will be active on Codeforces pages.
+```bash
+npm run build
+```
 
-## 📁 Project Structure
+This will generate the distributable files inside the `dist/` folder.
 
-Here's a brief overview of the project's directory structure:
+4. **Load into Chrome**
+   * Open `chrome://extensions/`
+   * Enable **Developer Mode** (toggle in the top-right)
+   * Click **"Load unpacked"**
+   * Select the `dist` directory from this project
+
+✅ You're ready! The CF Mentor icon will appear in your toolbar, and its features will activate automatically on Codeforces.
+
+## 📂 Project Structure
+
+```
 .
-├── dist/             # Auto-generated build output for the extension
+├── dist/             # Build output (generated after npm run build)
 ├── public/           # Static assets (icons, manifest.json)
-└── src/              # Main source code
-├── background/   # Background service worker
-├── content/      # Scripts injected into Codeforces pages
-├── popup/        # UI components for the extension popup
-└── shared/       # Reusable logic and utilities
+└── src/              # Source code
+    ├── background/   # Background service worker
+    ├── content/      # Scripts injected into Codeforces pages
+    ├── popup/        # Popup UI components
+    └── shared/       # Utilities & shared logic
+```
 
 ## 🤝 Contributing
 
-Contributions are welcome! If you have ideas for new features or improvements, feel free to open an issue to discuss it. Pull requests are also highly appreciated.
+We welcome contributions!
 
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/NewFeature`)
+3. Commit changes (`git commit -m 'Add NewFeature'`)
+4. Push to your branch (`git push origin feature/NewFeature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE` for details.
