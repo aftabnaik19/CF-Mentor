@@ -21,7 +21,7 @@ const roots = window.__cfMentorRoots as WeakMap<HTMLElement, ReactDOM.Root>;
  * @param target - HTMLElement to mount the app inside
  * @param Component - React component to render
  */
-export function MountComponent(
+export function mountComponent(
 	target: HTMLElement,
 	Component: React.ReactElement,
 ) {
@@ -40,7 +40,7 @@ export function MountComponent(
  * Generic unmount function for React components.
  * @param target - The same HTMLElement used to mount
  */
-export function UnmountComponent(target: HTMLElement) {
+export function unmountComponent(target: HTMLElement) {
 	const root = roots.get(target);
 	if (root) {
 		root.unmount();

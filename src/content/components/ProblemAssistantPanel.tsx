@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import * as bookmarkStorage from "../utils/bookmark-storage";
+import * as bookmarkStorage from "../utils/bookmarkStorage";
+import * as domUtils from "../utils/domUtils";
 import DifficultySelector from "./DifficultySelector";
 import Notes from "./Notes";
 import Stopwatch from "./Stopwatch";
@@ -15,7 +16,7 @@ const ProblemAssistantPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // Determine current problem key
-  const problemInfo = bookmarkStorage.getCurrentProblemInfo();
+  const problemInfo = domUtils.getCurrentProblemInfo();
   const PROBLEM_KEY = problemInfo
     ? bookmarkStorage.getProblemKey(
       problemInfo.contestId,

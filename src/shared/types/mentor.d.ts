@@ -1,4 +1,47 @@
 export interface Problem {
+	contestId: number;
+	index: string;
+	name: string;
+	cfRating: number;
+	clistRating: number;
+	tags: string[];
+	acceptedCount: number;
+	attemptCount: number;
+	totalUsers: number;
+	tillDateAccepted: number;
+	problemDate: string;
+}
+
+export interface Contest {
+	id: number;
+	name: string;
+	rules: string;
+	type: string;
+	durationSeconds: number;
+	startTime: string;
+}
+
+export interface Sheet {
+	id: number;
+	name: string;
+}
+
+export interface SheetProblem {
+	sheetId: number;
+	contestId: number;
+	index: string;
+}
+
+export interface MentorData {
+	problems: Problem[];
+	contests: Contest[];
+	sheets: Sheet[];
+	sheetsProblems: SheetProblem[];
+}
+
+// --- Raw API Types (snake_case) ---
+
+export interface RawProblem {
 	contest_id: number;
 	index: string;
 	name: string;
@@ -12,7 +55,7 @@ export interface Problem {
 	problem_date: string;
 }
 
-export interface Contest {
+export interface RawContest {
 	id: number;
 	name: string;
 	rules: string;
@@ -21,20 +64,15 @@ export interface Contest {
 	start_time: string;
 }
 
-export interface Sheet {
-	id: number;
-	name: string;
-}
-
-export interface SheetProblem {
+export interface RawSheetProblem {
 	sheet_id: number;
 	contest_id: number;
 	index: string;
 }
 
-export interface MentorData {
-	problems: Problem[];
-	contests: Contest[];
-	sheets: Sheet[];
-	sheets_problems: SheetProblem[];
+export interface RawMentorData {
+	problems: RawProblem[];
+	contests: RawContest[];
+	sheets: Sheet[]; // Sheets already use camelCase keys
+	sheets_problems: RawSheetProblem[];
 }

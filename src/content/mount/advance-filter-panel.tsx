@@ -1,5 +1,5 @@
-import AdvanceFilterPanel from "../components/AdvanceFilterPanel";
-import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
+import AdvanceFilterPanel from "../components/advance-filter-panel";
+import { mountComponent, unmountComponent } from "../utils/componentUtils";
 const CONTAINER_ID = "cf-mentor-advance-filters-panel-host";
 
 let originalContent: string | null = null;
@@ -35,7 +35,7 @@ export function mountAdvanceFilterPanel() {
 		shadowRoot.appendChild(shadowMount);
 
 		// Mount into shadow root
-		MountComponent(shadowMount, <AdvanceFilterPanel />);
+		mountComponent(shadowMount, <AdvanceFilterPanel />);
 	}
 }
 
@@ -47,7 +47,7 @@ export function unmountAdvanceFilterPanel() {
 			const shadowMount = host.shadowRoot
 				.firstElementChild as HTMLElement | null;
 			if (shadowMount) {
-				UnmountComponent(shadowMount);
+				unmountComponent(shadowMount);
 			}
 		}
 		host.remove();

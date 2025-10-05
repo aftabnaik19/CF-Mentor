@@ -1,5 +1,5 @@
 import Datatable from "../components/Datatable";
-import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
+import { mountComponent, unmountComponent } from "../utils/componentUtils";
 const CONTAINER_ID = "cf-mentor-datatable";
 
 let originalContent: string | null = null;
@@ -35,7 +35,7 @@ export function mountDatatable() {
 		targetDiv.id = CONTAINER_ID;
 
 		// Mount directly into the target div
-		MountComponent(targetDiv, <Datatable />);
+		mountComponent(targetDiv, <Datatable />);
 	}
 }
 
@@ -43,7 +43,7 @@ export function unmountDatatable() {
 	const targetDiv = document.getElementById(CONTAINER_ID) as HTMLElement | null;
 	if (targetDiv) {
 		// Unmount the component
-		UnmountComponent(targetDiv);
+		unmountComponent(targetDiv);
 		targetDiv.removeAttribute("id"); // Remove the temporary ID
 
 		// Restore original state
