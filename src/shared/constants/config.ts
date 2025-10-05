@@ -6,6 +6,7 @@ export const EXTENSION_CONFIG = {
 	},
 	API: {
 		BASE_URL: "https://api.openai.com/v1",
+		MENTOR_API_URL: "https://api.cf-mentor.me/data",
 		TIMEOUT: 30000,
 	},
 	UI: {
