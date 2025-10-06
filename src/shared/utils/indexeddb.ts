@@ -17,13 +17,7 @@ const stores = [
 	{ name: MENTOR_STORE.SHEETS_PROBLEMS, key: ["sheetId", "contestId", "index"] },
 ];
 
-let db: IDBDatabase | null = null;
-
 async function openDB(): Promise<IDBDatabase> {
-	if (db) {
-		return db;
-	}
-
 	return new Promise((resolve, reject) => {
 		const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -31,16 +25,15 @@ async function openDB(): Promise<IDBDatabase> {
 			const db = (event.target as IDBOpenDBRequest).result;
 			console.log("Upgrading IndexedDB schema...");
 			stores.forEach(storeInfo => {
-				// If the store already exists, delete it to ensure the keyPath is updated.
-				if (db.objectStoreNames.contains(storeInfo.name)) {
-					db.deleteObjectStore(storeInfo.name);
+				// Only create object stores if they don't already exist.
+				if (!db.objectStoreNames.contains(storeInfo.name)) {
+					db.createObjectStore(storeInfo.name, { keyPath: storeInfo.key });
 				}
-				db.createObjectStore(storeInfo.name, { keyPath: storeInfo.key });
 			});
 		};
 
 		request.onsuccess = (event) => {
-			db = (event.target as IDBOpenDBRequest).result;
+			const db = (event.target as IDBOpenDBRequest).result;
 			resolve(db);
 		};
 
@@ -75,6 +68,7 @@ export async function saveData(
 }
 
 export async function saveAllData(data: MentorData): Promise<void> {
+	console.log("Attempting to save data to IndexedDB...");
 	const db = await openDB();
 	const transaction = db.transaction(Object.values(MENTOR_STORE), "readwrite");
 
@@ -86,6 +80,7 @@ export async function saveAllData(data: MentorData): Promise<void> {
 	};
 
 	Object.entries(dataMap).forEach(([storeName, storeData]) => {
+		console.log(`Saving ${storeData.length} items to ${storeName}`);
 		const store = transaction.objectStore(storeName);
 		store.clear();
 		storeData.forEach((item: any) => {
@@ -95,9 +90,11 @@ export async function saveAllData(data: MentorData): Promise<void> {
 
 	return new Promise((resolve, reject) => {
 		transaction.oncomplete = () => {
+			console.log("Transaction complete. Data saved successfully.");
 			resolve();
 		};
 		transaction.onerror = (event) => {
+			console.error("Transaction error:", (event.target as IDBTransaction).error);
 			reject((event.target as IDBTransaction).error);
 		};
 	});
@@ -107,6 +104,7 @@ export async function getData<T>(
 	storeName: string,
 	ids?: IDBValidKey[],
 ): Promise<T[]> {
+	console.log(`Attempting to get data from store: ${storeName}`);
 	const db = await openDB();
 	const transaction = db.transaction(storeName, "readonly");
 	const store = transaction.objectStore(storeName);
@@ -116,6 +114,7 @@ export async function getData<T>(
 
 		request.onsuccess = (event) => {
 			const results = (event.target as IDBRequest).result as T[];
+			console.log(`Retrieved ${results.length} records from ${storeName}.`);
 			if (ids && ids.length > 0) {
 				// This filtering is inefficient for large datasets, but acceptable for this extension's scale.
 				// A more complex solution would involve cursors or multiple `get` requests.
@@ -132,6 +131,7 @@ export async function getData<T>(
 		};
 
 		request.onerror = (event) => {
+			console.error(`Error getting data from ${storeName}:`, (event.target as IDBRequest).error);
 			reject((event.target as IDBRequest).error);
 		};
 	});

@@ -10,11 +10,15 @@ import { saveAllData } from "../shared/utils/indexeddb";
 
 export async function fetchAndStoreData() {
 	try {
+		console.log("Attempting to fetch data from API...");
 		const response = await fetch(EXTENSION_CONFIG.API.MENTOR_API_URL);
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const rawData: RawMentorData = await response.json();
+		console.log(
+			`Raw data received: ${rawData.problems?.length} problems, ${rawData.contests?.length} contests, ${rawData.sheets?.length} sheets, ${rawData.sheets_problems?.length} sheets_problems.`
+		);
 
 		// Map snake_case from API to camelCase for our types, based on the exact API response format.
 		const data: MentorData = {
@@ -56,9 +60,14 @@ export async function fetchAndStoreData() {
 				.filter((sp) => sp.sheetId && sp.contestId && sp.index),
 		};
 
+		console.log(
+			`Processed data: ${data.problems.length} problems, ${data.contests.length} contests, ${data.sheets.length} sheets, ${data.sheetsProblems.length} sheetsProblems.`
+		);
 		await saveAllData(data);
 		console.log("Data fetched and stored successfully.");
+		return true;
 	} catch (error) {
 		console.error("Failed to fetch and store data:", error);
+		return false;
 	}
 }

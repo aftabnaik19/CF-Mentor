@@ -22,16 +22,58 @@ const Header = (
 );
 const Datatable: React.FC = () => {
   const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    // ProblemService.getProblemsMini().then((data: Problem[]) => {
-    // 	setProblems(data);
-    // }
-    setProblems(ProblemService.getProblemsData());
+    setLoading(true);
+
+    const port = ProblemService.listenToState((state) => {
+      console.log("Received state from background:", state);
+      switch (state) {
+        case "READY":
+          ProblemService.getProblems(port).then((data) => {
+            console.log("Received data from service worker:", data);
+            // Log first 10 of each for verification
+            console.log("First 10 problems:", data.problems.slice(0, 10));
+            console.log("First 10 contests:", data.contests.slice(0, 10));
+            console.log("First 10 sheets:", data.sheets.slice(0, 10));
+            console.log(
+              "First 10 sheets_problems:",
+              data.sheetsProblems.slice(0, 10)
+            );
+
+            const processedProblems = data.problems.map((p) => ({
+              ...p,
+              sortableId: `${p.contestId.toString().padStart(5, "0")}${p.index}`,
+              attemptPercentage: p.totalUsers
+                ? (p.attemptCount / p.totalUsers) * 100
+                : 0,
+              acceptancePercentage: p.attemptCount
+                ? (p.acceptedCount / p.attemptCount) * 100
+                : 0,
+            }));
+
+            setProblems(processedProblems);
+            setLoading(false);
+          });
+          break;
+        case "FETCHING":
+          setLoading(true);
+          break;
+        case "ERROR":
+          setLoading(false);
+          break;
+      }
+    });
+
+    return () => {
+      port.disconnect();
+    };
   }, []);
 
   return (
     <DataTable
       value={problems}
+      loading={loading}
       tableStyle={{ minWidth: "50rem" }}
       removableSort
       sortMode="multiple"
@@ -48,6 +90,7 @@ const Datatable: React.FC = () => {
     >
       <Column
         sortable
+        sortField="sortableId"
         header="#"
         headerStyle={{ textAlign: "center" }}
         body={(rowData: Problem) => {
@@ -56,7 +99,9 @@ const Datatable: React.FC = () => {
           const index = String(rowData.index).toUpperCase();
 
           // Build a safe URL – starts with hard‑coded scheme/host
-          const href = `https://codeforces.com/contest/${encodeURIComponent(contestId)}/problem/${encodeURIComponent(index)}`;
+          const href = `https://codeforces.com/contest/${encodeURIComponent(
+            contestId,
+          )}/problem/${encodeURIComponent(index)}`;
 
           return (
             <a
@@ -116,25 +161,21 @@ const Datatable: React.FC = () => {
       />
       <Column
         sortable
+        field="attemptPercentage"
         header="Attempt %"
         headerStyle={{ textAlign: "center" }}
-        body={(rowData: Problem) => {
-          const { inContestAttempts, contestRegistrants } = rowData;
-          if (!contestRegistrants) return "—"; // avoid division by zero
-          const rate = (inContestAttempts / contestRegistrants) * 100;
-          return `${rate.toFixed(1)}%`;
-        }}
+        body={(rowData: Problem) =>
+          `${rowData.attemptPercentage?.toFixed(1)}%`
+        }
       />
       <Column
         sortable
+        field="acceptancePercentage"
         header="Acceptance %"
         headerStyle={{ textAlign: "center" }}
-        body={(rowData: Problem) => {
-          const { inContestAccepted, inContestAttempts } = rowData;
-          if (!inContestAttempts) return "—"; // Avoid division by zero
-          const rate = (inContestAccepted / inContestAttempts) * 100;
-          return `${rate.toFixed(1)}%`;
-        }}
+        body={(rowData: Problem) =>
+          `${rowData.acceptancePercentage?.toFixed(1)}%`
+        }
       />
       <Column
         field="cfRating"
@@ -149,7 +190,7 @@ const Datatable: React.FC = () => {
         headerStyle={{ textAlign: "center" }}
       />
       <Column
-        field="totalAccepted"
+        field="tillDateAccepted"
         sortable
         header="Solved"
         headerStyle={{ textAlign: "center" }}

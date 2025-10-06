@@ -1,4 +1,4 @@
-import Datatable from "../components/Datatable";
+import Datatable from "../components/datatable/Datatable";
 import { mountComponent, unmountComponent } from "../utils/componentUtils";
 const CONTAINER_ID = "cf-mentor-datatable";
 
