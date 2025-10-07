@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface StopwatchProps {
 	problemKey: string | null;
@@ -127,7 +127,7 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 	const [isPaused, setIsPaused] = useState(false);
 	const [showConfirmation, setShowConfirmation] = useState(false);
 
-	const intervalRef = useRef<any | null>(null);
+	const intervalRef = useRef<number | null>(null);
 	const firstSeenTimeRef = useRef<number | null>(null);
 	const lastPausedRef = useRef<number | null>(null);
 	const totalPauseTimeRef = useRef<number>(0);
@@ -157,7 +157,7 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 		: null;
 
 	// Function to calculate elapsed time
-	const calculateElapsedTime = () => {
+	const calculateElapsedTime = useCallback(() => {
 		if (!firstSeenTimeRef.current) return 0;
 
 		const currentTime = Date.now();
@@ -170,7 +170,7 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 		}
 
 		return Math.max(0, totalElapsed);
-	};
+	}, [isPaused]);
 
 	// Function to format time for display
 	const formatTime = (timeMs: number): string => {
@@ -185,7 +185,7 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 	};
 
 	// Save state to localStorage
-	const saveStateToStorage = () => {
+	const saveStateToStorage = useCallback(() => {
 		if (!problemKey) return;
 
 		if (STORAGE_KEY_FIRST_SEEN) {
@@ -215,10 +215,20 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 		if (STORAGE_KEY_LAST_SEEN) {
 			localStorage.setItem(STORAGE_KEY_LAST_SEEN, Date.now().toString());
 		}
-	};
+	}, [
+		problemKey,
+		isRunning,
+		isPaused,
+		STORAGE_KEY_FIRST_SEEN,
+		STORAGE_KEY_IS_PAUSED,
+		STORAGE_KEY_IS_RUNNING,
+		STORAGE_KEY_LAST_PAUSED,
+		STORAGE_KEY_LAST_SEEN,
+		STORAGE_KEY_TOTAL_PAUSE,
+	]);
 
 	// Load state from localStorage
-	const loadStateFromStorage = () => {
+	const loadStateFromStorage = useCallback(() => {
 		if (!problemKey) return;
 
 		const storedFirstSeen = STORAGE_KEY_FIRST_SEEN
@@ -251,7 +261,15 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 			storedLastSeen,
 			storedFirstSeen,
 		};
-	};
+	}, [
+		problemKey,
+		STORAGE_KEY_FIRST_SEEN,
+		STORAGE_KEY_IS_PAUSED,
+		STORAGE_KEY_IS_RUNNING,
+		STORAGE_KEY_LAST_PAUSED,
+		STORAGE_KEY_LAST_SEEN,
+		STORAGE_KEY_TOTAL_PAUSE,
+	]);
 
 	// Initialize component
 	useEffect(() => {
@@ -300,12 +318,12 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 			// Calculate and set current elapsed time for other states
 			setElapsed(calculateElapsedTime());
 		}
-	}, [problemKey]);
+	}, [problemKey, INACTIVITY_THRESHOLD, calculateElapsedTime, loadStateFromStorage]);
 
 	// Handle timer updates
 	useEffect(() => {
 		if (isRunning && !isPaused) {
-			intervalRef.current = setInterval(() => {
+			intervalRef.current = window.setInterval(() => {
 				setElapsed(calculateElapsedTime());
 			}, 100);
 		} else {
@@ -321,14 +339,14 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 				intervalRef.current = null;
 			}
 		};
-	}, [isRunning, isPaused]);
+	}, [isRunning, isPaused, calculateElapsedTime]);
 
 	// Save state when component unmounts or key changes
 	useEffect(() => {
 		return () => {
 			saveStateToStorage();
 		};
-	}, [problemKey, isRunning, isPaused]);
+	}, [problemKey, isRunning, isPaused, saveStateToStorage]);
 
 	// Handle beforeunload to save state
 	useEffect(() => {
@@ -340,13 +358,13 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 		return () => {
 			window.removeEventListener("beforeunload", handleBeforeUnload);
 		};
-	}, []);
+	}, [saveStateToStorage]);
 
 	// FIXED: Update elapsed time immediately when state changes
 	useEffect(() => {
 		// Update elapsed time whenever isRunning or isPaused changes
 		setElapsed(calculateElapsedTime());
-	}, [isRunning, isPaused]);
+	}, [isRunning, isPaused, calculateElapsedTime]);
 
 	// Handle play/pause button
 	const handlePauseResume = () => {

@@ -1,6 +1,6 @@
+import { PrimeReactProvider } from "primereact/api";
 import React from "react";
 import ReactDOM from "react-dom/client";
-
 // Augment the global Window interface so TypeScript recognizes our custom property
 declare global {
 	interface Window {
@@ -21,20 +21,26 @@ const roots = window.__cfMentorRoots as WeakMap<HTMLElement, ReactDOM.Root>;
  * @param target - HTMLElement to mount the app inside
  * @param Component - React component to render
  */
-export function MountComponent(
+export function mountComponent(
 	target: HTMLElement,
 	Component: React.ReactElement,
 ) {
 	const root = ReactDOM.createRoot(target);
 	roots.set(target, root);
-	root.render(<React.StrictMode>{Component}</React.StrictMode>);
+	root.render(
+		<React.StrictMode>
+			<PrimeReactProvider value={{ ripple: true, inputStyle: "outlined" }}>
+				{Component}
+			</PrimeReactProvider>
+		</React.StrictMode>,
+	);
 }
 
 /**
  * Generic unmount function for React components.
  * @param target - The same HTMLElement used to mount
  */
-export function UnmountComponent(target: HTMLElement) {
+export function unmountComponent(target: HTMLElement) {
 	const root = roots.get(target);
 	if (root) {
 		root.unmount();

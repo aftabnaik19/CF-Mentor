@@ -1,14 +1,13 @@
 import { BookmarkedProblem, BookmarkStorage } from "@/shared/types/bookmark";
 
-const BASE_STORAGE_KEY = "cf_mentor_bookmarks";
+import {
+	extractProblemRating,
+	extractProblemTags,
+	getCurrentProblemInfo,
+	getCurrentUserHandle,
+} from "./domUtils";
 
-// Get the current Codeforces user handle from the page header
-export const getCurrentUserHandle = (): string | null => {
-	const profileLink = document.querySelector(
-		"#header a[href^='/profile/']",
-	) as HTMLAnchorElement;
-	return profileLink?.innerText ?? null;
-};
+const BASE_STORAGE_KEY = "cf_mentor_bookmarks";
 
 // Get the user-specific storage key
 const getUserStorageKey = (): string | null => {
@@ -25,52 +24,6 @@ export const getProblemKey = (
 	return contestId + problemIdx;
 };
 
-// Get current problem info from URL and DOM
-export const getCurrentProblemInfo = (): {
-	contestId: string;
-	problemIdx: string;
-} | null => {
-	const url = window.location.href;
-	const match =
-		url.match(/\/contest\/(\d+)\/problem\/([A-Z]\d*)/i) ||
-		url.match(/\/problemset\/problem\/(\d+)\/([A-Z]\d*)/i);
-
-	if (match) {
-		return {
-			contestId: match[1],
-			problemIdx: match[2].toUpperCase(),
-		};
-	}
-	return null;
-};
-
-// Extract problem rating from tags
-export const extractProblemRating = (): string | null => {
-	const tagElements = document.querySelectorAll(".tag-box");
-	for (const tag of Array.from(tagElements)) {
-		const text = tag.textContent?.trim();
-		if (text && text.match(/^\*\d+$/)) {
-			return text;
-		}
-	}
-	return null;
-};
-
-// Extract problem tags
-export const extractProblemTags = (): string[] => {
-	const tagElements = document.querySelectorAll(".tag-box");
-	const tags: string[] = [];
-
-	for (const tag of Array.from(tagElements)) {
-		const text = tag.textContent?.trim();
-		if (text && !text.match(/^\*\d+$/)) {
-			// Exclude rating tags
-			tags.push(text);
-		}
-	}
-	return tags;
-};
-
 // --- User-Scoped Storage Functions ---
 
 // Get bookmark data for the current user
@@ -79,12 +32,14 @@ const getUserData = async (): Promise<BookmarkStorage> => {
 	if (!userStorageKey) return { bookmarkedProblems: {} }; // Return empty if not logged in
 
 	return new Promise((resolve) => {
+		// Use chrome.storage.sync if available, otherwise fallback to local storage (for development/testing)
 		const storage = chrome.storage?.sync || chrome.storage?.local;
 		if (storage) {
 			storage.get([userStorageKey], (result) => {
 				resolve(result[userStorageKey] || { bookmarkedProblems: {} });
 			});
 		} else {
+			console.warn("Chrome storage not available, using localStorage as a fallback.");
 			const stored = localStorage.getItem(userStorageKey);
 			resolve(stored ? JSON.parse(stored) : { bookmarkedProblems: {} });
 		}
@@ -107,6 +62,7 @@ const saveUserData = async (userData: BookmarkStorage): Promise<void> => {
 				}
 			});
 		} else {
+			console.warn("Chrome storage not available, using localStorage as a fallback.");
 			localStorage.setItem(userStorageKey, JSON.stringify(userData));
 			resolve();
 		}

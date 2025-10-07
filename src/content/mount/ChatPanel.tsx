@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
+import { mountComponent, unmountComponent } from "../utils/componentUtils";
 
 const CHAT_ROOT_ID = "cf-chat-host";
 const CHAT_MOUNT_ID = "cf-chat-root";
@@ -20,10 +20,10 @@ export async function mountChatPanel() {
 	shadowRoot.appendChild(shadowMount);
 
 	// Dynamically import the ChatPanel component
-	const { default: ChatPanel } = await import("../ChatPanel/Main");
+	const { default: ChatPanel } = await import("../chat-panel/ChatMain");
 
 	// Mount the React component using your existing utility
-	MountComponent(shadowMount, <ChatPanel />);
+	mountComponent(shadowMount, <ChatPanel />);
 }
 
 /**
@@ -36,7 +36,7 @@ export function unmountChatPanel() {
 		if (shadowRoot) {
 			const shadowMount = shadowRoot.getElementById(CHAT_MOUNT_ID);
 			if (shadowMount) {
-				UnmountComponent(shadowMount);
+				unmountComponent(shadowMount);
 			}
 		}
 		host.remove();

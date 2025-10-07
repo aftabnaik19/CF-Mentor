@@ -1,0 +1,25 @@
+.popup-container {
+  padding: 1rem;
+  text-align: center;
+}
+
+.popup-container h1 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.popup-container p {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.popup-container button {
+  padding: 8px 16px;
+  background-color: #3B5998;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}

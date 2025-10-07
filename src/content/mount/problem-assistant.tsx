@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 import ProblemAssistantPanel from "../components/ProblemAssistantPanel";
-import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
+import { mountComponent, unmountComponent } from "../utils/componentUtils";
 
 const CONTAINER_ID = "cf-mentor-problem-assistance-panel";
 
@@ -14,14 +14,14 @@ export function mountProblemAssistant() {
 		const container = document.createElement("div");
 		container.id = CONTAINER_ID;
 		sidebar.prepend(container);
-		MountComponent(container, <ProblemAssistantPanel />);
+		mountComponent(container, <ProblemAssistantPanel />);
 	}
 }
 
 export function unmountProblemAssistant() {
 	const container = document.getElementById(CONTAINER_ID);
 	if (container) {
-		UnmountComponent(container);
+		unmountComponent(container);
 		container.remove();
 	}
 }

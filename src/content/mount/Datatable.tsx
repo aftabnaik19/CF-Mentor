@@ -1,5 +1,5 @@
-import Datatable from "../components/Datatable";
-import { MountComponent, UnmountComponent } from "../utils/ComponentUtils";
+import Datatable from "../components/datatable/Datatable";
+import { mountComponent, unmountComponent } from "../utils/componentUtils";
 const CONTAINER_ID = "cf-mentor-datatable";
 
 let originalContent: string | null = null;
@@ -28,36 +28,26 @@ export function mountDatatable() {
 		if (paginationDiv) paginationDiv.style.display = "none";
 		// Clear its contents and styles
 		targetDiv.innerHTML = "";
-		targetDiv.removeAttribute("style");
-		targetDiv.className = "";
+		// targetDiv.removeAttribute("style");
+		// targetDiv.className = "";
 
-		// Create host and shadow DOM
-		const host = document.createElement("div");
-		host.id = CONTAINER_ID;
-		targetDiv.appendChild(host);
-		const shadowRoot = host.attachShadow({ mode: "open" });
-		const shadowMount = document.createElement("div");
-		shadowRoot.appendChild(shadowMount);
+		// Add a container ID for unmounting and direct mounting
+		targetDiv.id = CONTAINER_ID;
 
-		// Mount into shadow root
-		MountComponent(shadowMount, <Datatable />);
+		// Mount directly into the target div
+		mountComponent(targetDiv, <Datatable />);
 	}
 }
 
 export function unmountDatatable() {
-	const host = document.getElementById(CONTAINER_ID) as HTMLElement | null;
-	if (host) {
-		const targetDiv = host.parentElement as HTMLElement | null;
-		if (host.shadowRoot) {
-			const shadowMount = host.shadowRoot
-				.firstElementChild as HTMLElement | null;
-			if (shadowMount) {
-				UnmountComponent(shadowMount);
-			}
-		}
-		host.remove();
+	const targetDiv = document.getElementById(CONTAINER_ID) as HTMLElement | null;
+	if (targetDiv) {
+		// Unmount the component
+		unmountComponent(targetDiv);
+		targetDiv.removeAttribute("id"); // Remove the temporary ID
 
-		if (targetDiv && originalContent) {
+		// Restore original state
+		if (originalContent) {
 			targetDiv.innerHTML = originalContent;
 			if (originalStyle) {
 				targetDiv.setAttribute("style", originalStyle);
@@ -74,4 +64,3 @@ export function unmountDatatable() {
 		paginationDiv.style.display = "block";
 	}
 }
-
