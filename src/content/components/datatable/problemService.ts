@@ -1,5 +1,5 @@
-import { Contest, Sheet, SheetProblem } from "../../../shared/types/mentor";
 import { ProblemFilter } from "../../../shared/types/filters";
+import { Contest, Sheet, SheetProblem } from "../../../shared/types/mentor";
 
 // This service now acts as a client to the background service worker,
 // which is the single source of truth for all data.
@@ -179,6 +179,14 @@ export const ProblemService = {
 			const port = chrome.runtime.connect({ name: "datatable-fetch" });
 
 			port.onDisconnect.addListener(() => {
+				// This is a normal event when the extension is reloaded.
+				// We check for lastError to avoid logging a scary but harmless error.
+				if (chrome.runtime.lastError) {
+					console.log(
+						"Port disconnected due to extension reload. This is normal.",
+					);
+					return; // Suppress the error
+				}
 				reject(new Error("Connection to service worker failed."));
 			});
 

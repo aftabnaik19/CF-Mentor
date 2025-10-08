@@ -5,11 +5,12 @@ import "primeicons/primeicons.css";
 
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
-import { useEffect, useState } from "react";
+import { useEffect, useRef,useState } from "react";
 
-import { ProblemService } from "./problemService.ts";
-import type { Problem } from "./problemService.ts";
+import { useConnectionStore } from "../../../shared/stores/connection-store.ts";
 import { useFilterStore } from "../../../shared/stores/filter-store.ts";
+import type { Problem } from "./problemService.ts";
+import { ProblemService } from "./problemService.ts";
 
 const Header = (
 	<div
@@ -27,10 +28,25 @@ const Datatable: React.FC = () => {
 	const [problems, setProblems] = useState<Problem[]>([]);
 	const [loading, setLoading] = useState(true);
 	const filters = useFilterStore((state) => state.filters);
+	const isConnected = useConnectionStore((state) => state.isConnected);
+	const alertShownRef = useRef(false);
+
+	// Effect to show an alert when the extension is disconnected.
+	useEffect(() => {
+		if (!isConnected && !alertShownRef.current) {
+			alert("CF-Mentor extension has been updated, please reload the page");
+			alertShownRef.current = true;
+		}
+	}, [isConnected]);
 
 	useEffect(() => {
-		const controller = new AbortController();
+		// Don't fetch if the extension context is invalidated
+		if (!isConnected) {
+			setLoading(false);
+			return;
+		}
 
+		const controller = new AbortController();
 		setLoading(true);
 
 		ProblemService.fetchAndFilterProblems(filters, (state) => {
@@ -38,7 +54,6 @@ const Datatable: React.FC = () => {
 				setLoading(true);
 			} else if (state === "ERROR") {
 				setLoading(false);
-				// Optionally, show an error message to the user
 			}
 		})
 			.then((data) => {
@@ -58,6 +73,7 @@ const Datatable: React.FC = () => {
 				setLoading(false);
 			})
 			.catch((error) => {
+				if (controller.signal.aborted) return;
 				console.error("Failed to fetch problems:", error);
 				setLoading(false);
 			});
@@ -65,7 +81,7 @@ const Datatable: React.FC = () => {
 		return () => {
 			controller.abort();
 		};
-	}, [filters]); // Re-run this effect whenever filters change
+	}, [filters, isConnected]); // Re-run this effect whenever filters or connection state change
 
 	return (
 		<DataTable

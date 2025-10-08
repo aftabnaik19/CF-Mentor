@@ -1,10 +1,29 @@
 import "primereact/resources/primereact.min.css"; // core styles
 import "primeicons/primeicons.css";
 
+import { useConnectionStore } from "../shared/stores/connection-store";
 import { mountAdvanceFilterPanel } from "./mount/advance-filter-panel";
 import { mountDatatable } from "./mount/Datatable";
 import { mountProblemAssistant } from "./mount/problem-assistant";
-import { useFilterStore } from "../shared/stores/filter-store";
+
+// --- Health Check for Extension Reloads ---
+// This establishes a long-lived port to monitor the connection to the service worker.
+// If the port disconnects with a "context invalidated" error, it means the extension
+// has been updated or reloaded. We then update a global store to notify UI
+// components that they are now "zombies" and should disable themselves.
+function initializeHealthCheck() {
+	const healthCheckPort = chrome.runtime.connect({ name: "health-check" });
+	healthCheckPort.onDisconnect.addListener(() => {
+		if (chrome.runtime.lastError) {
+			console.warn(
+				"CF Mentor: Health check port disconnected. Extension has been updated.",
+				chrome.runtime.lastError.message,
+			);
+			// Update the global state to indicate the connection is lost.
+			useConnectionStore.getState().setConnected(false);
+		}
+	});
+}
 
 // Wrap in async function to handle await
 async function initializeComponents() {
@@ -14,22 +33,6 @@ async function initializeComponents() {
 	// await mountChatPanel();
 }
 
-// Call the async function
+// Call the async functions
+initializeHealthCheck();
 initializeComponents().catch(console.error);
-
-// --- DEBUG ---
-// Expose the setFilters function to the window object for easy debugging from the console.
-// This should be removed in production builds.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).setAppFilters = useFilterStore.getState().setFilters;
-// --- END DEBUG ---
-
-// let isMounted = false;
-// setInterval(() => {
-// 	if (isMounted) {
-// 		unmountDatatable();
-// 	} else {
-// 		mountDatatable();
-// 	}
-// 	isMounted = !isMounted;
-// }, 5000);

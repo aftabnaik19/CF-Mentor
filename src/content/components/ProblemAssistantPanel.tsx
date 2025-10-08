@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import * as bookmarkStorage from "../utils/bookmarkStorage";
 import * as domUtils from "../utils/domUtils";
-import DifficultySelector from "./DifficultySelector";
+import DifficultySelector from "./DifficultySelector.tsx";
 import Notes from "./Notes";
 import Stopwatch from "./Stopwatch";
 

@@ -1,5 +1,5 @@
 import AdvanceFilterPanel from "../components/advance-filter-panel";
-import { mountComponent, unmountComponent } from "../utils/componentUtils";
+import { mountComponent, unmountComponent } from "../utils/componentUtils.tsx";
 const CONTAINER_ID = "cf-mentor-advance-filters-panel-host";
 
 let originalContent: string | null = null;
