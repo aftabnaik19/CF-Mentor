@@ -9,13 +9,14 @@ const paginationDiv = document.querySelector(
 	".pagination",
 ) as HTMLElement | null;
 
-function isProblemsetPage(url: string): boolean {
-	return /^https:\/\/codeforces\.com\/problemset/.test(url);
+function isProblemsetPage(): boolean {
+	const { pathname } = window.location;
+	return pathname === "/problemset";
 }
 
 export function mountDatatable() {
 	const targetDiv = document.querySelector(".datatable") as HTMLElement | null;
-	const isOnProblemsetPage = isProblemsetPage(window.location.href);
+	const isOnProblemsetPage = isProblemsetPage();
 	if (
 		targetDiv &&
 		isOnProblemsetPage &&

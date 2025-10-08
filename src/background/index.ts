@@ -41,6 +41,13 @@ chrome.runtime.onConnect.addListener((port) => {
   console.log(`New connection from: ${port.name}`);
   connectedPorts.add(port);
 
+  // If the service worker was dormant and is waking up, the state will be
+  // INITIAL. We need to kick off a fetch.
+  if (dataState === "INITIAL") {
+    console.log("State is INITIAL, triggering data fetch.");
+    fetchData();
+  }
+
   // Immediately send the current state to the new connection
   port.postMessage({ state: dataState });
 

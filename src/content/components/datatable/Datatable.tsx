@@ -7,8 +7,8 @@ import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { useEffect, useState } from "react";
 
-import type { Problem } from "./ProblemService.tsx";
-import { ProblemService } from "./ProblemService.tsx";
+import type { Problem } from "./problemService.ts";
+import { ProblemService } from "./problemService.ts";
 const Header = (
   <div
     style={{

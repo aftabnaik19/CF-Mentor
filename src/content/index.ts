@@ -2,7 +2,7 @@ import "primereact/resources/primereact.min.css"; // core styles
 import "primeicons/primeicons.css";
 
 import { mountAdvanceFilterPanel } from "./mount/advance-filter-panel";
-import { mountDatatable } from "./mount/datatable";
+import { mountDatatable } from "./mount/Datatable";
 import { mountProblemAssistant } from "./mount/problem-assistant";
 // Wrap in async function to handle await
 async function initializeComponents() {
