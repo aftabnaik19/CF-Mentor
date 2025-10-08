@@ -65,6 +65,32 @@ export async function fetchAndStoreData() {
 		);
 		await saveAllData(data);
 		console.log("Data fetched and stored successfully.");
+
+		// After storing data, generate and store filter metadata
+		try {
+			const contestTypes = [
+				...new Set(data.contests.map((c) => c.type).filter(Boolean)),
+			].sort();
+			const sheetNames = [
+				...new Set(data.sheets.map((s) => s.name).filter(Boolean)),
+			].sort();
+			const problemTags = [
+				...new Set(data.problems.flatMap((p) => p.tags).filter(Boolean)),
+			].sort();
+
+			const metadata = {
+				contestTypes,
+				sheetNames,
+				problemTags,
+			};
+
+			await chrome.storage.local.set({ filterMetadata: metadata });
+			console.log("Filter metadata generated and stored:", metadata);
+		} catch (metaError) {
+			console.error("Failed to generate or store filter metadata:", metaError);
+			// We don't return false here because the main data fetch was successful.
+		}
+
 		return true;
 	} catch (error) {
 		console.error("Failed to fetch and store data:", error);

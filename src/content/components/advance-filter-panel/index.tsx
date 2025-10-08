@@ -1,9 +1,3 @@
-import {
-	ALGORITHM_TAGS,
-	CONTEST_TYPES,
-	PROBLEM_SHEETS,
-} from "@/shared/data/filter-panel-data";
-
 import { DropdownSelector } from "./components/DropdownSelector";
 import { ProblemIndexSelector } from "./components/ProblemIndexSelector";
 import { TagsSelector } from "./components/TagsSelector";
@@ -46,7 +40,8 @@ export default function AdvanceFilterPanel() {
 		removeTag,
 		clearAllFilters,
 		handleAutoRecommend,
-		handleApplyFilters,
+		availableContestTypes,
+		availableSheetNames,
 	} = useAdvancedFilter();
 
 	// Functions to generate responsive styles based on window width
@@ -112,7 +107,9 @@ export default function AdvanceFilterPanel() {
 									type="number"
 									placeholder="Min"
 									value={minDifficulty}
-									onChange={(e) => setMinDifficulty((e.target as HTMLInputElement).value)}
+									onChange={(e) =>
+										setMinDifficulty((e.target as HTMLInputElement).value)
+									}
 									style={{
 										...styles.input,
 										width: "6rem",
@@ -129,7 +126,9 @@ export default function AdvanceFilterPanel() {
 									type="number"
 									placeholder="Max"
 									value={maxDifficulty}
-									onChange={(e) => setMaxDifficulty((e.target as HTMLInputElement).value)}
+									onChange={(e) =>
+										setMaxDifficulty((e.target as HTMLInputElement).value)
+									}
 									style={{
 										...styles.input,
 										width: "6rem",
@@ -149,7 +148,11 @@ export default function AdvanceFilterPanel() {
 							setIsOpen={setShowContestTypeDropdown}
 							title="Contest Type"
 							selectedItems={selectedContestTypes}
-							items={CONTEST_TYPES}
+							items={availableContestTypes.map((type) => ({
+								value: type,
+								label: type,
+								description: type, // Added missing property
+							}))}
 							onItemToggle={handleContestTypeToggle}
 							hoverState={hoverState}
 							handleMouseEnter={handleMouseEnter}
@@ -171,7 +174,11 @@ export default function AdvanceFilterPanel() {
 							setIsOpen={setShowSheetsDropdown}
 							title="Problem Sheets"
 							selectedItems={selectedSheets}
-							items={PROBLEM_SHEETS}
+							items={availableSheetNames.map((name) => ({
+								value: name,
+								label: name,
+								description: name, // Added missing property
+							}))}
 							onItemToggle={handleSheetToggle}
 							hoverState={hoverState}
 							handleMouseEnter={handleMouseEnter}
@@ -229,36 +236,33 @@ export default function AdvanceFilterPanel() {
 						<div style={styles.spaceY2}>
 							<label style={styles.label}>Selected Tags</label>
 							<div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-								{selectedTags.map((tagValue) => {
-									const tag = ALGORITHM_TAGS.find((t) => t.value === tagValue);
-									return (
-										<span key={tagValue} style={styles.badge}>
-											{tag?.label}
-											<button
-												onClick={() => removeTag(tagValue)}
-												style={{
-													background: "none",
-													border: "none",
-													color: "inherit",
-													cursor: "pointer",
-													display: "flex",
-													alignItems: "center",
-												}}
+								{selectedTags.map((tagValue) => (
+									<span key={tagValue} style={styles.badge}>
+										{tagValue}
+										<button
+											onClick={() => removeTag(tagValue)}
+											style={{
+												background: "none",
+												border: "none",
+												color: "inherit",
+												cursor: "pointer",
+												display: "flex",
+												alignItems: "center",
+											}}
+										>
+											<svg
+												style={styles.iconSm}
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="3"
 											>
-												<svg
-													style={styles.iconSm}
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="3"
-												>
-													<line x1="18" y1="6" x2="6" y2="18" />
-													<line x1="6" y1="6" x2="18" y2="18" />
-												</svg>
-											</button>
-										</span>
-									);
-								})}
+												<line x1="18" y1="6" x2="6" y2="18" />
+												<line x1="6" y1="6" x2="18" y2="18" />
+											</svg>
+										</button>
+									</span>
+								))}
 							</div>
 						</div>
 					)}
@@ -324,7 +328,9 @@ export default function AdvanceFilterPanel() {
 									<input
 										placeholder="Search algorithm tags..."
 										value={tagSearchQuery}
-										onChange={(e) => setTagSearchQuery((e.target as HTMLInputElement).value)}
+										onChange={(e) =>
+											setTagSearchQuery((e.target as HTMLInputElement).value)
+										}
 										style={{
 											...styles.input,
 											...(focusState.tagSearch && styles.inputFocus),
@@ -334,7 +340,11 @@ export default function AdvanceFilterPanel() {
 									/>
 								</div>
 								<TagsSelector
-									filteredTags={filteredTags}
+									filteredTags={filteredTags.map((tag) => ({
+										value: tag,
+										label: tag,
+										description: "", // No description available in this dynamic setup
+									}))}
 									selectedTags={selectedTags}
 									onTagToggle={handleTagToggle}
 									hoverState={hoverState}
@@ -347,28 +357,6 @@ export default function AdvanceFilterPanel() {
 					</div>
 
 					<div style={{ ...styles.borderT, display: "flex", gap: "0.75rem" }}>
-						<button
-							onClick={handleApplyFilters}
-							style={{
-								...styles.btn,
-								...styles.btnLg,
-								...styles.btnPrimary,
-								flex: 1,
-								...(hoverState.applyBtn && styles.btnPrimaryHover),
-							}}
-							onMouseEnter={() => handleMouseEnter("applyBtn")}
-							onMouseLeave={() => handleMouseLeave("applyBtn")}
-						>
-							<svg
-								style={styles.icon}
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-							>
-								<polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3" />
-							</svg>
-							Apply Filters
-						</button>
 						<button
 							onClick={handleAutoRecommend}
 							style={{
@@ -398,7 +386,7 @@ export default function AdvanceFilterPanel() {
 						{minDifficulty || maxDifficulty
 							? ` Difficulty: ${minDifficulty || "Any"}-${
 									maxDifficulty || "Any"
-								}`
+							  }`
 							: ""}
 						{selectedContestTypes.length > 0
 							? ` • Contest Types: ${selectedContestTypes.length}`

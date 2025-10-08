@@ -1,5 +1,5 @@
-import { ProblemFilter } from "../../../shared/types/filters";
 import { Contest, Sheet, SheetProblem } from "../../../shared/types/mentor";
+import { ProblemFilter } from "../../../shared/types/filters";
 
 // This service now acts as a client to the background service worker,
 // which is the single source of truth for all data.
@@ -20,31 +20,11 @@ export interface Problem {
 	acceptancePercentage?: number;
 }
 
-let port: chrome.runtime.Port | null = null;
-
-function connect() {
-	if (port) return port;
-	port = chrome.runtime.connect({ name: "datatable" });
-
-	// When the port is disconnected, nullify the variable so a new one can be created.
-	port.onDisconnect.addListener(() => {
-		port = null;
-		console.log("Port disconnected. It will be reconnected on next use.");
-	});
-
-	return port;
-}
-
 interface DataResponsePayload {
 	problems: Problem[];
 	contests: Contest[];
 	sheets: Sheet[];
 	sheetsProblems: SheetProblem[];
-}
-
-interface DataResponseMessage {
-	type: "data-response";
-	payload: DataResponsePayload;
 }
 
 function applyFilters(
@@ -119,15 +99,14 @@ function applyFilters(
 		filteredProblems = filteredProblems.filter((p) => {
 			const contest = contestMap.get(p.contestId);
 			if (!contest) return false;
-			const contestType = contest.type.toLowerCase();
+
+			// Direct equality check is now reliable
 			if (filters.contestType?.mode === "and") {
-				return filters.contestType.values.every((type) =>
-					contestType.includes(type),
+				return filters.contestType.values.every(
+					(type) => contest.type === type,
 				);
 			}
-			return filters.contestType?.values.some((type) =>
-				contestType.includes(type),
-			);
+			return filters.contestType?.values.some((type) => contest.type === type);
 		});
 	}
 
@@ -192,34 +171,29 @@ function applyFilters(
 }
 
 export const ProblemService = {
-	getProblems(
-		port: chrome.runtime.Port,
-		filters?: ProblemFilter,
+	fetchAndFilterProblems(
+		filters: ProblemFilter,
+		onStateChange: (state: "FETCHING" | "ERROR") => void,
 	): Promise<DataResponsePayload> {
-		return new Promise((resolve) => {
-			const listener = (message: DataResponseMessage) => {
-				if (message.type === "data-response") {
-					port.onMessage.removeListener(listener);
-					if (filters && Object.keys(filters).length > 0) {
-						const filteredData = applyFilters(message.payload, filters);
-						resolve(filteredData);
-					} else {
-						resolve(message.payload);
-					}
-				}
-			};
-			port.onMessage.addListener(listener);
-			port.postMessage({ type: "get-data" });
-		});
-	},
+		return new Promise((resolve, reject) => {
+			const port = chrome.runtime.connect({ name: "datatable-fetch" });
 
-	listenToState(callback: (state: string) => void): chrome.runtime.Port {
-		const port = connect();
-		port.onMessage.addListener((message) => {
-			if (message.state) {
-				callback(message.state);
-			}
+			port.onDisconnect.addListener(() => {
+				reject(new Error("Connection to service worker failed."));
+			});
+
+			port.onMessage.addListener((message) => {
+				if (message.state) {
+					onStateChange(message.state);
+					if (message.state === "READY") {
+						port.postMessage({ type: "get-data" });
+					}
+				} else if (message.type === "data-response") {
+					const filteredData = applyFilters(message.payload, filters);
+					resolve(filteredData);
+					port.disconnect();
+				}
+			});
 		});
-		return port;
 	},
 };

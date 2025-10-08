@@ -5,11 +5,11 @@ import "primeicons/primeicons.css";
 
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
-import { useEffect, useRef,useState } from "react";
+import { useEffect, useState } from "react";
 
-import { useFilterStore } from "../../../shared/stores/filter-store.ts";
-import type { Problem } from "./problemService.ts";
 import { ProblemService } from "./problemService.ts";
+import type { Problem } from "./problemService.ts";
+import { useFilterStore } from "../../../shared/stores/filter-store.ts";
 
 const Header = (
 	<div
@@ -26,71 +26,46 @@ const Header = (
 const Datatable: React.FC = () => {
 	const [problems, setProblems] = useState<Problem[]>([]);
 	const [loading, setLoading] = useState(true);
-
-	// Use a ref to hold the port to prevent re-connections on re-renders
-	const portRef = useRef<chrome.runtime.Port | null>(null);
-	const isFetchingRef = useRef(false);
+	const filters = useFilterStore((state) => state.filters);
 
 	useEffect(() => {
-		const fetchData = () => {
-			if (!portRef.current || isFetchingRef.current) return;
+		const controller = new AbortController();
 
-			isFetchingRef.current = true;
-			setLoading(true);
-			// Read the latest filters directly from the store when fetching
-			const currentFilters = useFilterStore.getState().filters;
-			ProblemService.getProblems(portRef.current, currentFilters).then(
-				(data) => {
-					console.log("Received data from service worker:", data);
-					const processedProblems = data.problems.map((p) => ({
-						...p,
-						sortableId: `${p.contestId.toString().padStart(5, "0")}${p.index}`,
-						attemptPercentage: p.totalUsers
-							? (p.attemptCount / p.totalUsers) * 100
-							: 0,
-						acceptancePercentage: p.attemptCount
-							? (p.acceptedCount / p.attemptCount) * 100
-							: 0,
-					}));
-					setProblems(processedProblems);
-					setLoading(false);
-					isFetchingRef.current = false;
-				},
-			);
-		};
+		setLoading(true);
 
-		portRef.current = ProblemService.listenToState((state) => {
-			console.log("Received state from background:", state);
-			switch (state) {
-				case "READY":
-					fetchData();
-					break;
-				case "FETCHING":
-					setLoading(true);
-					break;
-				case "ERROR":
-					setLoading(false);
-					break;
+		ProblemService.fetchAndFilterProblems(filters, (state) => {
+			if (state === "FETCHING") {
+				setLoading(true);
+			} else if (state === "ERROR") {
+				setLoading(false);
+				// Optionally, show an error message to the user
 			}
-		});
+		})
+			.then((data) => {
+				if (controller.signal.aborted) return;
+				console.log("Received data from service worker:", data);
+				const processedProblems = data.problems.map((p) => ({
+					...p,
+					sortableId: `${p.contestId.toString().padStart(5, "0")}${p.index}`,
+					attemptPercentage: p.totalUsers
+						? (p.attemptCount / p.totalUsers) * 100
+						: 0,
+					acceptancePercentage: p.attemptCount
+						? (p.acceptedCount / p.attemptCount) * 100
+						: 0,
+				}));
+				setProblems(processedProblems);
+				setLoading(false);
+			})
+			.catch((error) => {
+				console.error("Failed to fetch problems:", error);
+				setLoading(false);
+			});
 
-		// Re-fetch data when filters change, but only if the state is READY.
-		const unsubscribe = useFilterStore.subscribe((state, prevState) => {
-			if (
-				portRef.current &&
-				JSON.stringify(state.filters) !== JSON.stringify(prevState.filters)
-			) {
-				console.log("Filters changed, re-fetching data.");
-				fetchData();
-			}
-		});
-
-		const port = portRef.current;
 		return () => {
-			unsubscribe();
-			port?.disconnect();
+			controller.abort();
 		};
-	}, []); // Run only once on mount
+	}, [filters]); // Re-run this effect whenever filters change
 
 	return (
 		<DataTable
