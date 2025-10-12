@@ -1,0 +1,19 @@
+name: Bug report
+about: Report a bug
+title: ''
+labels: ['bug']
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Describe the bug**
+  - type: input
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide steps
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
