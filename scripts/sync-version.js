@@ -33,7 +33,7 @@ try {
   // Regex to find and replace the version in the badge URL
   const readmeRegex = /(\!\[Version\]\(https:\/\/img\.shields\.io\/badge\/version-)(.*)(-blue\.svg\))/;
   if (!readmeRegex.test(readme)) {
-    throw new Error('Could not find the version badge in README.md. Please ensure it follows the pattern: ![Version](https://img.shields.io/badge/version-X.X.X-blue.svg)');
+    throw new Error('Could not find the version badge in README.md. Please ensure it follows the pattern: !_!_[Version]_!_!(https://img.shields.io/badge/version-X.X.X-blue.svg)');
   }
   readme = readme.replace(readmeRegex, `$1${version}$3`);
   writeFileSync(readmePath, readme);
