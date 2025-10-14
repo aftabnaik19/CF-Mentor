@@ -1,6 +1,6 @@
 import React from "react";
 
-import { PROBLEM_INDICES } from "@/shared/data/filter-panel-data";
+import { PROBLEM_INDICES } from "@/shared/data/filterPanelData";
 
 import { styles } from "../styles";
 

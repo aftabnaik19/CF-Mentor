@@ -1,6 +1,6 @@
 import Select, { StylesConfig } from "react-select";
 
-import { ALGORITHM_TAGS } from "@/shared/data/filter-panel-data";
+import { ALGORITHM_TAGS } from "@/shared/data/filterPanelData";
 
 import { styles as globalStyles } from "../styles"; // Import the shared styles
 

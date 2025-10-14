@@ -1,10 +1,10 @@
 import "primereact/resources/primereact.min.css"; // core styles
 import "primeicons/primeicons.css";
 
-import { useConnectionStore } from "../shared/stores/connection-store";
-import { mountAdvanceFilterPanel } from "./mount/advance-filter-panel";
-import { mountDatatable } from "./mount/Datatable";
-import { mountProblemAssistant } from "./mount/problem-assistant";
+import { useConnectionStore } from "../shared/stores/connectionStore";
+import { mountAdvanceFilterPanel } from "./mount/AdvanceFilterPanel";
+import { mountDataTable } from "./mount/DataTable";
+import { mountProblemAssistant } from "./mount/ProblemAssistant";
 
 // --- Health Check for Extension Reloads ---
 // This establishes a long-lived port to monitor the connection to the service worker.
@@ -29,7 +29,7 @@ function initializeHealthCheck() {
 async function initializeComponents() {
 	mountProblemAssistant();
 	mountAdvanceFilterPanel();
-	mountDatatable();
+	mountDataTable();
 	// await mountChatPanel();
 }
 

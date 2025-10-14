@@ -1,5 +1,5 @@
-import { getData, MENTOR_STORE } from "../shared/utils/indexeddb";
-import { fetchAndStoreData } from "./data-fetcher";
+import { getData, MENTOR_STORE } from "../shared/utils/indexedDb";
+import { fetchAndStoreData } from "./dataFetcher";
 
 type DataState = "INITIAL" | "FETCHING" | "READY" | "ERROR";
 

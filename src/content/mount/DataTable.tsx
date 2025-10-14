@@ -1,5 +1,5 @@
-import Datatable from "../components/datatable/Datatable";
-import { mountComponent, unmountComponent } from "../utils/componentUtils.tsx";
+import ProblemDataTable from "../components/datatable/DataTable";
+import { mountComponent, unmountComponent } from "../utils/ComponentUtils.tsx";
 const CONTAINER_ID = "cf-mentor-datatable";
 
 let originalContent: string | null = null;
@@ -14,7 +14,7 @@ function isProblemsetPage(): boolean {
 	return pathname === "/problemset";
 }
 
-export function mountDatatable() {
+export function mountDataTable() {
 	const targetDiv = document.querySelector(".datatable") as HTMLElement | null;
 	const isOnProblemsetPage = isProblemsetPage();
 	if (
@@ -36,11 +36,11 @@ export function mountDatatable() {
 		targetDiv.id = CONTAINER_ID;
 
 		// Mount directly into the target div
-		mountComponent(targetDiv, <Datatable />);
+		mountComponent(targetDiv, <ProblemDataTable />);
 	}
 }
 
-export function unmountDatatable() {
+export function unmountDataTable() {
 	const targetDiv = document.getElementById(CONTAINER_ID) as HTMLElement | null;
 	if (targetDiv) {
 		// Unmount the component

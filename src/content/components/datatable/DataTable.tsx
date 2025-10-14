@@ -1,4 +1,4 @@
-import "./Datatable.css";
+import "./DataTable.css";
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -7,8 +7,8 @@ import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { useEffect, useRef,useState } from "react";
 
-import { useConnectionStore } from "../../../shared/stores/connection-store.ts";
-import { useFilterStore } from "../../../shared/stores/filter-store.ts";
+import { useConnectionStore } from "../../../shared/stores/connectionStore.ts";
+import { useFilterStore } from "../../../shared/stores/filterStore.ts";
 import type { Problem } from "./problemService.ts";
 import { ProblemService } from "./problemService.ts";
 
@@ -24,7 +24,7 @@ const Header = (
 	</div>
 );
 
-const Datatable: React.FC = () => {
+const ProblemDataTable: React.FC = () => {
 	const [problems, setProblems] = useState<Problem[]>([]);
 	const [loading, setLoading] = useState(true);
 	const filters = useFilterStore((state) => state.filters);
@@ -210,4 +210,4 @@ const Datatable: React.FC = () => {
 	);
 };
 
-export default Datatable;
+export default ProblemDataTable;
