@@ -3,22 +3,10 @@
 	"name": "CF-Mentor",
 	"version": "0.1.1",
 	"description": "The CF-Mentor helps select problems best suited for your rating growth.",
-	"permissions": ["storage", "identity", "alarms"],
+	"permissions": ["storage", "alarms"],
 	"host_permissions": [
-		"https://codeforces.com/*",
 		"https://api.cf-mentor.me/*"
 	],
-	"optional_host_permissions": [
-		"https://sheets.googleapis.com/*",
-		"https://atcoder.jp/*",
-		"https://leetcode.com/*",
-		"https://codechef.com/*",
-		"https://hackerrank.com/*"
-	],
-	"oauth2": {
-		"client_id": "314365019689-1uchb9nrqjtqnc3d8n744mtjhm5f46f3.apps.googleusercontent.com",
-		"scopes": ["https://www.googleapis.com/auth/spreadsheets"]
-	},
 	"action": {
 		"default_title": "Personalized CF Mentor",
 		"default_popup": "src/popup/index.html"
