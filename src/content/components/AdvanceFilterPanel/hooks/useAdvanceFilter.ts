@@ -1,10 +1,10 @@
 import { useEffect, useMemo,useState } from "react";
 
-import { useFilterStore } from "@/shared/stores/filter-store";
+import { useFilterStore } from "@/shared/stores/filterStore";
 import { ProblemFilter } from "@/shared/types/filters";
 import { metadataService } from "@/shared/utils/metadataService";
 
-import { useDebounce } from "./use-debounce";
+import { useDebounce } from "./useDebounce";
 
 export const useAdvancedFilter = () => {
 	const setFilters = useFilterStore((state) => state.setFilters);

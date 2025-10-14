@@ -1,8 +1,8 @@
-import { useConnectionStore } from "@/shared/stores/connection-store";
+import { useConnectionStore } from "@/shared/stores/connectionStore";
 import { DropdownSelector } from "./components/DropdownSelector";
 import { ProblemIndexSelector } from "./components/ProblemIndexSelector";
 import { TagsSelector } from "./components/TagsSelector";
-import { useAdvancedFilter } from "./hooks/use-advance-filter";
+import { useAdvancedFilter } from "./hooks/useAdvanceFilter";
 import { styles } from "./styles";
 export default function AdvanceFilterPanel() {
 	const isConnected = useConnectionStore((state) => state.isConnected);

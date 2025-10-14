@@ -6,7 +6,7 @@ import {
 	RawProblem,
 	RawSheetProblem,
 } from "../shared/types/mentor";
-import { saveAllData } from "../shared/utils/indexeddb";
+import { saveAllData } from "../shared/utils/indexedDb";
 
 export async function fetchAndStoreData() {
 	try {

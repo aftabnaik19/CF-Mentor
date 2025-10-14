@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
 import ProblemAssistantPanel from "../components/ProblemAssistantPanel";
-import { mountComponent, unmountComponent } from "../utils/componentUtils.tsx";
+import { mountComponent, unmountComponent } from "../utils/ComponentUtils.tsx";
 
 const CONTAINER_ID = "cf-mentor-problem-assistance-panel";
 
