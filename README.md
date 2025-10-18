@@ -83,3 +83,16 @@ We welcome contributions!
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for details.
+
+## 🔧 Feature Toggles
+
+You can enable/disable individual features from the extension popup. These settings are saved to Chrome's local storage and persist across browser restarts.
+
+Toggles available:
+- Problem Assistant: Sidebar on problem pages with bookmark, notes and optional stopwatch.
+- Stopwatch: Show/hide the stopwatch row inside Problem Assistant.
+- Advanced Filtering: Replace the default tag filter on the Problemset page with an advanced filter panel.
+- Enhanced Data Table: Replace the Problemset table with a richer data table.
+- Chat Panel (experimental): Mount a chat panel overlay.
+
+Changes take effect immediately on open tabs; the extension listens for updates and mounts/unmounts features live.
