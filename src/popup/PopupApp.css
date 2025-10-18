@@ -1,20 +1,86 @@
+/* Container */
 .popup-container {
-  padding: 1rem;
-  text-align: center;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.popup-container h1 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
+
+/* Top header band */
+.popup-header {
+  background: #d1ddf8; /* blue background like screenshot 2 */
+  padding: 12px 16px;
+  border-radius: 6px;
 }
 
-.popup-container p {
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+.popup-title-text {
+  color: #1e3a8a; /* darker blue for text */
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.1;
+  margin: 0;
 }
 
-.popup-container button {
-  padding: 8px 16px;
+.popup-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.popup-title a { color: #000; text-decoration: underline; }
+
+.popup-subtitle {
+  color: #333;
+  background: #f5f5f5;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.popup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+/* Toggle row */
+.cf-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0;
+}
+
+.cf-toggle.disabled {
+  opacity: 0.6;
+}
+
+.cf-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #3B5998;
+  margin-top: 2px;
+}
+
+.cf-toggle-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-toggle-title {
+  font-weight: bold;
+}
+
+.cf-toggle-desc {
+  color: #666;
+  font-size: 12px;
+}
+
+/* Button */
+.cf-button {
+  width: 100%;
+  padding: 10px 12px;
   background-color: #3B5998;
   color: white;
   border: none;
@@ -22,4 +88,10 @@
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+  margin-top: 4px;
+}
+
+.cf-button:disabled {
+  opacity: 0.7;
+  cursor: default;
 }

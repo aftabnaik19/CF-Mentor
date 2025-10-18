@@ -240,16 +240,20 @@ const ProblemAssistantPanel: React.FC = () => {
               </tr>
             </>
           )}
-          <tr>
-            <td className="left" style={{ padding: "0em 1em" }}>
-              <Stopwatch problemKey={PROBLEM_KEY} />
-            </td>
-          </tr>
-          <tr>
-            <td className="left dark" style={{ padding: "0.5em 1em" }}>
-              <span className="contest-state-regular">Time is running..! </span>
-            </td>
-          </tr>
+          {document.documentElement.getAttribute("data-cf-mentor-hide-stopwatch") !== "true" && (
+            <>
+              <tr>
+                <td className="left" style={{ padding: "0em 1em" }}>
+                  <Stopwatch problemKey={PROBLEM_KEY} />
+                </td>
+              </tr>
+              <tr>
+                <td className="left dark" style={{ padding: "0.5em 1em" }}>
+                  <span className="contest-state-regular">Time is running..! </span>
+                </td>
+              </tr>
+            </>
+          )}
         </tbody>
       </table>
     </div>

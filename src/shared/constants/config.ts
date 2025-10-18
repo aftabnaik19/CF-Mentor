@@ -3,6 +3,7 @@ export const EXTENSION_CONFIG = {
 		CHAT_HISTORY: "chatHistory",
 		USER_PREFERENCES: "userPreferences",
 		PAGE_CONTEXT: "pageContext",
+		FEATURE_FLAGS: "featureFlags",
 	},
 	API: {
 		BASE_URL: "https://api.openai.com/v1",
