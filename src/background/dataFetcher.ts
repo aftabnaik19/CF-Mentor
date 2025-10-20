@@ -1,11 +1,5 @@
 import { EXTENSION_CONFIG } from "../shared/constants/config";
-import {
-	MentorData,
-	RawContest,
-	RawMentorData,
-	RawProblem,
-	RawSheetProblem,
-} from "../shared/types/mentor";
+import { MentorData } from "../shared/types/mentor";
 import { saveAllData } from "../shared/utils/indexedDb";
 
 export async function fetchAndStoreData() {
@@ -15,80 +9,26 @@ export async function fetchAndStoreData() {
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
-		const rawData: RawMentorData = await response.json();
+		const data: MentorData = await response.json();
 		console.log(
-			`Raw data received: ${rawData.problems?.length} problems, ${rawData.contests?.length} contests, ${rawData.sheets?.length} sheets, ${rawData.sheets_problems?.length} sheets_problems.`
+			`Raw data received: ${data.problems?.length} problems, ${data.contests?.length} contests, ${data.sheets?.length} sheets, ${data.sheetsProblems?.length} sheetsProblems.`
 		);
 
-		// Map snake_case from API to camelCase for our types, based on the exact API response format.
-		const data: MentorData = {
-			problems: (rawData.problems || [])
-				.map((p: RawProblem) => ({
-					contestId: p.contest_id,
-					index: p.index,
-					name: p.name,
-					cfRating: p.cf_rating,
-					clistRating: p.clist_rating,
-					tags: p.tags,
-					acceptedCount: p.accepted_count,
-					attemptCount: p.attempt_count,
-					totalUsers: p.total_users,
-					tillDateAccepted: p.till_date_accepted,
-					problemDate: p.problem_date,
-				}))
-				.filter((p) => p.contestId && p.index),
-
-			contests: (rawData.contests || [])
-				.map((c: RawContest) => ({
-					id: c.id,
-					name: c.name,
-					rules: c.rules,
-					type: c.type,
-					durationSeconds: c.duration_seconds,
-					startTime: c.start_time,
-				}))
-				.filter((c) => c.id),
-
-			sheets: (rawData.sheets || []).filter((s) => s.id),
-
-			sheetsProblems: (rawData.sheets_problems || [])
-				.map((sp: RawSheetProblem) => ({
-					sheetId: sp.sheet_id,
-					contestId: sp.contest_id,
-					index: sp.index,
-				}))
-				.filter((sp) => sp.sheetId && sp.contestId && sp.index),
-		};
-
-		console.log(
-			`Processed data: ${data.problems.length} problems, ${data.contests.length} contests, ${data.sheets.length} sheets, ${data.sheetsProblems.length} sheetsProblems.`
-		);
 		await saveAllData(data);
 		console.log("Data fetched and stored successfully.");
 
-		// After storing data, generate and store filter metadata
+		// After storing data, use the metadata shipped with the API response
 		try {
-			const contestTypes = [
-				...new Set(data.contests.map((c) => c.type).filter(Boolean)),
-			].sort();
-			const sheetNames = [
-				...new Set(data.sheets.map((s) => s.name).filter(Boolean)),
-			].sort();
-			const problemTags = [
-				...new Set(data.problems.flatMap((p) => p.tags).filter(Boolean)),
-			].sort();
-
 			const metadata = {
-				contestTypes,
-				sheetNames,
-				problemTags,
+				contestTypes: (data.contestTypes || []).sort(),
+				sheetNames: (data.sheets || []).map(s => s.name).sort(),
+				problemTags: (data.tags || []).sort(),
 			};
 
 			await chrome.storage.local.set({ filterMetadata: metadata });
-			console.log("Filter metadata generated and stored:", metadata);
+			console.log("Filter metadata (from API) stored:", metadata);
 		} catch (metaError) {
-			console.error("Failed to generate or store filter metadata:", metaError);
-			// We don't return false here because the main data fetch was successful.
+			console.error("Failed to process or store filter metadata from API:", metaError);
 		}
 
 		return true;
