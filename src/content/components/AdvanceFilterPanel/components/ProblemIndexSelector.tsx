@@ -1,14 +1,18 @@
 import React from "react";
 
-import { PROBLEM_INDICES } from "@/shared/data/filterPanelData";
-
 import { styles } from "../styles";
+
+interface ProblemIndex {
+  value: string;
+  label: string;
+}
 
 interface ProblemIndexSelectorProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   selectedIndices: string[];
   onIndexToggle: (value: string) => void;
+  problemIndices: ProblemIndex[];
   hoverState: Record<string, boolean>;
   handleMouseEnter: (key: string) => void;
   handleMouseLeave: (key: string) => void;
@@ -19,6 +23,7 @@ export const ProblemIndexSelector: React.FC<ProblemIndexSelectorProps> = ({
 	setIsOpen,
 	selectedIndices,
 	onIndexToggle,
+	problemIndices,
 	hoverState,
 	handleMouseEnter,
 	handleMouseLeave,
@@ -61,7 +66,7 @@ export const ProblemIndexSelector: React.FC<ProblemIndexSelectorProps> = ({
 				{isOpen && (
 					<div style={{ ...styles.dropdownContent, padding: "1rem" }}>
 						<div style={styles.problemIndexGrid}>
-							{PROBLEM_INDICES.map((problemIndex) => (
+							{problemIndices.map((problemIndex) => (
 								<div
 									key={problemIndex.value}
 									onClick={() => onIndexToggle(problemIndex.value)}

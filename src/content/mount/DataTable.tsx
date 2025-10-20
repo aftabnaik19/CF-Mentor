@@ -11,7 +11,7 @@ const paginationDiv = document.querySelector(
 
 function isProblemsetPage(): boolean {
 	const { pathname } = window.location;
-	return pathname === "/problemset";
+	return pathname === "/problemset" || pathname === "/problemset/";
 }
 
 export function mountDataTable() {

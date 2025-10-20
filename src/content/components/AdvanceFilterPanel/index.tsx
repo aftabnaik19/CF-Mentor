@@ -44,6 +44,7 @@ export default function AdvanceFilterPanel() {
 		handleAutoRecommend,
 		availableContestTypes,
 		availableSheetNames,
+		availableProblemIndices,
 	} = useAdvancedFilter();
 
 	// Functions to generate responsive styles based on window width
@@ -181,6 +182,7 @@ export default function AdvanceFilterPanel() {
 								setIsOpen={setShowProblemIndexDropdown}
 								selectedIndices={selectedProblemIndices}
 								onIndexToggle={handleProblemIndexToggle}
+								problemIndices={availableProblemIndices}
 								hoverState={hoverState}
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}

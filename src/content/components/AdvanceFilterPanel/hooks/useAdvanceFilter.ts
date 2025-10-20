@@ -1,10 +1,23 @@
-import { useEffect, useMemo,useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useFilterStore } from "@/shared/stores/filterStore";
 import { ProblemFilter } from "@/shared/types/filters";
 import { metadataService } from "@/shared/utils/metadataService";
 
 import { useDebounce } from "./useDebounce";
+
+const PROBLEM_INDICES = [
+	{ value: "A", label: "A" },
+	{ value: "B", label: "B" },
+	{ value: "C", label: "C" },
+	{ value: "D", label: "D" },
+	{ value: "E", label: "E" },
+	{ value: "F", label: "F" },
+	{ value: "G", label: "G" },
+	{ value: "H", label: "H" },
+	{ value: "I", label: "I" },
+	{ value: "J", label: "J" },
+];
 
 export const useAdvancedFilter = () => {
 	const setFilters = useFilterStore((state) => state.setFilters);
@@ -16,6 +29,9 @@ export const useAdvancedFilter = () => {
 	);
 	const [availableSheetNames, setAvailableSheetNames] = useState<string[]>([]);
 	const [availableTags, setAvailableTags] = useState<string[]>([]);
+	const [availableProblemIndices] = useState(
+		PROBLEM_INDICES,
+	);
 
 	// Local state for UI controls, initialized from the global store
 	const [minDifficulty, setMinDifficulty] = useState<string>(
@@ -245,5 +261,6 @@ export const useAdvancedFilter = () => {
 		handleAutoRecommend,
 		availableContestTypes,
 		availableSheetNames,
+		availableProblemIndices,
 	};
 };
