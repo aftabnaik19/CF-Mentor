@@ -132,6 +132,7 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 	const lastPausedRef = useRef<number | null>(null);
 	const totalPauseTimeRef = useRef<number>(0);
 	const lastSeenRef = useRef<number>(0);
+	const isHandlingRef = useRef<boolean>(false);
 
 	// Constants for inactivity threshold (2 hours in milliseconds)
 	const INACTIVITY_THRESHOLD = 2 * 60 * 60 * 1000; // 2 hours
@@ -368,7 +369,10 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 
 	// Handle play/pause button
 	const handlePauseResume = () => {
-		if (!problemKey) return;
+		if (!problemKey || isHandlingRef.current) return;
+
+		isHandlingRef.current = true;
+		setTimeout(() => (isHandlingRef.current = false), 200);
 
 		const currentTime = Date.now();
 
