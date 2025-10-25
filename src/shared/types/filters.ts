@@ -38,8 +38,13 @@ export interface ProblemFilter {
   problemIndex?: {
     values: string[];
   };
-  contestId?: {
-    gte?: number;
-    lte?: number;
-  };
-}
+   contestId?: {
+     gte?: number;
+     lte?: number;
+   };
+   displayOptions?: {
+     hideTags?: boolean;
+     hideSolved?: boolean;
+     hideStatusColors?: boolean;
+   };
+ }
