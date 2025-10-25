@@ -70,6 +70,11 @@ export default function ContestHistorySummary() {
             onChange={(e) => {
               const val = e.target.value;
               setKInput(val);
+              // Apply immediately when the value is a valid integer >= 1
+              const n = parseInt(val, 10);
+              if (Number.isFinite(n) && n >= 1) {
+                setK(n);
+              }
             }}
             onBlur={() => {
               const n = parseInt(kInput, 10);
