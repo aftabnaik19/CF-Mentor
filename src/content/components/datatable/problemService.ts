@@ -18,6 +18,7 @@ export interface Problem {
 	totalUsers: number;
 	attemptPercentage?: number;
 	acceptancePercentage?: number;
+	userVerdict?: string;
 }
 
 interface DataResponsePayload {
@@ -31,6 +32,7 @@ function applyFilters(
 	data: DataResponsePayload,
 	filters: ProblemFilter,
 ): DataResponsePayload {
+	console.log('Applying filters:', filters);
 	let filteredProblems = data.problems;
 
 	// Create maps for efficient lookups
@@ -155,7 +157,7 @@ function applyFilters(
 
 	if (filters.problemIndex?.values?.length) {
 		filteredProblems = filteredProblems.filter((p) =>
-			filters.problemIndex?.values.includes(p.index),
+			filters.problemIndex?.values.some(val => p.index.startsWith(val)),
 		);
 	}
 
@@ -167,6 +169,16 @@ function applyFilters(
 		);
 	}
 
+	// Display options
+	if (filters.displayOptions?.hideSolved) {
+		console.log('Hiding solved problems');
+		filteredProblems = filteredProblems.filter((p) => {
+			console.log('Problem', p.contestId + p.index, 'userVerdict:', p.userVerdict);
+			return p.userVerdict !== 'OK';
+		});
+	}
+
+	console.log('Filtered problems count:', filteredProblems.length);
 	return { ...data, problems: filteredProblems };
 }
 

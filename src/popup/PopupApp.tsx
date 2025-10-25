@@ -1,5 +1,7 @@
 import "./PopupApp.css";
+
 import { useEffect, useState } from "react";
+
 import { EXTENSION_CONFIG } from "../shared/constants/config";
 import type { FeatureFlags } from "../shared/stores/featureFlags";
 

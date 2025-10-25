@@ -1,68 +1,11 @@
-.datatable td {
-  width: auto !important;
-  max-width: 20em !important;
-  overflow: auto;
+.solved-row {
+  background-color: lightgreen !important;
 }
 
-.datatable {
-  width: 100%;
-  position: relative;
+.wrong-row {
+  background-color: lightcoral !important;
 }
 
-.datatable table {
-  width: 100%;
-}
-
-.datatable td,
-.datatable th {
-  border-top: 1px solid #e1e1e1;
-  border-right: 1px solid #e1e1e1;
-  padding: 0.4em;
-  font-size: 1.3rem;
-  text-align: center;
-  overflow: hidden;
-}
-
-.datatable th {
-  font-weight: bold;
-  text-align: center;
-  white-space: normal;
-  overflow-wrap: break-word;
-  /* alias: word-wrap: break-word; */
-  word-break: break-word;
-}
-
-.datatable .left {
-  border-left: none;
-}
-
-.datatable .top {
-  border-top: none;
-}
-
-.datatable .bottom {
-  border-bottom: none;
-}
-
-.datatable .right {
-  border-right: none;
-}
-
-.datatable .dark {
-  background-color: #f8f8f8;
-}
-
-.datatable-scratch {
-  display: inline-block !important;
-  width: auto !important;
-}
-
-.datatable-filter {
-  display: inline-block !important;
-  width: auto !important;
-  border: 1px solid var(--border-color);
-  padding: 0 0.5em;
-  position: relative;
-  top: 0.1rem;
-  color: var(--muted-color);
+.tle-row {
+  background-color: lightyellow !important;
 }

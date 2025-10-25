@@ -2,10 +2,10 @@ import "primereact/resources/primereact.min.css"; // core styles
 import "primeicons/primeicons.css";
 
 import { useConnectionStore } from "../shared/stores/connectionStore";
+import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { mountAdvanceFilterPanel, unmountAdvanceFilterPanel } from "./mount/AdvanceFilterPanel";
 import { mountDataTable, unmountDataTable } from "./mount/DataTable";
 import { mountProblemAssistant, unmountProblemAssistant } from "./mount/ProblemAssistant";
-import { getFeatureFlags } from "../shared/stores/featureFlags";
 
 let lastFlags: Awaited<ReturnType<typeof getFeatureFlags>> | null = null;
 
@@ -68,6 +68,16 @@ async function initializeComponents() {
 
 	// Remember for next pass
 	lastFlags = flags;
+}
+
+// Get user handle from page
+const handleElement = document.querySelector('a[href^="/profile/"]');
+if (handleElement) {
+  const handle = handleElement.textContent?.trim();
+  if (handle) {
+    chrome.storage.local.set({ userHandle: handle });
+    console.log('User handle set:', handle);
+  }
 }
 
 // Call the async functions

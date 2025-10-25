@@ -1,4 +1,5 @@
 import { create } from "zustand";
+
 import { EXTENSION_CONFIG } from "../constants/config";
 
 export type FeatureKey =

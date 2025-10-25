@@ -1,4 +1,5 @@
 import { useConnectionStore } from "@/shared/stores/connectionStore";
+
 import { DropdownSelector } from "./components/DropdownSelector";
 import { ProblemIndexSelector } from "./components/ProblemIndexSelector";
 import { TagsSelector } from "./components/TagsSelector";
@@ -6,48 +7,65 @@ import { useAdvancedFilter } from "./hooks/useAdvanceFilter";
 import { styles } from "./styles";
 export default function AdvanceFilterPanel() {
 	const isConnected = useConnectionStore((state) => state.isConnected);
-	const {
-		minDifficulty,
-		setMinDifficulty,
-		maxDifficulty,
-		setMaxDifficulty,
-		selectedTags,
-		selectedSheets,
-		combineMode,
-		setCombineMode,
-		isAdvancedOpen,
-		setIsAdvancedOpen,
-		tagSearchQuery,
-		setTagSearchQuery,
-		selectedContestTypes,
-		selectedProblemIndices,
-		showContestTypeDropdown,
-		setShowContestTypeDropdown,
-		showProblemIndexDropdown,
-		setShowProblemIndexDropdown,
-		showSheetsDropdown,
-		setShowSheetsDropdown,
-		hoverState,
-		focusState,
-		windowWidth,
-		handleMouseEnter,
-		handleMouseLeave,
-		handleFocus,
-		handleBlur,
-		filteredTags,
-		handleTagToggle,
-		handleSheetToggle,
-		handleContestTypeToggle,
-		handleProblemIndexToggle,
-		removeTag,
-		clearAllFilters,
-		handleAutoRecommend,
-		availableContestTypes,
-		availableSheetNames,
-		availableProblemIndices,
-	} = useAdvancedFilter();
+ 	const {
+ 		minDifficulty,
+ 		setMinDifficulty,
+ 		maxDifficulty,
+ 		setMaxDifficulty,
+ 		selectedTags,
+ 		selectedSheets,
+ 		combineMode,
+ 		setCombineMode,
+ 		isAdvancedOpen,
+ 		setIsAdvancedOpen,
+ 		tagSearchQuery,
+ 		setTagSearchQuery,
+ 		selectedContestTypes,
+ 		selectedProblemIndices,
+ 		hideTags,
+ 		setHideTags,
+ 		hideSolved,
+ 		setHideSolved,
+ 		hideStatusColors,
+ 		setHideStatusColors,
+ 		showContestTypeDropdown,
+ 		setShowContestTypeDropdown,
+ 		showProblemIndexDropdown,
+ 		setShowProblemIndexDropdown,
+ 		showSheetsDropdown,
+ 		setShowSheetsDropdown,
+  		hoverState,
+  		setHoverState,
+  		focusState,
+  		setFocusState,
+  		windowWidth,
+  		filteredTags,
+ 		handleTagToggle,
+ 		handleSheetToggle,
+ 		handleContestTypeToggle,
+ 		handleProblemIndexToggle,
+ 		removeTag,
+ 		clearAllFilters,
+ 		handleAutoRecommend,
+ 		availableContestTypes,
+ 		availableSheetNames,
+ 		availableProblemIndices,
+  	} = useAdvancedFilter();
 
-	// Functions to generate responsive styles based on window width
+  const handleMouseEnter = (key: string) => {
+ 		setHoverState((prev: Record<string, boolean>) => ({ ...prev, [key]: true }));
+ 	};
+ 	const handleMouseLeave = (key: string) => {
+ 		setHoverState((prev: Record<string, boolean>) => ({ ...prev, [key]: false }));
+ 	};
+ 	const handleFocus = (key: string) => {
+ 		setFocusState((prev: Record<string, boolean>) => ({ ...prev, [key]: true }));
+ 	};
+ 	const handleBlur = (key: string) => {
+ 		setFocusState((prev: Record<string, boolean>) => ({ ...prev, [key]: false }));
+ 	};
+
+ 	// Functions to generate responsive styles based on window width
 	const getQuickFiltersGridStyle = () => {
 		let gridTemplateColumns = "repeat(1, 1fr)";
 		if (windowWidth >= 768) {
@@ -204,51 +222,84 @@ export default function AdvanceFilterPanel() {
 								handleMouseLeave={handleMouseLeave}
 							/>
 
-							<div style={styles.spaceY2}>
-								<label style={styles.label}>Combine Tags</label>
-								<div style={styles.radioGroup}>
-									<div
-										onClick={() => setCombineMode("and")}
-										style={styles.radioItem}
-									>
-										<input
-											type="radio"
-											id="and"
-											name="combine"
-											value="and"
-											style={styles.radio}
-											checked={combineMode === "and"}
-											readOnly
-										/>
-										<label
-											htmlFor="and"
-											style={{ fontSize: "0.95rem", cursor: "pointer" }}
-										>
-											AND
-										</label>
-									</div>
-									<div
-										onClick={() => setCombineMode("or")}
-										style={styles.radioItem}
-									>
-										<input
-											type="radio"
-											id="or"
-											name="combine"
-											value="or"
-											style={styles.radio}
-											checked={combineMode === "or"}
-											readOnly
-										/>
-										<label
-											htmlFor="or"
-											style={{ fontSize: "0.95rem", cursor: "pointer" }}
-										>
-											OR
-										</label>
-									</div>
-								</div>
-							</div>
+ 							<div style={styles.spaceY2}>
+ 								<label style={styles.label}>Combine Tags</label>
+ 								<div style={styles.radioGroup}>
+ 									<div
+ 										onClick={() => setCombineMode("and")}
+ 										style={styles.radioItem}
+ 									>
+ 										<input
+ 											type="radio"
+ 											id="and"
+ 											name="combine"
+ 											value="and"
+ 											style={styles.radio}
+ 											checked={combineMode === "and"}
+ 											readOnly
+ 										/>
+ 										<label
+ 											htmlFor="and"
+ 											style={{ fontSize: "0.95rem", cursor: "pointer" }}
+ 										>
+ 											AND
+ 										</label>
+ 									</div>
+ 									<div
+ 										onClick={() => setCombineMode("or")}
+ 										style={styles.radioItem}
+ 									>
+ 										<input
+ 											type="radio"
+ 											id="or"
+ 											name="combine"
+ 											value="or"
+ 											style={styles.radio}
+ 											checked={combineMode === "or"}
+ 											readOnly
+ 										/>
+ 										<label
+ 											htmlFor="or"
+ 											style={{ fontSize: "0.95rem", cursor: "pointer" }}
+ 										>
+ 											OR
+ 										</label>
+ 									</div>
+ 								</div>
+ 							</div>
+
+ 							<div style={styles.spaceY2}>
+ 								<label style={styles.label}>Visibility Controls</label>
+ 								<div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+ 									<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", cursor: "pointer" }}>
+ 										<input
+ 											type="checkbox"
+ 											checked={!hideTags}
+ 											onChange={() => setHideTags(!hideTags)}
+ 											style={{ margin: 0 }}
+ 										/>
+ 										Show Tags
+ 									</label>
+ 									<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", cursor: "pointer" }}>
+ 										<input
+ 											type="checkbox"
+ 											checked={!hideSolved}
+ 											onChange={() => setHideSolved(!hideSolved)}
+ 											style={{ margin: 0 }}
+ 										/>
+ 										Show Solved Problems
+ 									</label>
+ 									<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", cursor: "pointer" }}>
+ 										<input
+ 											type="checkbox"
+ 											checked={!hideStatusColors}
+ 											onChange={() => setHideStatusColors(!hideStatusColors)}
+ 											style={{ margin: 0 }}
+ 										/>
+ 										Show Status Colors
+ 									</label>
+ 								</div>
+ 							</div>
 						</div>
 
 						{selectedTags.length > 0 && (
