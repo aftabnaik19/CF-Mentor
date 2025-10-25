@@ -1,11 +1,13 @@
+/* eslint-disable simple-import-sort/imports */
 import "primereact/resources/primereact.min.css"; // core styles
 import "primeicons/primeicons.css";
 
+import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { useConnectionStore } from "../shared/stores/connectionStore";
 import { mountAdvanceFilterPanel, unmountAdvanceFilterPanel } from "./mount/AdvanceFilterPanel";
+import { mountContestHistorySummary, unmountContestHistorySummary } from "./mount/ContestHistorySummary.tsx";
 import { mountDataTable, unmountDataTable } from "./mount/DataTable";
 import { mountProblemAssistant, unmountProblemAssistant } from "./mount/ProblemAssistant";
-import { getFeatureFlags } from "../shared/stores/featureFlags";
 
 let lastFlags: Awaited<ReturnType<typeof getFeatureFlags>> | null = null;
 
@@ -65,6 +67,14 @@ async function initializeComponents() {
 	} else {
 		unmountDataTable();
 	}
+
+		// Contest History Summary on profile page
+		if (flags.contestHistorySummary) {
+				// We'll mount only on profile pages inside the mount handler
+				mountContestHistorySummary();
+		} else {
+				unmountContestHistorySummary();
+		}
 
 	// Remember for next pass
 	lastFlags = flags;

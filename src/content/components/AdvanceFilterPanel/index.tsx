@@ -1,3 +1,4 @@
+/* eslint-disable simple-import-sort/imports */
 import { useConnectionStore } from "@/shared/stores/connectionStore";
 import { DropdownSelector } from "./components/DropdownSelector";
 import { ProblemIndexSelector } from "./components/ProblemIndexSelector";
