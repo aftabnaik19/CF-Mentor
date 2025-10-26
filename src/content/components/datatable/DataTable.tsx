@@ -28,6 +28,7 @@ const ProblemDataTable: React.FC = () => {
 	const [problems, setProblems] = useState<Problem[]>([]);
 	const [loading, setLoading] = useState(true);
 	const filters = useFilterStore((state) => state.filters);
+	const displayOptions = filters.displayOptions || {};
 	const isConnected = useConnectionStore((state) => state.isConnected);
 	const alertShownRef = useRef(false);
 
@@ -59,7 +60,7 @@ const ProblemDataTable: React.FC = () => {
 			.then((data) => {
 				if (controller.signal.aborted) return;
 				console.log("Received data from service worker:", data);
-				const processedProblems = data.problems.map((p) => ({
+				let processedProblems = data.problems.map((p) => ({
 					...p,
 					sortableId: `${p.contestId.toString().padStart(5, "0")}${p.index}`,
 					attemptPercentage: p.totalUsers
@@ -69,6 +70,23 @@ const ProblemDataTable: React.FC = () => {
 						? (p.acceptedCount / p.attemptCount) * 100
 						: 0,
 				}));
+
+				// Fix contestId for problems where index is embedded in contestId
+				processedProblems = processedProblems.map((p) => {
+					if (p.contestId > 10000 && (!p.index || p.index === "")) {
+						const contest = Math.floor(p.contestId / 100);
+						const idx = (p.contestId % 100).toString();
+						console.log(`Fixed ${p.contestId} to contest ${contest}, index ${idx}`);
+						return {
+							...p,
+							contestId: contest,
+							index: idx,
+							sortableId: `${contest.toString().padStart(5, "0")}${idx}`,
+						};
+					}
+					return p;
+				});
+				console.log('Problems loaded:', processedProblems.length);
 				setProblems(processedProblems);
 				setLoading(false);
 			})
@@ -100,10 +118,28 @@ const ProblemDataTable: React.FC = () => {
 			paginator
 			rows={25}
 			rowsPerPageOptions={[25, 50, 100]}
+
+			rowClassName={(rowData: Problem) => {
+				console.log('Row class for', rowData.contestId + rowData.index, 'userVerdict:', rowData.userVerdict);
+				if (displayOptions.hideStatusColors || !rowData.userVerdict) return '';
+				switch (rowData.userVerdict) {
+					case 'OK':
+						return 'solved-row';
+					case 'WA':
+					case 'RTE':
+					case 'CE':
+						return 'wrong-row';
+					case 'TLE':
+					case 'ILE':
+						return 'tle-row';
+					default:
+						return '';
+				}
+			}}
 		>
 			<Column
 				sortable
-				sortField="sortableId"
+				sortField="contestId"
 				header="#"
 				headerStyle={{ textAlign: "center" }}
 				body={(rowData: Problem) => {
@@ -155,20 +191,22 @@ const ProblemDataTable: React.FC = () => {
 						>
 							{row.name}
 						</a>
-						<span
-							style={{
-								color: "#888",
-								fontSize: "1.1rem",
-								whiteSpace: "nowrap",
-								overflow: "hidden",
-								textOverflow: "ellipsis",
-								flexShrink: 0,
-								marginLeft: "auto",
-							}}
-							title={row.tags.join(", ")}
-						>
-							{row.tags.join(", ")}
-						</span>
+						{displayOptions.hideTags ? null : (
+							<span
+								style={{
+									color: "#888",
+									fontSize: "1.1rem",
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									flexShrink: 0,
+									marginLeft: "auto",
+								}}
+								title={row.tags.join(", ")}
+							>
+								{row.tags.join(", ")}
+							</span>
+						)}
 					</div>
 				)}
 			/>
