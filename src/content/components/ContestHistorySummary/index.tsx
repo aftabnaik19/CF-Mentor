@@ -197,13 +197,22 @@ export default function ContestHistorySummary() {
                         <tr>
                             <td colSpan={6} style={{ padding: 8, background: "#fafafa", borderBottom: "1px solid #f3f4f6" }}>
                             <div style={{ overflowX: "auto" }}>
-                              <table className="standings" style={{ width: "100%", borderCollapse: "collapse" }}>
+                              <table
+                                className="standings"
+                                style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}
+                              >
+                                <colgroup>
+                                  <col style={{ width: "28%" }} />
+                                  {Array.from({ length: 7 }).map((_, i) => (
+                                    <col key={i} style={{ width: `${(72 / 7).toFixed(3)}%` }} />
+                                  ))}
+                                </colgroup>
                                 <thead>
                                   <tr style={{ color: "#374151" }}>
-                                      <th style={{ textAlign: "left", padding: 6 }}>
-                                        {viewMode === "percent"
-                                          ? `Metric (Avg. of past ${k} ${byMode === "months" ? "month(s)" : "contest(s)"})`
-                                          : `Metric (Past ${k} ${byMode === "months" ? "month(s)" : "contest(s)"})`}
+                                    <th style={{ textAlign: "left", padding: 6 }}>
+                                      {viewMode === "percent"
+                                        ? `Metric (Avg. of past ${row.contests} contest${row.contests === 1 ? "" : "s"})`
+                                        : `Metric (Past ${row.contests} contest${row.contests === 1 ? "" : "s"})`}
                                       </th>
                                     {["A","B","C","D","E","F","G"].map((L) => (
                                       <th key={L} style={{ textAlign: "right", padding: 6 }}>{L}</th>
@@ -211,7 +220,7 @@ export default function ContestHistorySummary() {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {viewMode === "percent" ? (
+                                  {viewMode === "percent" && (
                                     <>
                                       <tr>
                                         <td style={{ padding: 6, color: "#374151" }}>Attempt (%)</td>
@@ -230,7 +239,8 @@ export default function ContestHistorySummary() {
                                         ))}
                                       </tr>
                                     </>
-                                  ) : (
+                                  )}
+                                  {viewMode === "counts" && (
                                     <>
                                       <tr>
                                         <td style={{ padding: 6, color: "#374151" }}>Attempt count</td>
@@ -248,24 +258,25 @@ export default function ContestHistorySummary() {
                                           </td>
                                         ))}
                                       </tr>
-                                      <tr>
-                                        <td style={{ padding: 6, color: "#374151" }}>Avg time to solve</td>
-                                        {["A","B","C","D","E","F","G"].map((L) => (
-                                          <td key={L} style={{ padding: 6, textAlign: "right" }}>
-                                            {letterByDivision[row.division]?.indivTimeAvgSec?.[L] != null ? formatTime(letterByDivision[row.division]!.indivTimeAvgSec[L]!) : "—"}
-                                          </td>
-                                        ))}
-                                      </tr>
-                                      <tr>
-                                        <td style={{ padding: 6, color: "#374151" }}>Avg cumulative time</td>
-                                        {["A","B","C","D","E","F","G"].map((L) => (
-                                          <td key={L} style={{ padding: 6, textAlign: "right" }}>
-                                            {letterByDivision[row.division]?.cumulTimeAvgSec?.[L] != null ? formatTime(letterByDivision[row.division]!.cumulTimeAvgSec[L]!) : "—"}
-                                          </td>
-                                        ))}
-                                      </tr>
                                     </>
                                   )}
+                                  {/* Time rows shown in both views */}
+                                  <tr>
+                                    <td style={{ padding: 6, color: "#374151" }}>Avg time to solve</td>
+                                    {["A","B","C","D","E","F","G"].map((L) => (
+                                      <td key={L} style={{ padding: 6, textAlign: "right" }}>
+                                        {letterByDivision[row.division]?.indivTimeAvgSec?.[L] != null ? formatTime(letterByDivision[row.division]!.indivTimeAvgSec[L]!) : "—"}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                  <tr>
+                                    <td style={{ padding: 6, color: "#374151" }}>Avg cumulative time</td>
+                                    {["A","B","C","D","E","F","G"].map((L) => (
+                                      <td key={L} style={{ padding: 6, textAlign: "right" }}>
+                                        {letterByDivision[row.division]?.cumulTimeAvgSec?.[L] != null ? formatTime(letterByDivision[row.division]!.cumulTimeAvgSec[L]!) : "—"}
+                                      </td>
+                                    ))}
+                                  </tr>
                                 </tbody>
                               </table>
                             </div>
