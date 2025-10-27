@@ -85,7 +85,11 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
 	const [contestsConsidered, setContestsConsidered] = useState(0);
 	const [details, setDetails] = useState<Array<{ id: number; name: string; division: string; attempted: number; solved: number }>>([]);
 	const [letterByDivision, setLetterByDivision] = useState<Record<string, LetterMetrics>>({});
-	const [base, setBase] = useState<{ bg?: DataResponsePayload; rating?: CFRatingChange[]; submissions?: CFSubmission[]; handle?: string } | null>(null);
+		const [base, setBase] = useState<{ bg?: DataResponsePayload; rating?: CFRatingChange[]; submissions?: CFSubmission[]; handle?: string } | null>(null);
+
+		// Global base cache to avoid re-fetching on remount (e.g., modal open/close)
+		const baseCacheRef: Map<string, { bg: DataResponsePayload; rating: CFRatingChange[]; submissions: CFSubmission[] }>
+			= (globalThis as any).__cfSummaryBaseCacheRef || ((globalThis as any).__cfSummaryBaseCacheRef = new Map());
 
 	// Simple in-memory caches shared across re-renders
 	const contestListCacheRef = (globalThis as any).__cfContestListCacheRef || ((globalThis as any).__cfContestListCacheRef = { map: new Map<number, { startTimeSeconds?: number; durationSeconds?: number; name: string }>(), ready: false });
@@ -97,7 +101,7 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
 	// Fetch heavy data only when handle changes (or first load)
 	useEffect(() => {
 		let cancelled = false;
-		async function run() {
+			async function run() {
 			if (!handle) return;
 			setLoading(true);
 			setError(null);
@@ -105,16 +109,21 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
 			setUnknownMetaCount(0);
 			setLetterByDivision({});
 			try {
-				if (base?.handle === handle && base.bg && base.rating && base.submissions) {
-					return; // compute pass below will run in the next effect
-				}
-				const [bg, ratingHistory, submissions] = await Promise.all([
-					connectAndFetchData(),
-					fetchJson<{ status: string; result: CFRatingChange[] }>(`https://codeforces.com/api/user.rating?handle=${encodeURIComponent(handle)}`),
-					fetchJson<{ status: string; result: CFSubmission[] }>(`https://codeforces.com/api/user.status?handle=${encodeURIComponent(handle)}&from=1`),
-				]);
-				if (cancelled) return;
-				setBase({ bg, rating: ratingHistory.result || [], submissions: submissions.result || [], handle });
+					// Use cached base if available
+					const cached = baseCacheRef.get(handle);
+					if (cached) {
+						if (!cancelled) setBase({ bg: cached.bg, rating: cached.rating, submissions: cached.submissions, handle });
+						return;
+					}
+					const [bg, ratingHistory, submissions] = await Promise.all([
+						connectAndFetchData(),
+						fetchJson<{ status: string; result: CFRatingChange[] }>(`https://codeforces.com/api/user.rating?handle=${encodeURIComponent(handle)}`),
+						fetchJson<{ status: string; result: CFSubmission[] }>(`https://codeforces.com/api/user.status?handle=${encodeURIComponent(handle)}&from=1`),
+					]);
+					if (cancelled) return;
+					const packed = { bg, rating: ratingHistory.result || [], submissions: submissions.result || [] };
+					baseCacheRef.set(handle, packed);
+					setBase({ ...packed, handle });
 			} catch (e) {
 				const msg = e instanceof Error ? e.message : String(e);
 				if (!cancelled) setError(msg);

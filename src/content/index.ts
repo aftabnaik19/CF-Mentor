@@ -5,7 +5,7 @@ import "primeicons/primeicons.css";
 import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { useConnectionStore } from "../shared/stores/connectionStore";
 import { mountAdvanceFilterPanel, unmountAdvanceFilterPanel } from "./mount/AdvanceFilterPanel";
-import { mountContestHistorySummary, unmountContestHistorySummary } from "./mount/ContestHistorySummary.tsx";
+import { mountStalkButtonAndPanel, unmountStalkButtonAndPanel } from "./mount/StalkPanel.tsx";
 import { mountDataTable, unmountDataTable } from "./mount/DataTable";
 import { mountProblemAssistant, unmountProblemAssistant } from "./mount/ProblemAssistant";
 
@@ -68,12 +68,12 @@ async function initializeComponents() {
 		unmountDataTable();
 	}
 
-		// Contest History Summary on profile page
+
+		// Contest History Summary via "Stalk" button on profile page
 		if (flags.contestHistorySummary) {
-				// We'll mount only on profile pages inside the mount handler
-				mountContestHistorySummary();
+			mountStalkButtonAndPanel();
 		} else {
-				unmountContestHistorySummary();
+			unmountStalkButtonAndPanel();
 		}
 
 	// Remember for next pass
