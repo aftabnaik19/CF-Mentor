@@ -1,3 +1,4 @@
+/* eslint-disable simple-import-sort/imports */
 import "./PopupApp.css";
 
 import { useEffect, useState } from "react";
@@ -16,6 +17,7 @@ const TOGGLES: ToggleItem[] = [
   { key: "stopwatch", label: "Stopwatch", description: "Show stopwatch inside Problem Assistant" },
   { key: "advancedFiltering", label: "Advanced Filtering", description: "Replace filter-by-tags on Problemset" },
   { key: "dataTable", label: "Enhanced Data Table", description: "Replace problemset table with richer view" },
+  { key: "contestHistorySummary", label: "Contest History Summary", description: "Show division-wise averages on profile page" },
 ];
 
 const Popup = () => {
@@ -31,6 +33,7 @@ const Popup = () => {
         stopwatch: true,
         advancedFiltering: true,
         dataTable: true,
+        contestHistorySummary: true,
       };
       setFlags({ ...defaults, ...(stored ?? {}) });
     });
