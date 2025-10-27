@@ -12,21 +12,19 @@ function isProfilePage(url: string): boolean {
  * Try to locate the horizontal profile links bar and append our Stalk button there.
  * Fallbacks: append near #pageContent header if menu not found.
  */
-function findProfileMenuContainer(): HTMLElement | null {
-  const page = document.querySelector("#pageContent") as HTMLElement | null;
-  if (!page) return null;
-  const candidates = [
-    ".second-level-menu",
-    ".userbox .second-level-menu",
-    ".second-level-menu-list",
-    ".content-with-sidebar .second-level-menu",
-  ];
-  for (const sel of candidates) {
-    const el = page.querySelector(sel) as HTMLElement | null;
-    if (el) return el;
+function findProfileMenuContainer(): HTMLUListElement | null {
+  // Prefer the UL.list that holds the tabs
+  const direct = document.querySelector("#pageContent .second-level-menu-list") as HTMLUListElement | null;
+  if (direct) return direct;
+  const wrapper = document.querySelector("#pageContent .second-level-menu") as HTMLElement | null;
+  if (wrapper) {
+    const ul = wrapper.querySelector(".second-level-menu-list") as HTMLUListElement | null;
+    if (ul) return ul;
   }
-  // Fallback: top of pageContent
-  return page;
+  // Broader fallbacks for different CF layouts
+  const any = document.querySelector(".second-level-menu-list") as HTMLUListElement | null;
+  if (any) return any;
+  return null;
 }
 
 function ensureModalHost(): { host: HTMLElement; mountPoint: HTMLElement } {
@@ -124,18 +122,16 @@ export function mountStalkButtonAndPanel() {
   // Build <li><a> like CF menu
   const anchor = document.createElement("a");
   anchor.id = BTN_ID;
-  anchor.textContent = "Stalk";
+  anchor.textContent = "STALK";
   anchor.href = "#";
-  anchor.className = "second-level-menu__link";
+  // Match CF menu: anchors inside li inherit styles; no extra classes needed
+  anchor.removeAttribute("class");
   anchor.addEventListener("click", (e) => { e.preventDefault(); openModal(); });
 
-  if (menu.tagName === "UL" || menu.tagName === "OL") {
-    const li = document.createElement("li");
-    li.appendChild(anchor);
-    (menu as HTMLElement).appendChild(li);
-  } else {
-    (menu as HTMLElement).appendChild(anchor);
-  }
+  // Insert as a list item in the UL so CF CSS applies identically
+  const li = document.createElement("li");
+  li.appendChild(anchor);
+  menu.appendChild(li);
 }
 
 export function unmountStalkButtonAndPanel() {
