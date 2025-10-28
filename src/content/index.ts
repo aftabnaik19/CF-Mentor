@@ -1,6 +1,3 @@
-import "primereact/resources/primereact.min.css"; // core styles
-import "primeicons/primeicons.css";
-
 import { useConnectionStore } from "../shared/stores/connectionStore";
 import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { mountAdvanceFilterPanel, unmountAdvanceFilterPanel } from "./mount/AdvanceFilterPanel";
