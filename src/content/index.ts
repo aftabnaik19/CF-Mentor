@@ -1,6 +1,8 @@
+import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { useConnectionStore } from "../shared/stores/connectionStore";
 import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { mountAdvanceFilterPanel, unmountAdvanceFilterPanel } from "./mount/AdvanceFilterPanel";
+import { mountStalkButtonAndPanel, unmountStalkButtonAndPanel } from "./mount/StalkPanel.tsx";
 import { mountDataTable, unmountDataTable } from "./mount/DataTable";
 import { mountProblemAssistant, unmountProblemAssistant } from "./mount/ProblemAssistant";
 
@@ -62,6 +64,14 @@ async function initializeComponents() {
 	} else {
 		unmountDataTable();
 	}
+
+
+		// Contest History Summary via "Stalk" button on profile page
+		if (flags.contestHistorySummary) {
+			mountStalkButtonAndPanel();
+		} else {
+			unmountStalkButtonAndPanel();
+		}
 
 	// Remember for next pass
 	lastFlags = flags;

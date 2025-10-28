@@ -6,7 +6,8 @@ export type FeatureKey =
   | "problemAssistant" // bookmark + notes + stopwatch panel
   | "stopwatch"
   | "advancedFiltering"
-  | "dataTable";
+  | "dataTable"
+  | "contestHistorySummary"; // profile page: division-wise summary of past k contests
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 
@@ -15,6 +16,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   stopwatch: true,
   advancedFiltering: true,
   dataTable: true,
+  contestHistorySummary: true,
 };
 
 interface FeatureFlagsState {
