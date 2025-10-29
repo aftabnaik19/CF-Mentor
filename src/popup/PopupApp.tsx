@@ -1,4 +1,4 @@
-/* eslint-disable simple-import-sort/imports */
+ 
 import "./PopupApp.css";
 
 import { useEffect, useState } from "react";

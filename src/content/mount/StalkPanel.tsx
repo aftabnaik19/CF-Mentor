@@ -54,15 +54,15 @@ function ensureModalHost(): { host: HTMLElement; mountPoint: HTMLElement } {
 
 function styleTag() {
   const style = document.createElement("style");
-  style.textContent = `
-  .cfm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 2147483000; display: flex; align-items: center; justify-content: center; }
-  .cfm-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; width: min(960px, 95vw); max-height: 90vh; overflow: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-  .cfm-header { display:flex; align-items:center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f3f4f6; font-weight: 600; }
-  .cfm-close { background:none; border:none; font-size:14px; cursor:pointer; color:#374151; }
-  .cfm-body { padding: 8px; }
-  .cfm-btn { display:inline-block; padding: 3px 10px; border-radius: 12px; background: #111; color:#fff; font-weight: 600; cursor: pointer; margin-left: 8px; }
-  .cfm-btn:hover { filter: brightness(1.1); }
-  `;
+   style.textContent = `
+   .cfm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2147483000; display: flex; align-items: center; justify-content: center; }
+   .cfm-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; width: min(960px, 95vw); max-height: 90vh; overflow: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: #000; }
+   .cfm-header { display:flex; align-items:center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f3f4f6; font-weight: 600; background: #f9fafb; }
+   .cfm-close { background:none; border:none; font-size:14px; cursor:pointer; color:#374151; }
+   .cfm-body { padding: 16px; }
+   .cfm-btn { display:inline-block; padding: 3px 10px; border-radius: 12px; background: #d1d5db; color:#000; font-weight: 600; cursor: pointer; margin-left: 8px; }
+   .cfm-btn:hover { background: #9ca3af; }
+   `;
   return style;
 }
 

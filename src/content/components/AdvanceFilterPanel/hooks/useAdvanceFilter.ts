@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 
 import { useFilterStore } from "@/shared/stores/filterStore";
+import { ProblemFilter } from "@/shared/types/filters";
 import { metadataService } from "@/shared/utils/metadataService";
+
 import { useDebounce } from "./useDebounce";
 
 const PROBLEM_INDICES = [
@@ -104,7 +106,7 @@ export const useAdvancedFilter = () => {
   );
 
   useEffect(() => {
-    const newFilters: any = {};
+    const newFilters: ProblemFilter = {};
 
     const min = parseInt(debouncedState.minDifficulty, 10);
     const max = parseInt(debouncedState.maxDifficulty, 10);
