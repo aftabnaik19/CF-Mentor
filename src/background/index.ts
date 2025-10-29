@@ -3,6 +3,7 @@ import { BookmarkedProblem, BookmarkStorage } from "@/shared/types/bookmark";
 import { MESSAGE_TYPES } from "../shared/constants/messages";
 import { getData, MENTOR_STORE } from "../shared/utils/indexedDb";
 import { fetchAndStoreData } from "./dataFetcher";
+import type { CFSubmission, CFRatingChange } from "../content/components/ContestHistorySummary/types";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
 
@@ -202,10 +203,10 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     (async () => {
       try {
         const rating = await fetchWithCache(`${handle}.rating`, () =>
-          fetchJson<{ status: string; result: any[] }>(`https://codeforces.com/api/user.rating?handle=${encodeURIComponent(handle)}`)
+          fetchJson<{ status: string; result: CFRatingChange[] }>(`https://codeforces.com/api/user.rating?handle=${encodeURIComponent(handle)}`)
         );
         const submissions = await fetchWithCache(`${handle}.status`, () =>
-          fetchJson<{ status: string; result: any[] }>(`https://codeforces.com/api/user.status?handle=${encodeURIComponent(handle)}&from=1`)
+          fetchJson<{ status: string; result: CFSubmission[] }>(`https://codeforces.com/api/user.status?handle=${encodeURIComponent(handle)}&from=1`)
         );
         sendResponse({ success: true, rating, submissions });
       } catch (error) {

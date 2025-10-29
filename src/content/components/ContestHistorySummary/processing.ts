@@ -1,6 +1,7 @@
 import type { Contest, Problem } from "@/shared/types/mentor";
-import type { CFSubmission, CFRatingChange, LetterMetrics, SummaryRow } from "./types";
+
 import { fetchJson, safeParseStart } from "./api";
+import type { CFRatingChange, CFSubmission, LetterMetrics, SummaryRow } from "./types";
 
 export async function computeSummaries(
 	base: { bg: { problems: Problem[]; contests: Contest[] }; rating: CFRatingChange[]; submissions: CFSubmission[] },
