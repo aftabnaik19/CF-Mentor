@@ -32,7 +32,21 @@ export async function computeSummaries(
 	if (by === "months" && k && k > 0) {
 		const monthsSec = k * 30 * 24 * 60 * 60; // approx
 		const cutoff = nowSec - monthsSec;
-		selectedRatings = ratedAll.filter((r) => (r.ratingUpdateTimeSeconds || 0) >= cutoff);
+		// Partition by division, filter by time, take last k per division
+		const tempByDiv: Map<string, CFRatingChange[]> = new Map();
+		for (const r of ratedAll) {
+			if ((r.ratingUpdateTimeSeconds || 0) >= cutoff) {
+				const c = allContestsMap.get(r.contestId)!;
+				const div = c.type;
+				if (!tempByDiv.has(div)) tempByDiv.set(div, []);
+				tempByDiv.get(div)!.push(r);
+			}
+		}
+		selectedRatings = [];
+		for (const [, arr] of tempByDiv.entries()) {
+			const subset = arr.slice(-k); // last k in time
+			selectedRatings.push(...subset);
+		}
 	} else {
 		// For count mode, partition by division and take last k
 		const byDiv: Map<string, CFRatingChange[]> = new Map();
