@@ -178,7 +178,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       });
       return true;
 
-    case MESSAGE_TYPES.ADD_OR_UPDATE_BOOKMARK:
+    case MESSAGE_TYPES.ADD_OR_UPDATE_BOOKMARK: {
       const { difficultyRating, notes, timeRequiredSeconds, problemRating, problemTags } = payload;
       const key = getProblemKey(problemInfo.contestId, problemInfo.problemIdx);
       const now = Date.now();
@@ -199,19 +199,23 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
         currentData.bookmarkedProblems[key] = bookmark;
         return currentData;
       })
-      .then(() => sendResponse({ success: true }))
-      .catch((error) => sendResponse({ error: error.message }));
+        .then(() => sendResponse({ success: true }))
+        .catch((error) => sendResponse({ error: error.message }));
       return true;
-
-    case MESSAGE_TYPES.REMOVE_BOOKMARK:
-      const problemKey = getProblemKey(problemInfo.contestId, problemInfo.problemIdx);
+    }
+    case MESSAGE_TYPES.REMOVE_BOOKMARK: {
+      const problemKey = getProblemKey(
+        problemInfo.contestId,
+        problemInfo.problemIdx,
+      );
       performUpdate(handle, (currentData) => {
         delete currentData.bookmarkedProblems[problemKey];
         return currentData;
       })
-      .then(() => sendResponse({ success: true }))
-      .catch((error) => sendResponse({ error: error.message }));
+        .then(() => sendResponse({ success: true }))
+        .catch((error) => sendResponse({ error: error.message }));
       return true;
+    }
   }
 
   return true; // Keep the message channel open for async response

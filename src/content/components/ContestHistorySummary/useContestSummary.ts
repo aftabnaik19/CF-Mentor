@@ -88,15 +88,23 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
 		const [base, setBase] = useState<{ bg?: DataResponsePayload; rating?: CFRatingChange[]; submissions?: CFSubmission[]; handle?: string } | null>(null);
 
 		// Global base cache to avoid re-fetching on remount (e.g., modal open/close)
-		const baseCacheRef: Map<string, { bg: DataResponsePayload; rating: CFRatingChange[]; submissions: CFSubmission[] }>
-			= (globalThis as any).__cfSummaryBaseCacheRef || ((globalThis as any).__cfSummaryBaseCacheRef = new Map());
+		type AppGlobal = typeof globalThis & {
+  __cfSummaryBaseCacheRef?: Map<string, { bg: DataResponsePayload; rating: CFRatingChange[]; submissions: CFSubmission[] }>;
+  __cfContestListCacheRef?: { map: Map<number, { startTimeSeconds?: number; durationSeconds?: number; name: string }>; ready: boolean };
+  __cfStandingsMetaCacheRef?: Map<number, { count: number; indices: string[] }>;
+  __cfStandingsUserRankCacheRef?: Map<string, number>;
+};
 
 	// Simple in-memory caches shared across re-renders
-	const contestListCacheRef = (globalThis as any).__cfContestListCacheRef || ((globalThis as any).__cfContestListCacheRef = { map: new Map<number, { startTimeSeconds?: number; durationSeconds?: number; name: string }>(), ready: false });
+			const g = globalThis as AppGlobal;
+    const baseCacheRef = g.__cfSummaryBaseCacheRef || (g.__cfSummaryBaseCacheRef = new Map());
+
+	// Simple in-memory caches shared across re-renders
+	const contestListCacheRef = g.__cfContestListCacheRef || (g.__cfContestListCacheRef = { map: new Map(), ready: false });
 	// Cache contest standings metadata: problem count and indices
-	const standingsMetaCacheRef = (globalThis as any).__cfStandingsMetaCacheRef || ((globalThis as any).__cfStandingsMetaCacheRef = new Map<number, { count: number; indices: string[] }>());
+	const standingsMetaCacheRef = g.__cfStandingsMetaCacheRef || (g.__cfStandingsMetaCacheRef = new Map());
 	// Cache user rank from standings
-	const userRankCacheRef = (globalThis as any).__cfStandingsUserRankCacheRef || ((globalThis as any).__cfStandingsUserRankCacheRef = new Map<string, number>());
+	const userRankCacheRef = g.__cfStandingsUserRankCacheRef || (g.__cfStandingsUserRankCacheRef = new Map());
 
 	// Fetch heavy data only when handle changes (or first load)
 	useEffect(() => {
@@ -133,7 +141,7 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
 		}
 		run();
 		return () => { cancelled = true; };
-	}, [handle]);
+	}, [handle, baseCacheRef]);
 
 	// Compute summaries when k or base data changes; do NOT re-fetch APIs
 	useEffect(() => {
@@ -478,8 +486,8 @@ async function fetchJson<T extends { status?: string; result?: unknown; comment?
 	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
 	const data = (await res.json()) as T;
-	if (data.status && data.status !== "OK") throw new Error((data as any).comment || `API error for ${url}`);
+	if (data.status && data.status !== "OK") throw new Error(data.comment || `API error for ${url}`);
 	return data;
 }
 
-export type { SummaryRow, LetterMetrics };
+export type { LetterMetrics,SummaryRow };
