@@ -78,7 +78,7 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
 			setUnknownMetaCount(0);
 			setLetterByDivision({});
 			try {
-				await computeSummaries(handle, { bg: base.bg!, rating: base.rating!, submissions: base.submissions! }, k, by, setSummary, setUnknownMetaCount, setContestsConsidered, setLetterByDivision, setDetails);
+				await computeSummaries({ bg: base.bg!, rating: base.rating!, submissions: base.submissions! }, k, by, setSummary, setUnknownMetaCount, setContestsConsidered, setLetterByDivision, setDetails);
 			} catch (e) {
 				const msg = e instanceof Error ? e.message : String(e);
 				if (!cancelled) setError(msg);

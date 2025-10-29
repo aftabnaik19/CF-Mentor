@@ -35,6 +35,7 @@ export type CFRatingChange = {
 	ratingUpdateTimeSeconds: number;
 	oldRating?: number;
 	newRating?: number;
+	rank: number;
 };
 
 export type LetterMetrics = {

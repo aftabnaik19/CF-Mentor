@@ -30,13 +30,7 @@ export async function fetchJson<T extends { status?: string; result?: unknown; c
 	return data;
 }
 
-export function parseDivision(name: string): string {
-	const m = /Div\.?\s*(\d)/i.exec(name);
-	if (m) return `Div. ${m[1]}`;
-	if (/Div\.?\s*1\s*\+\s*Div\.?\s*2/i.test(name)) return "Div.1+Div. 2";
-	if (/Educational/i.test(name)) return "Educational";
-	return "Other";
-}
+
 
 export function safeParseStart(startTime: string | undefined | null): number | null {
 	if (!startTime) return null;

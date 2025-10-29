@@ -1,9 +1,8 @@
 import type { Contest, Problem } from "@/shared/types/mentor";
 import type { CFSubmission, CFRatingChange, LetterMetrics, SummaryRow } from "./types";
-import { fetchJson, parseDivision, safeParseStart } from "./api";
+import { fetchJson, safeParseStart } from "./api";
 
 export async function computeSummaries(
-	handle: string,
 	base: { bg: { problems: Problem[]; contests: Contest[] }; rating: CFRatingChange[]; submissions: CFSubmission[] },
 	k: number | null,
 	by: "count" | "months",
@@ -28,27 +27,31 @@ export async function computeSummaries(
 	});
 
 	const ratedAll = base.rating || [];
-	// Partition by division and take last k (or by months) for each division
-	const byDiv: Map<string, CFRatingChange[]> = new Map();
-	for (const r of ratedAll) {
-		const div = parseDivision(r.contestName);
-		if (!byDiv.has(div)) byDiv.set(div, []);
-		byDiv.get(div)!.push(r);
-	}
-	const selected: CFRatingChange[] = [];
+	let selectedRatings: CFRatingChange[];
 	const nowSec = Math.floor(Date.now() / 1000);
-	const monthsSec = (k && k > 0) ? k * 30 * 24 * 60 * 60 : 0; // approx
-	for (const [, arr] of byDiv.entries()) {
-		let subset: CFRatingChange[];
-		if (by === "months" && monthsSec > 0) {
-			const cutoff = nowSec - monthsSec;
-			subset = arr.filter((r) => (r.ratingUpdateTimeSeconds || 0) >= cutoff);
-		} else {
-			subset = k && k > 0 ? arr.slice(-k) : arr.slice();
+	if (by === "months" && k && k > 0) {
+		const monthsSec = k * 30 * 24 * 60 * 60; // approx
+		const cutoff = nowSec - monthsSec;
+		selectedRatings = ratedAll.filter((r) => (r.ratingUpdateTimeSeconds || 0) >= cutoff);
+	} else {
+		// For count mode, partition by division and take last k
+		const byDiv: Map<string, CFRatingChange[]> = new Map();
+		for (const r of ratedAll) {
+			const c = allContestsMap.get(r.contestId)!;
+			const div = c.type;
+			if (!byDiv.has(div)) byDiv.set(div, []);
+			byDiv.get(div)!.push(r);
 		}
-		for (const r of subset) selected.push(r);
+		selectedRatings = [];
+		for (const [, arr] of byDiv.entries()) {
+			const subset = k && k > 0 ? arr.slice(-k) : arr.slice();
+			selectedRatings.push(...subset);
+		}
 	}
-	const contestIdsSet = new Set<number>(selected.map((r) => r.contestId));
+
+	const selectedContests = selectedRatings.map((r) => allContestsMap.get(r.contestId)).filter(Boolean) as Contest[];
+
+	const contestIdsSet = new Set<number>(selectedContests.map((c) => c.id));
 	setContestsConsidered(contestIdsSet.size);
 
 	const contestIds = contestIdsSet;
@@ -56,21 +59,15 @@ export async function computeSummaries(
 	const meta = new Map<number, { start: number | null; end: number | null; division: string; totalProblems: number | null; name: string }>();
 	const missingTime: number[] = [];
 	const missingTotal: number[] = [];
-	for (const r of selected) {
-		const c = allContestsMap.get(r.contestId);
-		const div = parseDivision(r.contestName);
-		if (c) {
-			const start = safeParseStart(c.startTime);
-			const end = start != null && c.durationSeconds != null ? start + c.durationSeconds : null;
-			const total = problemsByContest.get(c.id) ?? null;
-			if (start == null || end == null) missingTime.push(r.contestId);
-			if (total == null) missingTotal.push(r.contestId);
-			meta.set(r.contestId, { start, end, division: div, totalProblems: total, name: c.name });
-		} else {
-			missingTime.push(r.contestId);
-			missingTotal.push(r.contestId);
-			meta.set(r.contestId, { start: null, end: null, division: div, totalProblems: null, name: r.contestName });
-		}
+	const ratingByContest = new Map<number, CFRatingChange>(selectedRatings.map((r) => [r.contestId, r]));
+	for (const c of selectedContests) {
+		const div = c.type; // Use the type field directly
+		const start = safeParseStart(c.startTime);
+		const end = start != null && c.durationSeconds != null ? start + c.durationSeconds : null;
+		const total = problemsByContest.get(c.id) ?? null;
+		if (start == null || end == null) missingTime.push(c.id);
+		if (total == null) missingTotal.push(c.id);
+		meta.set(c.id, { start, end, division: div, totalProblems: total, name: c.name });
 	}
 
 	// Fallback 1: Fill missing time via contest.list
@@ -130,13 +127,13 @@ export async function computeSummaries(
 		}
 	}
 
-	// Count remaining unknowns for UI note
-	let unknown = 0;
-	for (const cid of selected.map(r => r.contestId)) {
-		const m = meta.get(cid)!;
-		if (m.start == null || m.end == null || m.totalProblems == null) unknown++;
-	}
-	setUnknownMetaCount(unknown);
+				// Count remaining unknowns for UI note
+				let unknown = 0;
+				for (const cid of selectedContests.map(c => c.id)) {
+					const m = meta.get(cid)!;
+					if (m.start == null || m.end == null || m.totalProblems == null) unknown++;
+				}
+				setUnknownMetaCount(unknown);
 
 	// submissions filtered
 	const subs = base.submissions || [];
@@ -149,6 +146,8 @@ export async function computeSummaries(
 	for (const s of subs) {
 		const cid = s.contestId;
 		if (!cid || !contestIds.has(cid)) continue;
+		// Exclude virtual contests
+		if (s.author?.participantType === "VIRTUAL") continue;
 		const m = meta.get(cid)!;
 		// only submissions during contest if we know window
 		if (m.start != null && m.end != null) {
@@ -174,30 +173,12 @@ export async function computeSummaries(
 	// per-letter aggregates per division
 	const letterAggByDivision = new Map<string, { denom: Record<string, number>; attempted: Record<string, number>; accepted: Record<string, number>; indivSum: Record<string, number>; indivCnt: Record<string, number>; cumulSum: Record<string, number>; cumulCnt: Record<string, number> }>();
 
-	// Pre-fetch user ranks for selected contests (with cache)
-	if (handle) {
-		for (const r of selected) {
-			const cid = r.contestId;
-			const key = `${cid}:${handle}`;
-			if ((globalThis as any).__cfStandingsUserRankCacheRef?.has(key)) continue;
-			try {
-				const st = await fetchJson<{ status: string; result: { rows?: Array<{ party?: { members?: Array<{ handle?: string }> }; rank?: number }> } }>(
-					`https://codeforces.com/api/contest.standings?contestId=${cid}&handles=${encodeURIComponent(handle)}&from=1&count=1`
-				);
-				const row = (st.result?.rows && st.result.rows[0]) || undefined;
-				const rank = typeof row?.rank === "number" ? row.rank : undefined;
-				if (rank != null) ((globalThis as any).__cfStandingsUserRankCacheRef ||= new Map()).set(key, rank);
-			} catch {
-				// ignore failures
-			}
-		}
-	}
-
-	for (const r of selected) {
+				for (const c of selectedContests) {
+					const r = ratingByContest.get(c.id)!;
 		const cid = r.contestId;
 		const m = meta.get(cid)!;
 		const rec = perContest.get(cid) || { attempted: new Set(), solved: new Set(), okTimeByLetter: new Map() };
-		const keys = m.division === "Div. 1" || m.division === "Div. 2" ? [m.division, "Div.1+Div. 2"] : [m.division];
+					const keys = [m.division];
 
 		for (const keyDiv of keys) {
 			if (!byDivision.has(keyDiv)) byDivision.set(keyDiv, { contests: 0, attempted: 0, solved: 0, totalProblems: 0, haveTotalCount: 0, ratingDeltaSum: 0, haveDeltaCount: 0, rankSum: 0, rankCount: 0 });
@@ -210,10 +191,10 @@ export async function computeSummaries(
 				agg.ratingDeltaSum += (r.newRating - r.oldRating);
 				agg.haveDeltaCount += 1;
 			}
-			if (handle) {
-				const rankKey = `${cid}:${handle}`;
-				if ((globalThis as any).__cfStandingsUserRankCacheRef?.has(rankKey)) { agg.rankSum += (globalThis as any).__cfStandingsUserRankCacheRef.get(rankKey)!; agg.rankCount += 1; }
-			}
+						if (typeof r.rank === "number") {
+							agg.rankSum += r.rank;
+							agg.rankCount += 1;
+						}
 		}
 
 		// Initialize letter aggregators for both keys
@@ -248,13 +229,19 @@ export async function computeSummaries(
 				const ch = idx[0];
 				if (["A","B","C","D","E","F","G"].includes(ch)) solvedLetters.add(ch);
 			}
-			const okTime = rec.okTimeByLetter || new Map<string, number>();
-			const cumulByLetter: Record<string, number> = {};
-			let cumul = 0;
-			for (const L of LETTERS) {
-				const t = okTime.get(L);
-				if (t != null) { cumul += t; cumulByLetter[L] = cumul; } else { cumulByLetter[L] = NaN; }
-			}
+						const okTime = rec.okTimeByLetter || new Map<string, number>();
+						const cumulByLetter: Record<string, number> = {};
+						// Sort solved letters by solve time
+						const solvedWithTimes = Array.from(okTime.entries()).sort((a, b) => a[1] - b[1]);
+						let cumul = 0;
+						for (const [L, t] of solvedWithTimes) {
+							cumul += t;
+							cumulByLetter[L] = cumul;
+						}
+						// For unsolved, set NaN
+						for (const L of LETTERS) {
+							if (!okTime.has(L)) cumulByLetter[L] = NaN;
+						}
 			for (const ladd of laddTargets) {
 				for (const L of lettersPresent) {
 					ladd.denom[L] += 1;
@@ -305,13 +292,13 @@ export async function computeSummaries(
 	}
 	setLetterByDivision(byDivOut);
 
-	// Build per-contest details for the UI (kept for compatibility; caller may ignore)
-	const det: Array<{ id: number; name: string; division: string; attempted: number; solved: number }> = [];
-	for (const r of selected) {
-		const cid = r.contestId;
-		const m = meta.get(cid)!;
-		const rec = perContest.get(cid) || { attempted: new Set(), solved: new Set(), okTimeByLetter: new Map() };
-		det.push({ id: cid, name: m.name, division: m.division, attempted: rec.attempted.size, solved: rec.solved.size });
-	}
-	setDetails(det);
+				// Build per-contest details for the UI (kept for compatibility; caller may ignore)
+				const det: Array<{ id: number; name: string; division: string; attempted: number; solved: number }> = [];
+				for (const c of selectedContests) {
+					const cid = c.id;
+					const m = meta.get(cid)!;
+					const rec = perContest.get(cid) || { attempted: new Set(), solved: new Set(), okTimeByLetter: new Map() };
+					det.push({ id: cid, name: m.name, division: m.division, attempted: rec.attempted.size, solved: rec.solved.size });
+				}
+				setDetails(det);
 }
