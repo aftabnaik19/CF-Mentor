@@ -1,9 +1,9 @@
 import { BookmarkedProblem, BookmarkStorage } from "@/shared/types/bookmark";
 
+import type { CFRatingChange,CFSubmission } from "../content/components/ContestHistorySummary/types";
 import { MESSAGE_TYPES } from "../shared/constants/messages";
 import { getData, MENTOR_STORE } from "../shared/utils/indexedDb";
 import { fetchAndStoreData } from "./dataFetcher";
-import type { CFSubmission, CFRatingChange } from "../content/components/ContestHistorySummary/types";
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
 

@@ -3,6 +3,11 @@ import type { Contest, Problem } from "@/shared/types/mentor";
 import { fetchJson, safeParseStart } from "./api";
 import type { CFRatingChange, CFSubmission, LetterMetrics, SummaryRow } from "./types";
 
+declare global {
+  var __cfContestListCacheRef: { map: Map<number, { startTimeSeconds?: number; durationSeconds?: number; name: string }>; ready: boolean } | undefined;
+  var __cfStandingsMetaCacheRef: Map<number, { count: number; indices: string[] }> | undefined;
+}
+
 export async function computeSummaries(
 	base: { bg: { problems: Problem[]; contests: Contest[] }; rating: CFRatingChange[]; submissions: CFSubmission[] },
 	k: number | null,
@@ -87,21 +92,21 @@ export async function computeSummaries(
 
 	// Fallback 1: Fill missing time via contest.list
 	if (missingTime.length > 0) {
-		if (!(globalThis as any).__cfContestListCacheRef?.ready) {
+		if (!globalThis.__cfContestListCacheRef?.ready) {
 			try {
 				const contestList = await fetchJson<{ status: string; result: Array<{ id: number; name: string; startTimeSeconds?: number; durationSeconds?: number }> }>(
 					`https://codeforces.com/api/contest.list?gym=false`
 				);
-				(globalThis as any).__cfContestListCacheRef = { map: new Map(), ready: false };
-				contestList.result.forEach((c) => (globalThis as any).__cfContestListCacheRef.map.set(c.id, { startTimeSeconds: c.startTimeSeconds, durationSeconds: c.durationSeconds, name: c.name }));
-				(globalThis as any).__cfContestListCacheRef.ready = true;
+				globalThis.__cfContestListCacheRef = { map: new Map(), ready: false };
+				contestList.result.forEach((c) => globalThis.__cfContestListCacheRef!.map.set(c.id, { startTimeSeconds: c.startTimeSeconds, durationSeconds: c.durationSeconds, name: c.name }));
+				globalThis.__cfContestListCacheRef.ready = true;
 			} catch {
 				// ignore
 			}
 		}
 		for (const cid of missingTime) {
 			const m = meta.get(cid);
-			const cl = (globalThis as any).__cfContestListCacheRef?.map.get(cid);
+			const cl = globalThis.__cfContestListCacheRef?.map.get(cid);
 			if (m && cl && cl.startTimeSeconds && cl.durationSeconds) {
 				m.start = cl.startTimeSeconds;
 				m.end = cl.startTimeSeconds + cl.durationSeconds;
@@ -115,8 +120,8 @@ export async function computeSummaries(
 		const m = meta.get(cid)!;
 		if (m.totalProblems != null) continue;
 		try {
-			if ((globalThis as any).__cfStandingsMetaCacheRef?.has(cid)) {
-				const metaEntry = (globalThis as any).__cfStandingsMetaCacheRef.get(cid)!;
+			if (globalThis.__cfStandingsMetaCacheRef?.has(cid)) {
+				const metaEntry = globalThis.__cfStandingsMetaCacheRef.get(cid)!;
 				m.totalProblems = metaEntry.count;
 			} else {
 				const st = await fetchJson<{ status: string; result: { problems: Array<{ index?: string }> } }>(
@@ -125,7 +130,7 @@ export async function computeSummaries(
 				const indices: string[] = Array.isArray(st.result?.problems) ? st.result.problems.map((x) => (x?.index ?? "")).filter(Boolean) as string[] : [];
 				const cnt = indices.length || null;
 				if (typeof cnt === "number") {
-					((globalThis as any).__cfStandingsMetaCacheRef ||= new Map()).set(cid, { count: cnt, indices });
+					(globalThis.__cfStandingsMetaCacheRef ||= new Map()).set(cid, { count: cnt, indices });
 				}
 				m.totalProblems = cnt;
 				if (!lettersByContest.has(cid) && indices.length > 0) {
@@ -224,7 +229,7 @@ export async function computeSummaries(
 		const laddTargets = keys.map((kdiv) => letterAggByDivision.get(kdiv)!);
 		// determine letters present in this contest
 		const lettersPresent = lettersByContest.get(cid) ?? (() => {
-			const metaEntry = (globalThis as any).__cfStandingsMetaCacheRef?.get(cid);
+			const metaEntry = globalThis.__cfStandingsMetaCacheRef?.get(cid);
 			if (!metaEntry) return undefined;
 			const set = new Set<string>();
 			for (const idx of metaEntry.indices) {

@@ -42,7 +42,7 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
  					}
  					const bg = await connectAndFetchData();
  					// Fetch user data via background script
- 					const userDataResponse = await new Promise<{ success: boolean; rating?: any[]; submissions?: any[]; error?: string }>((resolve) => {
+ 					const userDataResponse = await new Promise<{ success: boolean; rating?: CFRatingChange[]; submissions?: CFSubmission[]; error?: string }>((resolve) => {
  						chrome.runtime.sendMessage({ type: "fetch-user-data", handle }, (response) => {
  							resolve(response);
  						});
