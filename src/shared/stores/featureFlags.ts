@@ -7,7 +7,8 @@ export type FeatureKey =
   | "stopwatch"
   | "advancedFiltering"
   | "dataTable"
-  | "contestHistorySummary"; // profile page: division-wise summary of past k contests
+  | "contestHistorySummary" // profile page: division-wise summary of past k contests
+  | "maxRatedHeatmap"; // profile page: show max rating heatmap instead of count
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 
@@ -17,6 +18,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   advancedFiltering: true,
   dataTable: true,
   contestHistorySummary: true,
+  maxRatedHeatmap: false,
 };
 
 interface FeatureFlagsState {

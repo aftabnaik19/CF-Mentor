@@ -15,3 +15,4 @@ Commit message format:
 
 Code style & tests:
 - Run `npm run lint` and `npm run build` before opening a PR.
+- For details on project structure, conventions, and architecture, please see our [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) guide.
