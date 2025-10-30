@@ -1,7 +1,3 @@
-/* eslint-disable simple-import-sort/imports */
-import "primereact/resources/primereact.min.css"; // core styles
-import "primeicons/primeicons.css";
-
 import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { useConnectionStore } from "../shared/stores/connectionStore";
 import {
