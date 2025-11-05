@@ -10,7 +10,8 @@ const SHADOW_MOUNT_ID = "cf-mentor-datatable-shadow-mount";
 let originalContent: string | null = null;
 let originalStyle: string | null = null;
 let originalClassName: string | null = null;
-let originalPaginationDisplay: string | null = null;
+type HiddenEl = { el: HTMLElement; prev: string | null };
+let hiddenPaginationEls: HiddenEl[] = [];
 
 function injectStylesIntoShadow(shadowRoot: ShadowRoot) {
   // 1) Project-specific DataTable styles so row classes render inside shadow
@@ -51,11 +52,12 @@ export function mountDataTable() {
     originalStyle = targetDiv.getAttribute("style");
     originalClassName = targetDiv.className;
 
-    // Hide native pagination if present and remember its previous inline display
-    const paginationDiv = document.querySelector(".pagination") as HTMLElement | null;
-    if (paginationDiv) {
-      originalPaginationDisplay = paginationDiv.style.display || null;
-      paginationDiv.style.display = "none";
+    // Hide all native paginations (top/bottom) and similar controls
+    hiddenPaginationEls = [];
+    const toHide = Array.from(document.querySelectorAll(".pagination")) as HTMLElement[];
+    for (const el of toHide) {
+      hiddenPaginationEls.push({ el, prev: el.style.display || null });
+      el.style.display = "none";
     }
 
     // Clear its contents and keep class/style so layout remains consistent
@@ -104,14 +106,12 @@ export function unmountDataTable() {
       originalClassName = null;
     }
   }
-  // Restore pagination inline style exactly as before
-  const paginationDiv = document.querySelector(".pagination") as HTMLElement | null;
-  if (paginationDiv) {
-    if (originalPaginationDisplay === null) {
-      paginationDiv.style.removeProperty("display");
-    } else {
-      paginationDiv.style.display = originalPaginationDisplay;
+  // Restore pagination inline styles exactly as before for all hidden nodes
+  if (hiddenPaginationEls.length) {
+    for (const { el, prev } of hiddenPaginationEls) {
+      if (prev === null) el.style.removeProperty("display");
+      else el.style.display = prev;
     }
-    originalPaginationDisplay = null;
+    hiddenPaginationEls = [];
   }
 }

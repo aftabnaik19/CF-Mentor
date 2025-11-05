@@ -113,8 +113,9 @@ const ProblemDataTable: React.FC = () => {
 			reorderableColumns
 			stripedRows
 			paginator
+			paginatorPosition="bottom"
+			paginatorTemplate={{ layout: "FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink" }}
 			rows={25}
-			rowsPerPageOptions={[25, 50, 100]}
 
 			rowClassName={(rowData: Problem) => {
 				console.log('Row class for', rowData.contestId + rowData.index, 'userVerdict:', rowData.userVerdict);
