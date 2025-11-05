@@ -1,5 +1,8 @@
 import ProblemDataTable from "../components/datatable/DataTable";
 import { mountComponent, unmountComponent } from "../utils/ComponentUtils.tsx";
+// Inject project styles into shadow root so custom row classes work
+// Vite `?raw` imports file contents as string
+import dataTableCss from "../components/datatable/DataTable.css?raw";
 
 const CONTAINER_ID = "cf-mentor-datatable";
 const SHADOW_MOUNT_ID = "cf-mentor-datatable-shadow-mount";
@@ -7,17 +10,26 @@ const SHADOW_MOUNT_ID = "cf-mentor-datatable-shadow-mount";
 let originalContent: string | null = null;
 let originalStyle: string | null = null;
 let originalClassName: string | null = null;
-const paginationDiv = document.querySelector(".pagination") as HTMLElement | null;
+let originalPaginationDisplay: string | null = null;
 
 function injectStylesIntoShadow(shadowRoot: ShadowRoot) {
+  // 1) Project-specific DataTable styles so row classes render inside shadow
+  if (dataTableCss && !shadowRoot.querySelector('style[data-cf-mentor-datatable]')) {
+    const s = document.createElement("style");
+    s.setAttribute("data-cf-mentor-datatable", "");
+    s.textContent = dataTableCss;
+    shadowRoot.appendChild(s);
+  }
+
+  // 2) PrimeReact theme, core CSS and PrimeIcons via CDN for now
+  // Note: consider bundling later to avoid CSP/CDN risks
   const links = [
-    // PrimeReact theme and core CSS (scoped inside shadow)
     "https://cdn.jsdelivr.net/npm/primereact@10.9.6/resources/themes/lara-light-indigo/theme.css",
     "https://cdn.jsdelivr.net/npm/primereact@10.9.6/resources/primereact.min.css",
-    // PrimeIcons (for sort/resizer icons)
     "https://cdn.jsdelivr.net/npm/primeicons@7.0.0/primeicons.css",
   ];
   for (const href of links) {
+    if (shadowRoot.querySelector(`link[rel="stylesheet"][href="${href}"]`)) continue;
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = href;
@@ -38,7 +50,13 @@ export function mountDataTable() {
     originalContent = targetDiv.innerHTML;
     originalStyle = targetDiv.getAttribute("style");
     originalClassName = targetDiv.className;
-    if (paginationDiv) paginationDiv.style.display = "none";
+
+    // Hide native pagination if present and remember its previous inline display
+    const paginationDiv = document.querySelector(".pagination") as HTMLElement | null;
+    if (paginationDiv) {
+      originalPaginationDisplay = paginationDiv.style.display || null;
+      paginationDiv.style.display = "none";
+    }
 
     // Clear its contents and keep class/style so layout remains consistent
     targetDiv.innerHTML = "";
@@ -86,7 +104,14 @@ export function unmountDataTable() {
       originalClassName = null;
     }
   }
+  // Restore pagination inline style exactly as before
+  const paginationDiv = document.querySelector(".pagination") as HTMLElement | null;
   if (paginationDiv) {
-    paginationDiv.style.display = "block";
+    if (originalPaginationDisplay === null) {
+      paginationDiv.style.removeProperty("display");
+    } else {
+      paginationDiv.style.display = originalPaginationDisplay;
+    }
+    originalPaginationDisplay = null;
   }
 }
