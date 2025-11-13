@@ -1,4 +1,4 @@
-/* eslint-disable simple-import-sort/imports */
+ 
 import "./PopupApp.css";
 
 import { useEffect, useState } from "react";
@@ -18,6 +18,7 @@ const TOGGLES: ToggleItem[] = [
   { key: "advancedFiltering", label: "Advanced Filtering", description: "Replace filter-by-tags on Problemset" },
   { key: "dataTable", label: "Enhanced Data Table", description: "Replace problemset table with richer view" },
   { key: "contestHistorySummary", label: "Contest History Summary", description: "Show division-wise averages on profile page" },
+  { key: "maxRatedHeatmap", label: "Max Rated Heatmap", description: "Show max problem rating instead of count on profile heatmap" },
 ];
 
 const Popup = () => {
@@ -34,6 +35,7 @@ const Popup = () => {
         advancedFiltering: true,
         dataTable: true,
         contestHistorySummary: true,
+        maxRatedHeatmap: false,
       };
       setFlags({ ...defaults, ...(stored ?? {}) });
     });

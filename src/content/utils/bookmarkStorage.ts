@@ -115,7 +115,7 @@ export const getBookmarkedProblemsArray = async (): Promise<BookmarkedProblem[]>
 // to use the message passing system. For now, we will leave them as is,
 // but they will not work correctly without being moved to the background script.
 
-export const searchBookmarks = async (_query: any): Promise<BookmarkedProblem[]> => {
+export const searchBookmarks = async (): Promise<BookmarkedProblem[]> => {
     console.warn("searchBookmarks is not implemented with the service worker yet.");
     return [];
 }
@@ -125,6 +125,6 @@ export const exportBookmarks = async (): Promise<string> => {
     return "";
 }
 
-export const importBookmarks = async (_jsonData: string): Promise<void> => {
+export const importBookmarks = async (): Promise<void> => {
     console.warn("importBookmarks is not implemented with the service worker yet.");
 }

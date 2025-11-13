@@ -1,9 +1,25 @@
 import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { useConnectionStore } from "../shared/stores/connectionStore";
-import { mountAdvanceFilterPanel, unmountAdvanceFilterPanel } from "./mount/AdvanceFilterPanel";
-import { mountStalkButtonAndPanel, unmountStalkButtonAndPanel } from "./mount/StalkPanel";
+
+import {
+	mountAdvanceFilterPanel,
+	unmountAdvanceFilterPanel,
+} from "./mount/AdvanceFilterPanel";
+
+import {
+	mountStalkButtonAndPanel,
+	unmountStalkButtonAndPanel,
+} from "./mount/StalkPanel.tsx";
+
 import { mountDataTable, unmountDataTable } from "./mount/DataTable";
-import { mountProblemAssistant, unmountProblemAssistant } from "./mount/ProblemAssistant";
+import {
+	mountProblemAssistant,
+	unmountProblemAssistant,
+} from "./mount/ProblemAssistant";
+import {
+	mountMaxRatedHeatmap,
+	unmountMaxRatedHeatmap,
+} from "./mount/MaxRatedHeatmap";
 
 let lastFlags: Awaited<ReturnType<typeof getFeatureFlags>> | null = null;
 
@@ -33,7 +49,8 @@ async function initializeComponents() {
 	// Problem Assistant panel (bookmarks+notes+stopwatch)
 	if (flags.problemAssistant) {
 		// If only the stopwatch flag changed while assistant remains enabled, remount to reflect UI changes
-		const stopwatchChanged = lastFlags && lastFlags.stopwatch !== flags.stopwatch;
+		const stopwatchChanged =
+			lastFlags && lastFlags.stopwatch !== flags.stopwatch;
 		if (stopwatchChanged) {
 			unmountProblemAssistant();
 		}
@@ -47,7 +64,10 @@ async function initializeComponents() {
 	if (flags.stopwatch) {
 		document.documentElement.removeAttribute("data-cf-mentor-hide-stopwatch");
 	} else {
-		document.documentElement.setAttribute("data-cf-mentor-hide-stopwatch", "true");
+		document.documentElement.setAttribute(
+			"data-cf-mentor-hide-stopwatch",
+			"true",
+		);
 	}
 
 	// Advanced filter panel on problemset page
@@ -64,12 +84,20 @@ async function initializeComponents() {
 		unmountDataTable();
 	}
 
+
   // Contest History Summary via "Stalk" button on profile page
   if (flags.contestHistorySummary) {
     mountStalkButtonAndPanel();
   } else {
     unmountStalkButtonAndPanel();
   }
+
+	// Max Rated Heatmap on profile page
+	if (flags.maxRatedHeatmap) {
+		mountMaxRatedHeatmap();
+	} else {
+		unmountMaxRatedHeatmap();
+	}
 
 	// Remember for next pass
 	lastFlags = flags;
@@ -78,11 +106,11 @@ async function initializeComponents() {
 // Get user handle from page
 const handleElement = document.querySelector('a[href^="/profile/"]');
 if (handleElement) {
-  const handle = handleElement.textContent?.trim();
-  if (handle) {
-    chrome.storage.local.set({ userHandle: handle });
-    console.log('User handle set:', handle);
-  }
+	const handle = handleElement.textContent?.trim();
+	if (handle) {
+		chrome.storage.local.set({ userHandle: handle });
+		console.log("User handle set:", handle);
+	}
 }
 
 // Call the async functions
