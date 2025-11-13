@@ -1,7 +1,4 @@
 import "./DataTable.css";
-import "primereact/resources/themes/lara-light-indigo/theme.css";
-import "primereact/resources/primereact.min.css";
-import "primeicons/primeicons.css";
 
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
@@ -116,8 +113,9 @@ const ProblemDataTable: React.FC = () => {
 			reorderableColumns
 			stripedRows
 			paginator
+			paginatorPosition="bottom"
+			paginatorTemplate={{ layout: "FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink" }}
 			rows={25}
-			rowsPerPageOptions={[25, 50, 100]}
 
 			rowClassName={(rowData: Problem) => {
 				console.log('Row class for', rowData.contestId + rowData.index, 'userVerdict:', rowData.userVerdict);

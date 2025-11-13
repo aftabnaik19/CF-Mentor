@@ -1,17 +1,16 @@
-/* eslint-disable simple-import-sort/imports */
-import "primereact/resources/primereact.min.css"; // core styles
-import "primeicons/primeicons.css";
-
 import { getFeatureFlags } from "../shared/stores/featureFlags";
 import { useConnectionStore } from "../shared/stores/connectionStore";
+
 import {
 	mountAdvanceFilterPanel,
 	unmountAdvanceFilterPanel,
 } from "./mount/AdvanceFilterPanel";
+
 import {
 	mountStalkButtonAndPanel,
 	unmountStalkButtonAndPanel,
 } from "./mount/StalkPanel.tsx";
+
 import { mountDataTable, unmountDataTable } from "./mount/DataTable";
 import {
 	mountProblemAssistant,
@@ -85,12 +84,13 @@ async function initializeComponents() {
 		unmountDataTable();
 	}
 
-	// Contest History Summary via "Stalk" button on profile page
-	if (flags.contestHistorySummary) {
-		mountStalkButtonAndPanel();
-	} else {
-		unmountStalkButtonAndPanel();
-	}
+
+  // Contest History Summary via "Stalk" button on profile page
+  if (flags.contestHistorySummary) {
+    mountStalkButtonAndPanel();
+  } else {
+    unmountStalkButtonAndPanel();
+  }
 
 	// Max Rated Heatmap on profile page
 	if (flags.maxRatedHeatmap) {
