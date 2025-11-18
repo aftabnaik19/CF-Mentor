@@ -17,10 +17,16 @@ export class MessageService {
   }
 
   private async handleMessage(request: any, sendResponse: (response: any) => void) {
+    console.log("MessageService received request:", request);
+    if (!request) {
+      sendResponse({ error: "Empty request" });
+      return;
+    }
     try {
       if (request.action === "fetchData") {
         console.log("Received manual refresh request.");
         await schedulerService.fetchData();
+        sendResponse({ status: "ok" });
         return;
       }
 
@@ -33,10 +39,19 @@ export class MessageService {
 
       if (this.isBookmarkMessage(type)) {
         await this.handleBookmarkMessage(type, payload, sendResponse);
+        return;
       }
+      
+      // Default response for unknown messages to close the channel
+      console.warn("Unknown message type:", type);
+      sendResponse({ error: "Unknown message type" });
+      
     } catch (error) {
       console.error("Error handling message:", error);
-      sendResponse({ error: (error as Error).message });
+      sendResponse({ 
+        error: (error as Error).message,
+        stack: (error as Error).stack 
+      });
     }
   }
 
@@ -52,6 +67,10 @@ export class MessageService {
 
   private async handleFetchUserData(request: any, sendResponse: (response: any) => void) {
     const { handle } = request;
+    if (!handle) {
+      sendResponse({ success: false, error: "User handle is required." });
+      return;
+    }
     try {
         // We need to expose fetchWithCache or similar from SchedulerService or a new ApiService
         // For now, I'll assume we can move the fetch logic here or to a helper
@@ -64,10 +83,10 @@ export class MessageService {
         // Actually, I should probably create an ApiService for this.
         // But to stick to the plan, I'll implement the logic here using a helper.
         
-        const rating = await this.fetchJsonWithCache<CFRatingChange[]>(`${handle}.rating`, 
+        const rating = await this.fetchJsonWithCache<CFRatingChange[]>(`user_rating_${handle}`, 
             `https://codeforces.com/api/user.rating?handle=${encodeURIComponent(handle)}`);
             
-        const submissions = await this.fetchJsonWithCache<CFSubmission[]>(`${handle}.status`,
+        const submissions = await this.fetchJsonWithCache<CFSubmission[]>(`user_status_${handle}`,
             `https://codeforces.com/api/user.status?handle=${encodeURIComponent(handle)}&from=1`);
 
         sendResponse({ success: true, rating, submissions });
@@ -77,9 +96,8 @@ export class MessageService {
   }
 
   private async fetchJsonWithCache<T>(key: string, url: string): Promise<T> {
-      // Simple implementation for now, ideally this goes to a CacheService
-      const cached = await storageService.getLocal<{data: T, timestamp: number}>(key);
       const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
+      const cached = await storageService.getCachedEntry<T>(key);
       
       if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
           return cached.data;
@@ -90,7 +108,7 @@ export class MessageService {
       const data = await res.json();
       if (data.status && data.status !== "OK") throw new Error(data.comment || `API error for ${url}`);
       
-      await storageService.setLocal(key, { data: data.result, timestamp: Date.now() });
+      await storageService.setCached(key, data.result);
       return data.result as T;
   }
 

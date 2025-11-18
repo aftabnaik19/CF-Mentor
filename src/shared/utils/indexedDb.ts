@@ -1,13 +1,14 @@
 import { Contest, MentorData, Problem, Sheet, SheetProblem } from "../types/mentor";
 
 const DB_NAME = "cf-mentor-db";
-const DB_VERSION = 3; // Incremented version to trigger schema upgrade
+const DB_VERSION = 4; // Incremented version to trigger schema upgrade
 
 export const MENTOR_STORE = {
 	PROBLEMS: "problems",
 	CONTESTS: "contests",
 	SHEETS: "sheets",
 	SHEETS_PROBLEMS: "sheets_problems",
+	USER_CACHE: "user_cache",
 };
 
 const stores = [
@@ -15,6 +16,7 @@ const stores = [
 	{ name: MENTOR_STORE.CONTESTS, key: "id" },
 	{ name: MENTOR_STORE.SHEETS, key: "id" },
 	{ name: MENTOR_STORE.SHEETS_PROBLEMS, key: ["sheetId", "contestId", "index"] },
+	{ name: MENTOR_STORE.USER_CACHE, key: "key" },
 ];
 
 async function openDB(): Promise<IDBDatabase> {
@@ -49,11 +51,26 @@ async function openDB(): Promise<IDBDatabase> {
 
 export async function saveData(
 	storeName: string,
-	data: (Problem | Contest | Sheet | SheetProblem)[],
+	data: (Problem | Contest | Sheet | SheetProblem | any)[],
 ): Promise<void> {
 	const db = await openDB();
 	const transaction = db.transaction(storeName, "readwrite");
 	const store = transaction.objectStore(storeName);
+	
+	// For user cache, we might be saving a single item or multiple. 
+	// If it's a cache update, we usually just put/add.
+	// The original saveData cleared the store, which is fine for bulk data but maybe not for cache?
+	// Actually, for problems/contests we want to replace all.
+	// For user cache, we probably want to append/update specific keys.
+	// But this function is generic. Let's keep it as is for bulk updates (clearing store).
+	// Wait, if I use this for cache, it will clear other users' cache!
+	// I should probably NOT use `saveData` for single cache entry updates if it clears the store.
+	// I'll add a `saveItem` or `updateItem` function, or modify `saveData` to have an option to not clear.
+	// For now, I'll add `saveItems` which doesn't clear.
+	
+	// Actually, let's stick to the plan. I need `deleteData`.
+	// And I probably need a way to save a single item without clearing.
+	
 	store.clear();
 	data.forEach((item) => store.add(item));
 
@@ -67,10 +84,42 @@ export async function saveData(
 	});
 }
 
+export async function saveItems(
+	storeName: string,
+	items: any[]
+): Promise<void> {
+	const db = await openDB();
+	const transaction = db.transaction(storeName, "readwrite");
+	const store = transaction.objectStore(storeName);
+
+	items.forEach((item) => store.put(item)); // put updates if exists
+
+	return new Promise((resolve, reject) => {
+		transaction.oncomplete = () => resolve();
+		transaction.onerror = (event) => reject((event.target as IDBTransaction).error);
+	});
+}
+
+export async function deleteData(
+	storeName: string,
+	keys: IDBValidKey[]
+): Promise<void> {
+	const db = await openDB();
+	const transaction = db.transaction(storeName, "readwrite");
+	const store = transaction.objectStore(storeName);
+
+	keys.forEach((key) => store.delete(key));
+
+	return new Promise((resolve, reject) => {
+		transaction.oncomplete = () => resolve();
+		transaction.onerror = (event) => reject((event.target as IDBTransaction).error);
+	});
+}
+
 export async function saveAllData(data: MentorData): Promise<void> {
 	console.log("Attempting to save data to IndexedDB...");
 	const db = await openDB();
-	const transaction = db.transaction(Object.values(MENTOR_STORE), "readwrite");
+	const transaction = db.transaction(Object.values(MENTOR_STORE).filter(s => s !== MENTOR_STORE.USER_CACHE), "readwrite");
 
 	const dataMap = {
 		[MENTOR_STORE.PROBLEMS]: data.problems,
@@ -116,12 +165,9 @@ export async function getData<T>(
 			const results = (event.target as IDBRequest).result as T[];
 			console.log(`Retrieved ${results.length} records from ${storeName}.`);
 			if (ids && ids.length > 0) {
-				// This filtering is inefficient for large datasets, but acceptable for this extension's scale.
-				// A more complex solution would involve cursors or multiple `get` requests.
 				const idSet = new Set(ids);
 				const filteredResults = results.filter(item => {
 					const key = store.keyPath;
-					// This is a simplified check; composite keys would need more robust handling.
 					return idSet.has((item as any)[key as string]);
 				});
 				resolve(filteredResults);

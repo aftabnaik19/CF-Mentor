@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MessageService } from './MessageService';
 import { bookmarkService } from './BookmarkService';
 import { schedulerService } from './SchedulerService';
+import { storageService } from './StorageService';
 import { MESSAGE_TYPES } from '@/shared/constants/messages';
 
 // Mock dependencies
@@ -25,6 +26,8 @@ vi.mock('./StorageService', () => ({
   storageService: {
     getLocal: vi.fn(),
     setLocal: vi.fn(),
+    getCachedEntry: vi.fn(),
+    setCached: vi.fn(),
   },
 }));
 
@@ -71,6 +74,30 @@ describe('MessageService', () => {
 
     expect(bookmarkService.isBookmarked).toHaveBeenCalledWith('testUser', '123', 'A');
     expect(sendResponse).toHaveBeenCalledWith(true);
+  });
+
+  it('should handle fetch-user-data message', async () => {
+    const sendResponse = vi.fn();
+    const handle = 'testuser';
+    
+    // Mock cache hit to avoid fetch
+    vi.mocked(storageService.getCachedEntry).mockResolvedValue({
+      data: [],
+      timestamp: Date.now(),
+    });
+
+    await messageHandler(
+      { type: 'fetch-user-data', handle },
+      {},
+      sendResponse
+    );
+
+    await vi.waitFor(() => {
+      expect(sendResponse).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    });
+
+    expect(storageService.getCachedEntry).toHaveBeenCalledWith(`user_rating_${handle}`);
+    expect(storageService.getCachedEntry).toHaveBeenCalledWith(`user_status_${handle}`);
   });
 
   it('should handle ADD_OR_UPDATE_BOOKMARK message', async () => {

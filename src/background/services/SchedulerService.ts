@@ -1,5 +1,6 @@
 import { fetchAndStoreData } from "../dataFetcher";
 import { getData, MENTOR_STORE } from "@/shared/utils/indexedDb";
+import { storageService } from "./StorageService";
 
 type DataState = "INITIAL" | "FETCHING" | "READY" | "ERROR";
 
@@ -65,6 +66,10 @@ export class SchedulerService {
       if (alarm.name === this.DAILY_FETCH_ALARM) {
         console.log("Daily alarm triggered. Fetching data...");
         this.fetchData();
+        
+        // Clear expired user cache (1 day TTL)
+        const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+        storageService.clearExpiredCache(CACHE_TTL_MS).catch(console.error);
       }
     });
   }
@@ -105,6 +110,8 @@ export class SchedulerService {
       port.postMessage({ state: this.dataState });
 
       port.onMessage.addListener(async (message) => {
+        console.log("SchedulerService received message:", message);
+        if (!message) return;
         if (message.type === "get-data") {
           console.log("Received data request from content script.");
           const problems = await getData(MENTOR_STORE.PROBLEMS);

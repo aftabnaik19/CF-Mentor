@@ -35,7 +35,7 @@ const Popup = () => {
         advancedFiltering: true,
         dataTable: true,
         contestHistorySummary: true,
-        maxRatedHeatmap: false,
+        maxRatedHeatmap: true,
       };
       setFlags({ ...defaults, ...(stored ?? {}) });
     });

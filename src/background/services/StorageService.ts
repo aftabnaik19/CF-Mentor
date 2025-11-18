@@ -1,5 +1,5 @@
 import { BookmarkStorage } from "@/shared/types/bookmark";
-import { getData, saveData } from "@/shared/utils/indexedDb";
+import { deleteData, getData, MENTOR_STORE, saveData, saveItems } from "@/shared/utils/indexedDb";
 
 export class StorageService {
   // --- Chrome Storage Wrappers ---
@@ -53,6 +53,47 @@ export class StorageService {
 
   async setIndexedDbData(storeName: string, data: any[]): Promise<void> {
     return saveData(storeName, data);
+  }
+
+  // --- Caching Logic (IndexedDB) ---
+
+  async getCached<T>(key: string): Promise<T | null> {
+    const results = await getData<{ key: string; data: T; timestamp: number }>(
+      MENTOR_STORE.USER_CACHE,
+      [key]
+    );
+    return results.length > 0 ? results[0].data : null;
+  }
+
+  async getCachedEntry<T>(key: string): Promise<{ data: T; timestamp: number } | null> {
+    const results = await getData<{ key: string; data: T; timestamp: number }>(
+      MENTOR_STORE.USER_CACHE,
+      [key]
+    );
+    return results.length > 0 ? results[0] : null;
+  }
+
+  async setCached<T>(key: string, data: T): Promise<void> {
+    const entry = { key, data, timestamp: Date.now() };
+    await saveItems(MENTOR_STORE.USER_CACHE, [entry]);
+  }
+
+  async clearExpiredCache(ttlMs: number): Promise<void> {
+    console.log("Checking for expired cache entries...");
+    const allCache = await getData<{ key: string; timestamp: number }>(
+      MENTOR_STORE.USER_CACHE
+    );
+    const now = Date.now();
+    const expiredKeys = allCache
+      .filter((entry) => now - entry.timestamp > ttlMs)
+      .map((entry) => entry.key);
+
+    if (expiredKeys.length > 0) {
+      console.log(`Deleting ${expiredKeys.length} expired cache entries.`);
+      await deleteData(MENTOR_STORE.USER_CACHE, expiredKeys);
+    } else {
+      console.log("No expired cache entries found.");
+    }
   }
 
   // --- Specific Helpers ---

@@ -42,7 +42,8 @@ export async function computeSummaries(
 		const tempByDiv: Map<string, CFRatingChange[]> = new Map();
 		for (const r of ratedAll) {
 			if ((r.ratingUpdateTimeSeconds || 0) >= cutoff) {
-				const c = allContestsMap.get(r.contestId)!;
+				const c = allContestsMap.get(r.contestId);
+				if (!c) continue;
 				const div = c.type;
 				if (!tempByDiv.has(div)) tempByDiv.set(div, []);
 				tempByDiv.get(div)!.push(r);
@@ -57,7 +58,8 @@ export async function computeSummaries(
 		// For count mode, partition by division and take last k
 		const byDiv: Map<string, CFRatingChange[]> = new Map();
 		for (const r of ratedAll) {
-			const c = allContestsMap.get(r.contestId)!;
+			const c = allContestsMap.get(r.contestId);
+			if (!c) continue;
 			const div = c.type;
 			if (!byDiv.has(div)) byDiv.set(div, []);
 			byDiv.get(div)!.push(r);

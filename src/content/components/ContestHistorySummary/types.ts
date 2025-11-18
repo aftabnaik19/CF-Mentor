@@ -25,7 +25,7 @@ export type CFSubmission = {
 	creationTimeSeconds: number;
 	relativeTimeSeconds: number;
 	verdict?: string;
-	problem: { index: string };
+	problem: { index: string; contestId?: number };
 	author: { participantType: string };
 };
 
