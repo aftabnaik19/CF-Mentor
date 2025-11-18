@@ -12,6 +12,7 @@ dist
 dist.*
 dist-ssr
 *.local
+*.zip
 keys
 *.tsbuildinfo
 
