@@ -78,12 +78,40 @@ export async function computeSummaries(
 
 	const contestIds = contestIdsSet;
 	// Build meta per contest
+	// Helper to normalize division names
+	const normalizeDivision = (type: string): string => {
+		const t = type.trim();
+		if (t.includes("Div. 1") && t.includes("Div. 2")) return "Div. 1 + Div. 2";
+		if (t.includes("Hello") || t.includes("Good Bye") || t.includes("Goodbye")) return "Div. 1 + Div. 2";
+		if (t.includes("Global")) return "Global";
+		if (t.includes("Educational") || t.includes("Edu")) return "Div. 2 (Educational)";
+		if (t.includes("Div. 1")) return "Div. 1";
+		if (t.includes("Div. 2")) return "Div. 2";
+		if (t.includes("Div. 3")) return "Div. 3";
+		if (t.includes("Div. 4")) return "Div. 4";
+		return t; // Fallback
+	};
+
+	const divisionOrder: Record<string, number> = {
+		"Global": 1,
+		"Div. 1 + Div. 2": 2,
+		"Div. 1": 3,
+		"Div. 2": 4,
+		"Div. 2 (Educational)": 5,
+		"Div. 3": 6,
+		"Div. 4": 7
+	};
+
+	const getDivisionOrder = (div: string): number => {
+		return divisionOrder[div] || 99;
+	};
+
 	const meta = new Map<number, { start: number | null; end: number | null; division: string; totalProblems: number | null; name: string }>();
 	const missingTime: number[] = [];
 	const missingTotal: number[] = [];
 	const ratingByContest = new Map<number, CFRatingChange>(selectedRatings.map((r) => [r.contestId, r]));
 	for (const c of selectedContests) {
-		const div = c.type; // Use the type field directly
+		const div = normalizeDivision(c.type); // Normalize here
 		const start = safeParseStart(c.startTime);
 		const end = start != null && c.durationSeconds != null ? start + c.durationSeconds : null;
 		const total = problemsByContest.get(c.id) ?? null;
@@ -91,6 +119,8 @@ export async function computeSummaries(
 		if (total == null) missingTotal.push(c.id);
 		meta.set(c.id, { start, end, division: div, totalProblems: total, name: c.name });
 	}
+
+	// ... (rest of the file until sorting)
 
 	// Fallback 1: Fill missing time via contest.list
 	if (missingTime.length > 0) {
@@ -286,7 +316,12 @@ export async function computeSummaries(
 		const avgRatingDelta = agg.haveDeltaCount > 0 ? agg.ratingDeltaSum / agg.haveDeltaCount : null;
 		const avgRank = agg.rankCount > 0 ? agg.rankSum / agg.rankCount : null;
 		return { division, contests: agg.contests, attemptRatePct, acceptanceRatePct, avgAttempted, avgSolved, avgRatingDelta, avgRank };
-	}).sort((a, b) => a.division.localeCompare(b.division));
+	}).sort((a, b) => {
+		const orderA = getDivisionOrder(a.division);
+		const orderB = getDivisionOrder(b.division);
+		if (orderA !== orderB) return orderA - orderB;
+		return a.division.localeCompare(b.division);
+	});
 
 	setSummary(rows);
 
