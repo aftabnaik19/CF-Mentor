@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
+import { createPortal } from 'react-dom';
 
 // --- Types & Constants ---
 
@@ -120,21 +121,51 @@ const NewMaxRatedHeatmap: React.FC<{
 
   // Process data for heatmap
   const { heatmapData } = useMemo(() => {
-    const dateMap = new Map<string, { maxRating: number; count: number }>();
+    const dateMap = new Map<string, { 
+      maxRating: number; 
+      count: number;
+      attempted: number;
+      accepted: number;
+      ratingBreakdown: Record<number, number>;
+      unratedAc: number;
+      unratedAttempts: number;
+    }>();
 
     // Filter and process submissions
     submissions.forEach(sub => {
+      const date = new Date(sub.creationTimeSeconds * 1000);
+      const dateKey = formatDate(date);
+      
+      const current = dateMap.get(dateKey) || { 
+        maxRating: 0, 
+        count: 0,
+        attempted: 0,
+        accepted: 0,
+        ratingBreakdown: {},
+        unratedAc: 0,
+        unratedAttempts: 0
+      };
+
+      current.attempted++;
+      current.count++; // Total items (submissions)
+
       if (sub.verdict === 'OK') {
-        const date = new Date(sub.creationTimeSeconds * 1000);
-        const dateKey = formatDate(date);
-        
-        const current = dateMap.get(dateKey) || { maxRating: 0, count: 0 };
-        if (sub.problem.rating > current.maxRating) {
-          current.maxRating = sub.problem.rating;
+        current.accepted++;
+        if (sub.problem.rating) {
+          if (sub.problem.rating > current.maxRating) {
+            current.maxRating = sub.problem.rating;
+          }
+          current.ratingBreakdown[sub.problem.rating] = (current.ratingBreakdown[sub.problem.rating] || 0) + 1;
+        } else {
+          current.unratedAc++;
         }
-        current.count++;
-        dateMap.set(dateKey, current);
+      } else {
+        if (!sub.problem.rating) {
+          current.unratedAttempts++;
+        }
       }
+      
+      dateMap.set(dateKey, current);
     });
 
     // Determine date range
@@ -143,7 +174,7 @@ const NewMaxRatedHeatmap: React.FC<{
 
     const year = parseInt(selectedYear);
     if (isNaN(year)) {
-      // Last 365 days ending today (handle "last", "undefined", or any non-numeric value)
+      // Last 365 days ending today
       endDate = new Date();
       startDate = new Date(endDate);
       startDate.setDate(endDate.getDate() - 365);
@@ -157,8 +188,19 @@ const NewMaxRatedHeatmap: React.FC<{
     const gridStartDate = new Date(startDate);
     gridStartDate.setDate(gridStartDate.getDate() - gridStartDate.getDay()); // Go back to Sunday
 
-    const gridData: { date: Date; dateKey: string; maxRating: number; count: number }[][] = [];
-    let currentWeek: { date: Date; dateKey: string; maxRating: number; count: number }[] = [];
+    const gridData: { 
+      date: Date; 
+      dateKey: string; 
+      maxRating: number; 
+      count: number;
+      attempted: number;
+      accepted: number;
+      ratingBreakdown: Record<number, number>;
+      unratedAc: number;
+      unratedAttempts: number;
+    }[][] = [];
+    
+    let currentWeek: typeof gridData[0] = [];
     
     const iterDate = new Date(gridStartDate);
     let loopCount = 0;
@@ -166,13 +208,20 @@ const NewMaxRatedHeatmap: React.FC<{
       if (loopCount++ > 1000) break;
 
       const dateKey = formatDate(iterDate);
-      const data = dateMap.get(dateKey) || { maxRating: 0, count: 0 };
+      const data = dateMap.get(dateKey) || { 
+        maxRating: 0, 
+        count: 0,
+        attempted: 0,
+        accepted: 0,
+        ratingBreakdown: {},
+        unratedAc: 0,
+        unratedAttempts: 0
+      };
       
       currentWeek.push({
         date: new Date(iterDate),
         dateKey,
-        maxRating: data.maxRating,
-        count: data.count
+        ...data
       });
 
       if (currentWeek.length === 7) {
@@ -191,142 +240,258 @@ const NewMaxRatedHeatmap: React.FC<{
 
   }, [submissions, selectedYear]);
 
+  const getCellColor = (day: typeof heatmapData[0][0]) => {
+    if (day.maxRating > 0) {
+      return getColorForRating(day.maxRating);
+    }
+    // Fallback for unrated activity
+    if (day.unratedAc > 0) {
+      // Gradient from dark gray to black based on AC count (1 to 5+)
+      // Distinct from standard 'gray' (Newbie) which is lighter.
+      if (day.unratedAc >= 5) return '#000000';
+      
+      const intensity = day.unratedAc; // 1 to 4
+      // 1 -> #666666, 4 -> #1A1A1A
+      if (intensity === 1) return '#666666';
+      if (intensity === 2) return '#4D4D4D';
+      if (intensity === 3) return '#333333';
+      if (intensity === 4) return '#1A1A1A';
+    }
+    if (day.unratedAttempts > 0 || (day.attempted > 0 && day.maxRating === 0)) {
+      // 0 AC but >0 attempts (unrated or rated failures)
+      return '#e0e0e0'; // Faint gray
+    }
+    return '#EBEDF0'; // Empty
+  };
+
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    content: React.ReactNode;
+  }>({ visible: false, x: 0, y: 0, content: null });
+
+  const getTooltipContent = (day: typeof heatmapData[0][0]) => {
+    // Sort ratings descending
+    const ratings = Object.keys(day.ratingBreakdown).map(Number).sort((a, b) => b - a);
+    
+    return (
+      <div style={{ textAlign: 'left' }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{day.dateKey}</div>
+        <div>Attempted: {day.attempted}</div>
+        <div>Accepted: {day.accepted}</div>
+        {ratings.length > 0 && (
+          <div style={{ marginTop: '4px', borderTop: '1px solid #eee', paddingTop: '2px' }}>
+            {ratings.map(r => (
+              <div key={r}>{r}: {day.ratingBreakdown[r]}</div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent, day: typeof heatmapData[0][0]) => {
+    setTooltip({
+      visible: true,
+      x: e.clientX + 10,
+      y: e.clientY + 10,
+      content: getTooltipContent(day)
+    });
+  };
+
+  const handleHeaderMouseEnter = (e: React.MouseEvent) => {
+    setTooltip({
+      visible: true,
+      x: e.clientX + 10,
+      y: e.clientY + 10,
+      content: (
+        <div style={{ maxWidth: '250px', textAlign: 'left' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Max Rated Activity</div>
+          <div>Shows the highest rating of a problem solved on each day.</div>
+          <div style={{ marginTop: '4px' }}>Days with only unrated/gym problems are shown in a dark gray-to-black gradient based on solve count.</div>
+        </div>
+      )
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    setTooltip(prev => ({
+      ...prev,
+      x: e.clientX + 10,
+      y: e.clientY + 10
+    }));
+  };
+
+  const handleMouseLeave = () => {
+    setTooltip(prev => ({ ...prev, visible: false }));
+  };
+
 
   // Render
   if (loading) return null;
 
   return (
-    <div className="_UserActivityFrame_frame">
-      <div className="roundbox userActivityRoundBox borderTopRound borderBottomRound" style={{ padding: '10px' }}>
-        
-        {/* Header */}
-        <div className="_UserActivityFrame_header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span className="_UserActivityFrame_caption" style={{ fontWeight: 'bold', color: '#444' }}>
-            Max Rated Activity
-          </span>
+    <>
+      {tooltip.visible && createPortal(
+        <div style={{
+          position: 'fixed',
+          left: tooltip.x,
+          top: tooltip.y,
+          background: 'white',
+          border: '1px solid #ccc',
+          padding: '6px 10px',
+          fontFamily: 'verdana, arial, sans-serif',
+          fontSize: '11px',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          boxShadow: '2px 2px 3px rgba(0,0,0,0.2)',
+          color: '#333',
+          lineHeight: '1.3'
+        }}>
+          {tooltip.content}
+        </div>,
+        document.body
+      )}
+      <div className="_UserActivityFrame_frame">
+        <div className="roundbox userActivityRoundBox borderTopRound borderBottomRound" style={{ padding: '10px' }}>
+          
+          {/* Header */}
+          <div className="_UserActivityFrame_header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span 
+              className="_UserActivityFrame_caption" 
+              style={{ fontWeight: 'bold', color: '#444', cursor: 'help' }}
+              onMouseEnter={handleHeaderMouseEnter}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              Max Rated Activity
+            </span>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div className="_UserActivityFrame_selector weeks52">
-              <label>
-                <select 
-                  name="yearSelect" 
-                  style={{ fontSize: '1em' }}
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  {availableYears.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <div className="_UserActivityFrame_selector weeks52">
+                <label>
+                  <select 
+                    name="yearSelect" 
+                    style={{ fontSize: '1em' }}
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                  >
+                    {availableYears.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="_UserActivityFrame_selector weeks52">
+                <label htmlFor="showPrivateActivity" style={{ marginRight: '5px' }}>Mode:</label>
+                <select name="showPrivateActivity" id="showPrivateActivity" style={{ fontSize: '1em' }} disabled>
+                  <option value="true">Max Rated</option>
                 </select>
-              </label>
-            </div>
-
-            <div className="_UserActivityFrame_selector weeks52">
-              <label htmlFor="showPrivateActivity" style={{ marginRight: '5px' }}>Mode:</label>
-              <select name="showPrivateActivity" id="showPrivateActivity" style={{ fontSize: '1em' }} disabled>
-                <option value="true">Max Rated</option>
-              </select>
+              </div>
             </div>
           </div>
+
+          {/* Graph */}
+          <div id="userActivityGraph" style={{ overflowX: 'auto' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 721 110" style={{ width: '100%', height: 'auto' }}>
+              <g transform="translate(25, 20)">
+                {heatmapData.map((week, weekIndex) => (
+                  <g key={weekIndex} transform={`translate(${weekIndex * 13}, 0)`}>
+                    {week.map((day, dayIndex) => (
+                      <rect
+                        key={day.dateKey}
+                        className="day"
+                        width="11"
+                        height="11"
+                        y={dayIndex * 13}
+                        fill={getCellColor(day)}
+                        data-date={day.dateKey}
+                        data-items={day.count}
+                        onMouseEnter={(e) => handleMouseEnter(e, day)}
+                        onMouseMove={handleMouseMove}
+                        onMouseLeave={handleMouseLeave}
+                      />
+                    ))}
+                  </g>
+                ))}
+
+                {/* Month Labels */}
+                {heatmapData.map((week, i) => {
+                  const firstDay = week[0].date;
+                  if (firstDay.getDate() <= 7 && (i === 0 || heatmapData[i-1][0].date.getMonth() !== firstDay.getMonth())) {
+                     return (
+                       <text key={`month-${i}`} x={i * 13} y="-5" className="month" style={{ fontSize: '10px', fill: '#767676' }}>
+                         {getMonthName(firstDay.getMonth())}
+                       </text>
+                     );
+                  }
+                  return null;
+                })}
+
+                {/* Day Labels */}
+                <text textAnchor="middle" className="wday" dx="-13" dy="22" style={{ fontSize: '9px', fill: '#767676' }}>Mon</text>
+                <text textAnchor="middle" className="wday" dx="-13" dy="48" style={{ fontSize: '9px', fill: '#767676' }}>Wed</text>
+                <text textAnchor="middle" className="wday" dx="-13" dy="74" style={{ fontSize: '9px', fill: '#767676' }}>Fri</text>
+              </g>
+            </svg>
+          </div>
+
+          {/* Footer */}
+          {initialStats && (
+          <div className="_UserActivityFrame_footer">
+              <div className="_UserActivityFrame_countersRow">
+                  <div className="_UserActivityFrame_counter">
+                      <div className="_UserActivityFrame_counterValue">{initialStats.allTime.value}</div>
+                      <div className="_UserActivityFrame_counterDescription">
+                          {initialStats.allTime.desc}
+                      </div>
+                  </div>
+
+                  <div className="_UserActivityFrame_counter">
+                      <div className="_UserActivityFrame_counterValue">{initialStats.lastYear.value}</div>
+                      <div className="_UserActivityFrame_counterDescription">
+                          {initialStats.lastYear.desc}
+                      </div>
+                  </div>
+
+                  <div className="_UserActivityFrame_counter">
+                      <div className="_UserActivityFrame_counterValue">{initialStats.lastMonth.value}</div>
+                      <div className="_UserActivityFrame_counterDescription">
+                          {initialStats.lastMonth.desc}
+                      </div>
+                  </div>
+              </div>
+
+              <div className="_UserActivityFrame_countersRow">
+                  <div className="_UserActivityFrame_counter">
+                      <div className="_UserActivityFrame_counterValue">{initialStats.maxStreak.value}</div>
+                      <div className="_UserActivityFrame_counterDescription">
+                          {initialStats.maxStreak.desc}
+                      </div>
+                  </div>
+
+                  <div className="_UserActivityFrame_counter">
+                      <div className="_UserActivityFrame_counterValue">{initialStats.lastYearStreak.value}</div>
+                      <div className="_UserActivityFrame_counterDescription">
+                          {initialStats.lastYearStreak.desc}
+                      </div>
+                  </div>
+
+                  <div className="_UserActivityFrame_counter">
+                      <div className="_UserActivityFrame_counterValue">{initialStats.lastMonthStreak.value}</div>
+                      <div className="_UserActivityFrame_counterDescription">
+                          {initialStats.lastMonthStreak.desc}
+                      </div>
+                  </div>
+              </div>
+          </div>
+          )}
+
         </div>
-
-        {/* Graph */}
-        <div id="userActivityGraph" style={{ overflowX: 'auto' }}>
-          <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 721 110" style={{ width: '100%', height: 'auto' }}>
-            <g transform="translate(25, 20)">
-              {heatmapData.map((week, weekIndex) => (
-                <g key={weekIndex} transform={`translate(${weekIndex * 13}, 0)`}>
-                  {week.map((day, dayIndex) => (
-                    <rect
-                      key={day.dateKey}
-                      className="day"
-                      width="11"
-                      height="11"
-                      y={dayIndex * 13}
-                      fill={day.maxRating > 0 ? getColorForRating(day.maxRating) : '#EBEDF0'}
-                      data-date={day.dateKey}
-                      data-items={day.count}
-                    >
-                      <title>{`${day.dateKey}: ${day.count} items, Max Rating: ${day.maxRating}`}</title>
-                    </rect>
-                  ))}
-                </g>
-              ))}
-
-              {/* Month Labels */}
-              {heatmapData.map((week, i) => {
-                const firstDay = week[0].date;
-                if (firstDay.getDate() <= 7 && (i === 0 || heatmapData[i-1][0].date.getMonth() !== firstDay.getMonth())) {
-                   return (
-                     <text key={`month-${i}`} x={i * 13} y="-5" className="month" style={{ fontSize: '10px', fill: '#767676' }}>
-                       {getMonthName(firstDay.getMonth())}
-                     </text>
-                   );
-                }
-                return null;
-              })}
-
-              {/* Day Labels */}
-              <text textAnchor="middle" className="wday" dx="-13" dy="22" style={{ fontSize: '9px', fill: '#767676' }}>Mon</text>
-              <text textAnchor="middle" className="wday" dx="-13" dy="48" style={{ fontSize: '9px', fill: '#767676' }}>Wed</text>
-              <text textAnchor="middle" className="wday" dx="-13" dy="74" style={{ fontSize: '9px', fill: '#767676' }}>Fri</text>
-            </g>
-          </svg>
-        </div>
-
-        {/* Footer */}
-        {initialStats && (
-        <div className="_UserActivityFrame_footer">
-            <div className="_UserActivityFrame_countersRow">
-                <div className="_UserActivityFrame_counter">
-                    <div className="_UserActivityFrame_counterValue">{initialStats.allTime.value}</div>
-                    <div className="_UserActivityFrame_counterDescription">
-                        {initialStats.allTime.desc}
-                    </div>
-                </div>
-
-                <div className="_UserActivityFrame_counter">
-                    <div className="_UserActivityFrame_counterValue">{initialStats.lastYear.value}</div>
-                    <div className="_UserActivityFrame_counterDescription">
-                        {initialStats.lastYear.desc}
-                    </div>
-                </div>
-
-                <div className="_UserActivityFrame_counter">
-                    <div className="_UserActivityFrame_counterValue">{initialStats.lastMonth.value}</div>
-                    <div className="_UserActivityFrame_counterDescription">
-                        {initialStats.lastMonth.desc}
-                    </div>
-                </div>
-            </div>
-
-            <div className="_UserActivityFrame_countersRow">
-                <div className="_UserActivityFrame_counter">
-                    <div className="_UserActivityFrame_counterValue">{initialStats.maxStreak.value}</div>
-                    <div className="_UserActivityFrame_counterDescription">
-                        {initialStats.maxStreak.desc}
-                    </div>
-                </div>
-
-                <div className="_UserActivityFrame_counter">
-                    <div className="_UserActivityFrame_counterValue">{initialStats.lastYearStreak.value}</div>
-                    <div className="_UserActivityFrame_counterDescription">
-                        {initialStats.lastYearStreak.desc}
-                    </div>
-                </div>
-
-                <div className="_UserActivityFrame_counter">
-                    <div className="_UserActivityFrame_counterValue">{initialStats.lastMonthStreak.value}</div>
-                    <div className="_UserActivityFrame_counterDescription">
-                        {initialStats.lastMonthStreak.desc}
-                    </div>
-                </div>
-            </div>
-        </div>
-        )}
-
       </div>
-    </div>
+    </>
   );
 };
 
