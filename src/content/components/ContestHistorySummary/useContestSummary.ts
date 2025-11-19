@@ -47,8 +47,8 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
  							resolve(response);
  						});
  					});
- 					if (!userDataResponse.success) {
- 						throw new Error(userDataResponse.error || "Failed to fetch user data");
+ 					if (!userDataResponse || !userDataResponse.success) {
+ 						throw new Error(userDataResponse?.error || "Failed to fetch user data");
  					}
  					const ratingHistory = userDataResponse.rating as CFRatingChange[];
  					const submissions = userDataResponse.submissions as CFSubmission[];

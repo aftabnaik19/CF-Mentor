@@ -146,6 +146,8 @@ export default function ContestHistorySummary() {
         {handle && error && (
           <div style={{ color: "#ff6b6b" }}>
             Failed to fetch data: {error}
+            {/* @ts-ignore */}
+            {error.stack && <pre style={{ fontSize: 10, overflow: "auto" }}>{error.stack}</pre>}
           </div>
         )}
         {handle && !loading && !error && (

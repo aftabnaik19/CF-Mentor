@@ -146,23 +146,18 @@ const MaxRatedHeatmap: React.FC = () => {
         return;
       }
 
-      // Get cached submissions for this specific user
-      const cacheKey = `userSubmissionsCache_${handle}`;
-      let cache = await chrome.storage.local.get(cacheKey);
-      let submissions: Submission[];
+      // Fetch user data via background script (which handles caching in IndexedDB)
+      const response = await new Promise<{ success: boolean; submissions?: Submission[]; error?: string } | undefined>((resolve) => {
+        chrome.runtime.sendMessage({ type: "fetch-user-data", handle }, (res) => {
+          resolve(res);
+        });
+      });
 
-      if (!cache[cacheKey] || Date.now() - cache[cacheKey].timestamp > 3600000) {
-        // Fetch fresh submissions for this user
-        const response = await fetch(`https://codeforces.com/api/user.status?handle=${encodeURIComponent(handle)}&from=1&count=10000`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        if (data.status !== 'OK') throw new Error('API error');
-
-        submissions = data.result;
-        await chrome.storage.local.set({ [cacheKey]: { submissions, timestamp: Date.now() } });
-      } else {
-        submissions = cache[cacheKey].submissions;
+      if (!response || !response.success || !response.submissions) {
+        throw new Error(response?.error || "Failed to fetch user data (empty response)");
       }
+
+      const submissions = response.submissions;
 
       const dateMaxRating = processSubmissionsForHeatmap(submissions);
 

@@ -10,6 +10,11 @@ export function connectAndFetchData(): Promise<DataResponsePayload> {
 		};
 
 		port.onMessage.addListener((message: { state?: string; type?: string; payload?: DataResponsePayload }) => {
+			console.log("ContestHistorySummary api.ts received message:", message);
+			if (!message) {
+				console.error("ContestHistorySummary api.ts received NULL message");
+				return;
+			}
 			if (message.state && message.state === "READY" && !resolvedStateReady) {
 				resolvedStateReady = true;
 				port.postMessage({ type: "get-data" });
