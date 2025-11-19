@@ -2,53 +2,6 @@ import React, { useEffect, useState } from "react";
 
 import { type SummaryRow, useContestSummary } from "./useContestSummary.ts";
 
-// Codeforces-inspired classic light theme styles
-const cardStyle: React.CSSProperties = {
-  border: "1px solid #e5e7eb",
-  borderRadius: 8,
-  background: "#fff",
-  color: "#000",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-  fontFamily: "Arial, sans-serif",
-};
-
-const headerStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: "12px 16px",
-  borderBottom: "1px solid #f3f4f6",
-  background: "#f9fafb",
-};
-
-const titleStyle: React.CSSProperties = { fontSize: 18, fontWeight: 600, color: "#000" };
-
-const bodyStyle: React.CSSProperties = { padding: 16 };
-
-const controlInputStyle: React.CSSProperties = {
-  padding: "6px 8px",
-  border: "1px solid #d1d5db",
-  borderRadius: 4,
-  background: "#fff",
-  color: "#000",
-  fontSize: 14,
-};
-const chipStyle: React.CSSProperties = {
-  padding: "6px 12px",
-  border: "1px solid #d1d5db",
-  borderRadius: 20,
-  cursor: "pointer",
-  background: "#fff",
-  color: "#374151",
-  fontSize: 14,
-  transition: "background 0.2s",
-};
-const chipActive: React.CSSProperties = {
-  background: "#dbeafe",
-  borderColor: "#3b82f6",
-  color: "#1e40af",
-};
-
 function useHandleFromUrl() {
   const path = window.location.pathname;
   const parts = path.split("/");
@@ -62,7 +15,7 @@ export default function ContestHistorySummary() {
   const [k, setK] = useState<number | null>(10);
   const [kInput, setKInput] = useState<string>("10");
   const [byMode, setByMode] = useState<"count" | "months">("count");
-  const [viewMode, setViewMode] = useState<"percent" | "counts">("percent");
+  const [viewMode, setViewMode] = useState<"percent" | "counts">("counts");
   const { loading, error, summary, unknownMetaCount, contestsConsidered, letterByDivision } = useContestSummary({ handle, k, by: byMode });
   const [expandedDivisions, setExpandedDivisions] = useState<Record<string, boolean>>({});
 
@@ -71,15 +24,14 @@ export default function ContestHistorySummary() {
   }, [handle, k]);
 
   return (
-    <div style={cardStyle}>
-      <div style={headerStyle}>
-        <div style={titleStyle}>Contest History Summary</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <div>
+      <div className="cfm-controls">
+        <div className="cfm-control-group">
+          <div className="cfm-toggle-group">
             <button
               type="button"
               onClick={() => setByMode("count")}
-              style={{ ...chipStyle, ...(byMode === "count" ? chipActive : {}) }}
+              className={`cfm-toggle-btn ${byMode === "count" ? "active" : ""}`}
               title="Count last N contests per division"
             >
               by contests
@@ -87,25 +39,27 @@ export default function ContestHistorySummary() {
             <button
               type="button"
               onClick={() => setByMode("months")}
-              style={{ ...chipStyle, ...(byMode === "months" ? chipActive : {}) }}
+              className={`cfm-toggle-btn ${byMode === "months" ? "active" : ""}`}
               title="Include contests in the past N months per division"
             >
               by months
             </button>
           </div>
-          <label htmlFor="kInput" style={{ fontSize: 12, color: "#374151" }}>{byMode === "count" ? "Past contests:" : "Past months:"}</label>
-            <input
-              id="kInput"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              step={1}
-              placeholder={byMode === "count" ? "10" : "6"}
-              value={kInput}
+        </div>
+
+        <div className="cfm-control-group">
+          <label htmlFor="kInput" className="cfm-label">{byMode === "count" ? "Past contests:" : "Past months:"}</label>
+          <input
+            id="kInput"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            step={1}
+            placeholder={byMode === "count" ? "10" : "6"}
+            value={kInput}
             onChange={(e) => {
               const val = e.target.value;
               setKInput(val);
-              // Apply immediately when the value is a valid integer >= 1
               const n = parseInt(val, 10);
               if (Number.isFinite(n) && n >= 1) {
                 setK(n);
@@ -119,32 +73,36 @@ export default function ContestHistorySummary() {
               setK(next);
               setKInput(String(next));
             }}
-            style={{ ...controlInputStyle, width: 72 }}
+            className="cfm-input"
           />
-          <div style={{ marginLeft: 8, display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "#374151" }}>View:</span>
-            <button
-              type="button"
-              onClick={() => setViewMode("percent")}
-              style={{ ...chipStyle, ...(viewMode === "percent" ? chipActive : {}) }}
-            >
-              %
-            </button>
+        </div>
+
+        <div className="cfm-control-group" style={{ marginLeft: "auto" }}>
+          <span className="cfm-label">View:</span>
+          <div className="cfm-toggle-group">
             <button
               type="button"
               onClick={() => setViewMode("counts")}
-              style={{ ...chipStyle, ...(viewMode === "counts" ? chipActive : {}) }}
+              className={`cfm-toggle-btn ${viewMode === "counts" ? "active" : ""}`}
             >
               counts
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("percent")}
+              className={`cfm-toggle-btn ${viewMode === "percent" ? "active" : ""}`}
+            >
+              percent(%)
             </button>
           </div>
         </div>
       </div>
-      <div style={bodyStyle}>
-  {!handle && <div style={{ color: "#ccc" }}>Couldn’t determine handle from URL.</div>}
-        {handle && loading && <div style={{ color: "#ccc" }}>Loading summary for {handle}…</div>}
+
+      <div>
+        {!handle && <div style={{ color: "#666", padding: 10 }}>Couldn’t determine handle from URL.</div>}
+        {handle && loading && <div style={{ color: "#666", padding: 10 }}>Loading summary for {handle}…</div>}
         {handle && error && (
-          <div style={{ color: "#ff6b6b" }}>
+          <div style={{ color: "#d32f2f", padding: 10 }}>
             Failed to fetch data: {error}
             {/* @ts-ignore */}
             {error.stack && <pre style={{ fontSize: 10, overflow: "auto" }}>{error.stack}</pre>}
@@ -152,30 +110,30 @@ export default function ContestHistorySummary() {
         )}
         {handle && !loading && !error && (
           <div>
-            <div style={{ marginBottom: 8, color: "#ccc", fontSize: 13 }}>
-              Contests considered: {contestsConsidered}
+            <div style={{ marginBottom: 10, color: "#666", fontSize: 12 }}>
+              Contests considered: <strong>{contestsConsidered}</strong>
               {unknownMetaCount > 0 && (
-                <span style={{ marginLeft: 8, color: "#ffcc00" }}>
-                  Note: {unknownMetaCount} contest(s) missing metadata; in-contest filtering may be approximate.
+                <span style={{ marginLeft: 10, color: "#f57c00" }}>
+                  Note: {unknownMetaCount} contest(s) missing metadata.
                 </span>
               )}
             </div>
-            <div style={{ overflowX: "auto" }}>
-              <table className="standings" style={{ width: "100%", borderCollapse: "collapse", background: "#fff" }}>
+            <div style={{ overflowX: "auto", border: "1px solid #e0e0e0", borderRadius: "4px" }}>
+              <table className="cfm-table">
                 <thead>
-                  <tr style={{ background: "#f9fafb", color: "#374151" }}>
-                    <th style={{ textAlign: "left", padding: 10, borderBottom: "1px solid #e5e7eb" }}>Division</th>
-                    <th style={{ textAlign: "right", padding: 10, borderBottom: "1px solid #e5e7eb" }}>Contests</th>
-                    <th style={{ textAlign: "right", padding: 10, borderBottom: "1px solid #e5e7eb" }}>Avg attempted</th>
-                    <th style={{ textAlign: "right", padding: 10, borderBottom: "1px solid #e5e7eb" }}>Avg solved</th>
-                    <th style={{ textAlign: "right", padding: 10, borderBottom: "1px solid #e5e7eb" }}>Avg rating Δ</th>
-                    <th style={{ textAlign: "right", padding: 10, borderBottom: "1px solid #e5e7eb" }}>Average Rank</th>
+                  <tr>
+                    <th>Division</th>
+                    <th className="numeric">Contests</th>
+                    <th className="numeric">Avg attempted</th>
+                    <th className="numeric">Avg solved</th>
+                    <th className="numeric">Avg rating Δ</th>
+                    <th className="numeric">Avg Rank</th>
                   </tr>
                 </thead>
                 <tbody>
                   {summary.length === 0 && (
                      <tr>
-                       <td colSpan={6} style={{ padding: 12, textAlign: "center", color: "#aaa" }}>
+                       <td colSpan={6} style={{ textAlign: "center", padding: 20, color: "#888" }}>
                          No contests found in the last {k} for this handle.
                        </td>
                      </tr>
@@ -183,7 +141,7 @@ export default function ContestHistorySummary() {
                   {summary.map((row: SummaryRow) => (
                     <React.Fragment key={row.division}>
                        <tr
-                         style={{ cursor: "pointer", background: "#fff" }}
+                         className="expandable"
                          onClick={() => setExpandedDivisions((prev) => ({ ...prev, [row.division]: !prev[row.division] }))}
                          tabIndex={0}
                          role="button"
@@ -194,65 +152,56 @@ export default function ContestHistorySummary() {
                            }
                          }}
                        >
-                         <td style={{ padding: 10, borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: 6, color: "#000" }}>
-                           <svg
-                             viewBox="0 0 24 24"
-                             width="14"
-                             height="14"
-                             style={{ transform: expandedDivisions[row.division] ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", color: "#666" }}
-                             aria-hidden="true"
-                           >
-                             <polyline points="6,9 12,15 18,9" fill="none" stroke="currentColor" strokeWidth="2" />
-                           </svg>
+                         <td>
+                           <span className={`cfm-chevron ${expandedDivisions[row.division] ? "expanded" : ""}`}>▶</span>
                            <span>{row.division}</span>
                          </td>
-                         <td style={{ padding: 10, borderBottom: "1px solid #f3f4f6", textAlign: "right", color: "#374151" }}>{row.contests}</td>
-                         <td style={{ padding: 10, borderBottom: "1px solid #f3f4f6", textAlign: "right", color: "#374151" }}>{row.avgAttempted != null ? row.avgAttempted.toFixed(2) : "—"}</td>
-                         <td style={{ padding: 10, borderBottom: "1px solid #f3f4f6", textAlign: "right", color: "#374151" }}>{row.avgSolved != null ? row.avgSolved.toFixed(2) : "—"}</td>
-                         <td style={{ padding: 10, borderBottom: "1px solid #f3f4f6", textAlign: "right", color: "#374151" }}>{row.avgRatingDelta != null ? signed(row.avgRatingDelta) : "—"}</td>
-                         <td style={{ padding: 10, borderBottom: "1px solid #f3f4f6", textAlign: "right", color: "#374151" }}>{row.avgRank != null ? row.avgRank.toFixed(0) : "—"}</td>
+                         <td className="numeric">{row.contests}</td>
+                         <td className="numeric">{row.avgAttempted != null ? row.avgAttempted.toFixed(2) : "—"}</td>
+                         <td className="numeric">{row.avgSolved != null ? row.avgSolved.toFixed(2) : "—"}</td>
+                         <td className="numeric" style={{ color: row.avgRatingDelta && row.avgRatingDelta > 0 ? "green" : row.avgRatingDelta && row.avgRatingDelta < 0 ? "gray" : "inherit" }}>
+                            {row.avgRatingDelta != null ? signed(row.avgRatingDelta) : "—"}
+                         </td>
+                         <td className="numeric">{row.avgRank != null ? row.avgRank.toFixed(0) : "—"}</td>
                        </tr>
                       {expandedDivisions[row.division] && (
                         <tr>
-                            <td colSpan={6} style={{ padding: 8, background: "#fafafa", borderBottom: "1px solid #f3f4f6" }}>
-                             <div style={{ overflowX: "auto" }}>
-                               <table
-                                 className="standings"
-                                 style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", background: "#fff" }}
-                               >
+                            <td colSpan={6} style={{ padding: 0 }}>
+                             <div className="cfm-subtable-container">
+                               <table className="cfm-subtable">
                                  <colgroup>
-                                   <col style={{ width: "28%" }} />
+                                   <col style={{ width: "20%" }} />
                                    {Array.from({ length: 7 }).map((_, i) => (
-                                     <col key={i} style={{ width: `${(72 / 7).toFixed(3)}%` }} />
+                                     <col key={i} style={{ width: `${(80 / 7).toFixed(3)}%` }} />
                                    ))}
                                  </colgroup>
                                  <thead>
-                                   <tr style={{ background: "#f9fafb", color: "#374151" }}>
-                                     <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #e5e7eb" }}>
+                                   <tr>
+                                     <th className="row-label">
                                        {viewMode === "percent"
-                                         ? `Metric (Avg. of past ${row.contests} contest${row.contests === 1 ? "" : "s"})`
-                                         : `Metric (Past ${row.contests} contest${row.contests === 1 ? "" : "s"})`}
+                                         ? `Avg. of past ${row.contests}`
+                                         : `Total of past ${row.contests}`}
                                        </th>
                                      {["A","B","C","D","E","F","G"].map((L) => (
-                                       <th key={L} style={{ textAlign: "right", padding: 8, borderBottom: "1px solid #e5e7eb" }}>{L}</th>
+                                       <th key={L}>{L}</th>
                                      ))}
                                    </tr>
                                  </thead>
                                  <tbody>
                                    {viewMode === "percent" && (
                                      <>
-                                       <tr style={{ background: "#fff" }}>
-                                         <td style={{ padding: 8, color: "#374151" }}>Attempt (%)</td>
+                                       <tr>
+                                         <td className="row-label">Attempt (%)</td>
                                          {["A","B","C","D","E","F","G"].map((L) => (
-                                           <td key={L} style={{ padding: 8, textAlign: "right", color: "#374151", borderBottom: "1px solid #f3f4f6" }}>
+                                           <td key={L}>
                                              {letterByDivision[row.division]?.attemptPct?.[L] != null ? `${letterByDivision[row.division]!.attemptPct[L]!.toFixed(1)}%` : "—"}
                                            </td>
                                          ))}
                                        </tr>
-                                       <tr style={{ background: "#f9fafb" }}>
-                                         <td style={{ padding: 8, color: "#374151" }}>Acceptance (%)</td>
+                                       <tr>
+                                         <td className="row-label">Acceptance (%)</td>
                                          {["A","B","C","D","E","F","G"].map((L) => (
-                                           <td key={L} style={{ padding: 8, textAlign: "right", color: "#374151", borderBottom: "1px solid #f3f4f6" }}>
+                                           <td key={L}>
                                              {letterByDivision[row.division]?.acceptancePct?.[L] != null ? `${letterByDivision[row.division]!.acceptancePct[L]!.toFixed(1)}%` : "—"}
                                            </td>
                                          ))}
@@ -261,18 +210,18 @@ export default function ContestHistorySummary() {
                                    )}
                                    {viewMode === "counts" && (
                                      <>
-                                       <tr style={{ background: "#fff" }}>
-                                         <td style={{ padding: 8, color: "#374151" }}>Attempt count</td>
+                                       <tr>
+                                         <td className="row-label">Attempt count</td>
                                          {["A","B","C","D","E","F","G"].map((L) => (
-                                           <td key={L} style={{ padding: 8, textAlign: "right", color: "#374151", borderBottom: "1px solid #f3f4f6" }}>
+                                           <td key={L}>
                                              {letterByDivision[row.division]?.attemptCount?.[L] ?? "—"}
                                            </td>
                                          ))}
                                        </tr>
-                                       <tr style={{ background: "#f9fafb" }}>
-                                         <td style={{ padding: 8, color: "#374151" }}>Acceptance count</td>
+                                       <tr>
+                                         <td className="row-label">Acceptance count</td>
                                          {["A","B","C","D","E","F","G"].map((L) => (
-                                           <td key={L} style={{ padding: 8, textAlign: "right", color: "#374151", borderBottom: "1px solid #f3f4f6" }}>
+                                           <td key={L}>
                                              {letterByDivision[row.division]?.acceptanceCount?.[L] ?? "—"}
                                            </td>
                                          ))}
@@ -280,18 +229,18 @@ export default function ContestHistorySummary() {
                                      </>
                                    )}
                                    {/* Time rows shown in both views */}
-                                   <tr style={{ background: "#fff" }}>
-                                     <td style={{ padding: 8, color: "#374151" }}>Avg time to solve</td>
+                                   <tr>
+                                     <td className="row-label">Avg time to solve</td>
                                      {["A","B","C","D","E","F","G"].map((L) => (
-                                       <td key={L} style={{ padding: 8, textAlign: "right", color: "#374151", borderBottom: "1px solid #f3f4f6" }}>
+                                       <td key={L}>
                                          {letterByDivision[row.division]?.indivTimeAvgSec?.[L] != null ? formatTime(letterByDivision[row.division]!.indivTimeAvgSec[L]!) : "—"}
                                        </td>
                                      ))}
                                    </tr>
-                                   <tr style={{ background: "#f9fafb" }}>
-                                     <td style={{ padding: 8, color: "#374151" }}>Avg cumulative time</td>
+                                   <tr>
+                                     <td className="row-label">Avg cumulative time</td>
                                      {["A","B","C","D","E","F","G"].map((L) => (
-                                       <td key={L} style={{ padding: 8, textAlign: "right", color: "#374151", borderBottom: "1px solid #f3f4f6" }}>
+                                       <td key={L}>
                                          {letterByDivision[row.division]?.cumulTimeAvgSec?.[L] != null ? formatTime(letterByDivision[row.division]!.cumulTimeAvgSec[L]!) : "—"}
                                        </td>
                                      ))}
@@ -307,7 +256,7 @@ export default function ContestHistorySummary() {
                 </tbody>
               </table>
             </div>
-            <div style={{ marginTop: 8, color: "#aaa", fontSize: 12 }}>
+            <div className="cfm-note">
               Tip: click a division row to toggle per-letter breakdown. Use the View toggle to switch % vs counts.
             </div>
           </div>
