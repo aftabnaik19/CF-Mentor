@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 
 // Define color mapping for Codeforces ratings
@@ -66,8 +66,7 @@ const getHandleFromUrl = (): string | null => {
   return null;
 };
 
-// Global map to store original colors
-let globalOriginalColors = new Map<string, string>();
+
 
 const resetHeatmapColors = () => {
   // Find the heatmap SVG and restore original colors
@@ -80,15 +79,12 @@ const resetHeatmapColors = () => {
   const rects = heatmapContainer.querySelectorAll('rect.day');
   let resetCount = 0;
   rects.forEach(rect => {
-    const date = rect.getAttribute('data-date');
-    if (date) {
-      const originalColor = globalOriginalColors.get(date);
-      if (originalColor) {
-        const currentColor = rect.getAttribute('fill');
-        if (currentColor !== originalColor) {
-          rect.setAttribute('fill', originalColor);
-          resetCount++;
-        }
+    const originalColor = rect.getAttribute('data-original-fill');
+    if (originalColor) {
+      const currentColor = rect.getAttribute('fill');
+      if (currentColor !== originalColor) {
+        rect.setAttribute('fill', originalColor);
+        resetCount++;
       }
     }
   });
@@ -96,48 +92,9 @@ const resetHeatmapColors = () => {
   if (resetCount > 0) {
     console.log(`Reset ${resetCount} rectangles to original colors`);
   }
-
-  // Hack: Trigger year select change to force Codeforces to re-render the heatmap with original colors
-  const yearSelect = document.querySelector('select[name="yearSelect"]') as HTMLSelectElement;
-  if (yearSelect) {
-    const originalValue = yearSelect.value;
-    // Change to a different year to trigger re-render
-    yearSelect.value = originalValue === "2024" ? "2025" : "2024";
-    yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    // Change back after a short delay
-    setTimeout(() => {
-      yearSelect.value = originalValue;
-      yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
-    }, 50);
-  }
 };
 
 const MaxRatedHeatmap: React.FC = () => {
-  const [isEnabled, setIsEnabled] = useState(false);
-
-  useEffect(() => {
-    const checkFeatureFlag = async () => {
-      const result = await chrome.storage.local.get('featureFlags');
-      const flags = result.featureFlags || {};
-      setIsEnabled(flags.maxRatedHeatmap || false);
-    };
-
-    checkFeatureFlag();
-
-    // Listen for feature flag changes
-    const handleMessage = (message: { type: string; payload?: { maxRatedHeatmap?: boolean } }) => {
-      if (message.type === 'cf-mentor:feature-flags-updated') {
-        setIsEnabled(message.payload?.maxRatedHeatmap || false);
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(handleMessage);
-
-    return () => {
-      chrome.runtime.onMessage.removeListener(handleMessage);
-    };
-  }, []);
-
   const applyMaxRatedHeatmap = useCallback(async () => {
     try {
       const handle = getHandleFromUrl();
@@ -171,11 +128,10 @@ const MaxRatedHeatmap: React.FC = () => {
       // Store original colors if not already stored
       const rects = heatmapContainer.querySelectorAll('rect.day');
       rects.forEach(rect => {
-        const date = rect.getAttribute('data-date');
-        if (date && !globalOriginalColors.has(date)) {
+        if (!rect.hasAttribute('data-original-fill')) {
           const fill = rect.getAttribute('fill');
           if (fill) {
-            globalOriginalColors.set(date, fill);
+            rect.setAttribute('data-original-fill', fill);
           }
         }
       });
@@ -221,13 +177,8 @@ const MaxRatedHeatmap: React.FC = () => {
 
       if (hasRelevantChange) {
         setTimeout(() => {
-          if (isEnabled) {
-            // Apply max-rated colors immediately
-            applyMaxRatedHeatmap();
-          } else {
-            // Reset to original colors immediately
-            resetHeatmapColors();
-          }
+          // Apply max-rated colors immediately
+          applyMaxRatedHeatmap();
         }, 50); // Small delay to ensure DOM is fully updated
       }
     });
@@ -238,7 +189,7 @@ const MaxRatedHeatmap: React.FC = () => {
     });
 
     return () => observer.disconnect();
-  }, [isEnabled, applyMaxRatedHeatmap]);
+  }, [applyMaxRatedHeatmap]);
 
   // Also watch for fill attribute changes on individual rects
   useEffect(() => {
@@ -246,8 +197,6 @@ const MaxRatedHeatmap: React.FC = () => {
     if (!heatmapContainer) return;
 
     const rectObserver = new MutationObserver((mutations) => {
-      if (!isEnabled) return;
-
       const hasFillChange = mutations.some(mutation =>
         mutation.type === 'attributes' &&
         mutation.attributeName === 'fill' &&
@@ -275,18 +224,17 @@ const MaxRatedHeatmap: React.FC = () => {
     });
 
     return () => rectObserver.disconnect();
-  }, [isEnabled, applyMaxRatedHeatmap]);
+  }, [applyMaxRatedHeatmap]);
 
   useEffect(() => {
-    if (!isEnabled) {
-      // Reset to original colors when disabled
-      resetHeatmapColors();
-      return;
-    }
-
-    // Apply max-rated colors immediately when enabled
+    // Apply max-rated colors immediately when mounted
     applyMaxRatedHeatmap();
-  }, [isEnabled, applyMaxRatedHeatmap]);
+
+    // Reset to original colors when unmounted
+    return () => {
+      resetHeatmapColors();
+    };
+  }, [applyMaxRatedHeatmap]);
 
   // This component doesn't render anything visible
   return null;
@@ -297,6 +245,11 @@ let heatmapRoot: ReactDOM.Root | null = null;
 
 // Mount function
 export const mountMaxRatedHeatmap = () => {
+  // Idempotency check: if already mounted, do nothing
+  if (heatmapRoot) {
+    return;
+  }
+
   const container = document.createElement('div');
   container.id = 'cf-mentor-max-rated-heatmap';
   document.body.appendChild(container);
@@ -307,8 +260,6 @@ export const mountMaxRatedHeatmap = () => {
 
 // Unmount function
 export const unmountMaxRatedHeatmap = () => {
-  // Reset colors before unmounting
-  resetHeatmapColors();
   if (heatmapRoot) {
     heatmapRoot.unmount();
     heatmapRoot = null;
@@ -317,4 +268,5 @@ export const unmountMaxRatedHeatmap = () => {
   if (container) {
     container.remove();
   }
+  // Note: The cleanup in useEffect will handle resetting colors
 };

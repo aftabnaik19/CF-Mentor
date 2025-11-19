@@ -18,9 +18,9 @@ import {
 	unmountProblemAssistant,
 } from "./mount/ProblemAssistant";
 import {
-	mountMaxRatedHeatmap,
-	unmountMaxRatedHeatmap,
-} from "./mount/MaxRatedHeatmap";
+	mountNewMaxRatedHeatmap,
+	unmountNewMaxRatedHeatmap,
+} from "./mount/NewMaxRatedHeatmap";
 
 let lastFlags: Awaited<ReturnType<typeof getFeatureFlags>> | null = null;
 
@@ -94,9 +94,9 @@ async function initializeComponents() {
 
 	// Max Rated Heatmap on profile page
 	if (flags.maxRatedHeatmap) {
-		mountMaxRatedHeatmap();
+		mountNewMaxRatedHeatmap();
 	} else {
-		unmountMaxRatedHeatmap();
+		unmountNewMaxRatedHeatmap();
 	}
 
 	// Remember for next pass
