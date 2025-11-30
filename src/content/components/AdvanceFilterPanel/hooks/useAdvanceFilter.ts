@@ -54,16 +54,40 @@ export const useAdvancedFilter = () => {
     string[]
   >(initialFilters.problemIndex?.values || []);
 
-  // Display options
-  const [hideTags, setHideTags] = useState<boolean>(
-    initialFilters.displayOptions?.hideTags || false,
-  );
-  const [hideSolved, setHideSolved] = useState<boolean>(
-    initialFilters.displayOptions?.hideSolved || false,
-  );
-  const [hideStatusColors, setHideStatusColors] = useState<boolean>(
-    initialFilters.displayOptions?.hideStatusColors || false,
-  );
+  // Display options - Read directly from store
+  const hideTags = initialFilters.displayOptions?.hideTags || false;
+  const hideSolved = initialFilters.displayOptions?.hideSolved || false;
+  const hideStatusColors = initialFilters.displayOptions?.hideStatusColors || false;
+
+  const setHideTags = (value: boolean) => {
+    setFilters({
+      ...initialFilters,
+      displayOptions: {
+        ...initialFilters.displayOptions,
+        hideTags: value,
+      },
+    });
+  };
+
+  const setHideSolved = (value: boolean) => {
+    setFilters({
+      ...initialFilters,
+      displayOptions: {
+        ...initialFilters.displayOptions,
+        hideSolved: value,
+      },
+    });
+  };
+
+  const setHideStatusColors = (value: boolean) => {
+    setFilters({
+      ...initialFilters,
+      displayOptions: {
+        ...initialFilters.displayOptions,
+        hideStatusColors: value,
+      },
+    });
+  };
 
   // UI-specific state
   const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false);
@@ -98,15 +122,12 @@ export const useAdvancedFilter = () => {
       combineMode,
       selectedContestTypes,
       selectedProblemIndices,
-      hideTags,
-      hideSolved,
-      hideStatusColors,
     },
     500,
   );
 
   useEffect(() => {
-    const newFilters: ProblemFilter = {};
+    const newFilters: ProblemFilter = { ...initialFilters }; // Start with current filters to preserve display options
 
     const min = parseInt(debouncedState.minDifficulty, 10);
     const max = parseInt(debouncedState.maxDifficulty, 10);
@@ -115,6 +136,8 @@ export const useAdvancedFilter = () => {
         min: isNaN(min) ? undefined : min,
         max: isNaN(max) ? undefined : max,
       };
+    } else {
+        delete newFilters.cfRating;
     }
 
     if (debouncedState.selectedTags.length > 0) {
@@ -122,6 +145,8 @@ export const useAdvancedFilter = () => {
         values: debouncedState.selectedTags,
         mode: debouncedState.combineMode,
       };
+    } else {
+        delete newFilters.tags;
     }
 
     if (debouncedState.selectedSheets.length > 0) {
@@ -129,6 +154,8 @@ export const useAdvancedFilter = () => {
         values: debouncedState.selectedSheets,
         mode: "or", // Assuming sheets are always OR
       };
+    } else {
+        delete newFilters.sheets;
     }
 
     if (debouncedState.selectedContestTypes.length > 0) {
@@ -136,27 +163,52 @@ export const useAdvancedFilter = () => {
         values: debouncedState.selectedContestTypes,
         mode: "or", // Assuming contest types are always OR
       };
+    } else {
+        delete newFilters.contestType;
     }
 
     if (debouncedState.selectedProblemIndices.length > 0) {
       newFilters.problemIndex = {
         values: debouncedState.selectedProblemIndices,
       };
+    } else {
+        delete newFilters.problemIndex;
     }
-
-    // Display options
-    newFilters.displayOptions = {
-      hideTags: debouncedState.hideTags,
-      hideSolved: debouncedState.hideSolved,
-      hideStatusColors: debouncedState.hideStatusColors,
-    };
 
     // Prevent infinite loop by only setting filters if they've changed.
+    // We compare JSON stringified versions excluding displayOptions to avoid conflicts if needed,
+    // but since we are merging, a direct comparison is safer if we trust the merge.
+    // However, since we are now modifying newFilters based on debounced state, we should just check if the *filter* parts changed.
+    
+    // Simplification: Just set the filters. The debounce handles the rapid firing.
+    // The store update will trigger a re-render, but since we read directly from store for display options,
+    // and local state for others, it should be stable.
+    
     const currentFilters = useFilterStore.getState().filters;
-    if (JSON.stringify(currentFilters) !== JSON.stringify(newFilters)) {
+    
+    // We need to ensure we don't overwrite displayOptions with stale data if they changed elsewhere
+    // But 'initialFilters' in the dependency array ensures we have the latest.
+    // Wait, 'initialFilters' is from the store hook, so it updates on store change.
+    // If we include it in dependency array, we might loop if we setFilters -> store updates -> hook updates -> effect runs.
+    // We need to be careful.
+    
+    // Strategy: Only update if the *debounced* parts are different from what's in the store.
+    
+    let hasChanges = false;
+    
+    // Helper to compare
+    const isDifferent = (a: any, b: any) => JSON.stringify(a) !== JSON.stringify(b);
+
+    if (isDifferent(newFilters.cfRating, currentFilters.cfRating)) hasChanges = true;
+    if (isDifferent(newFilters.tags, currentFilters.tags)) hasChanges = true;
+    if (isDifferent(newFilters.sheets, currentFilters.sheets)) hasChanges = true;
+    if (isDifferent(newFilters.contestType, currentFilters.contestType)) hasChanges = true;
+    if (isDifferent(newFilters.problemIndex, currentFilters.problemIndex)) hasChanges = true;
+
+    if (hasChanges) {
       setFilters(newFilters);
     }
-  }, [debouncedState, setFilters]);
+  }, [debouncedState, setFilters]); // Removed initialFilters from dependency to avoid loop
 
   // Effect to listen for window resize
   useEffect(() => {
@@ -214,11 +266,9 @@ export const useAdvancedFilter = () => {
     setSelectedContestTypes([]);
     setSelectedProblemIndices([]);
     setCombineMode("and");
-    setHideTags(false);
-    setHideSolved(false);
-    setHideStatusColors(false);
-    // Also clear the global state
-    setFilters({});
+    
+    // Reset display options directly
+    setFilters({}); 
   };
 
   const handleAutoRecommend = () => {
