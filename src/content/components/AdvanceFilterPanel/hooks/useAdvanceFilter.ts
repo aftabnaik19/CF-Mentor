@@ -94,7 +94,7 @@ export const useAdvancedFilter = () => {
   };
 
   // UI-specific state
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false);
+  const [showTagsDropdown, setShowTagsDropdown] = useState<boolean>(false);
   const [tagSearchQuery, setTagSearchQuery] = useState<string>("");
   const [showContestTypeDropdown, setShowContestTypeDropdown] =
     useState<boolean>(false);
@@ -318,18 +318,18 @@ export const useAdvancedFilter = () => {
     setSelectedSheets,
     combineMode,
     setCombineMode,
-    isAdvancedOpen,
-    setIsAdvancedOpen,
+    showTagsDropdown,
+    setShowTagsDropdown,
     tagSearchQuery,
     setTagSearchQuery,
     selectedContestTypes,
     setSelectedContestTypes,
     selectedProblemIndices,
-    setSelectedProblemIndices,
     hideTags,
     setHideTags,
     hideSolved,
     setHideSolved,
+    setSelectedProblemIndices,
     hideStatusColors,
     setHideStatusColors,
     showContestTypeDropdown,

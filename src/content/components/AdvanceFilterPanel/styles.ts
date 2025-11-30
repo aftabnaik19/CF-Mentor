@@ -52,6 +52,7 @@ export const styles: StyleObject = {
 		gap: "0.5rem",
 		color: "#374151",
 		textDecoration: "none",
+		boxSizing: "border-box",
 	},
 	btnHover: { background: "#f9fafb" },
 	btnPrimary: {
@@ -125,7 +126,7 @@ export const styles: StyleObject = {
 		borderColor: "#d1d5db",
 		borderRadius: "6px",
 		boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-		zIndex: 10,
+		zIndex: 1000,
 		maxHeight: "16rem",
 		overflowY: "auto",
 		padding: "0.5rem",
@@ -146,22 +147,7 @@ export const styles: StyleObject = {
 		marginTop: "0.2rem",
 		flexShrink: 0,
 	},
-	tagGridItem: {
-		padding: "0.5rem",
-		borderRadius: "6px",
-		borderWidth: "1px",
-		borderStyle: "solid",
-		borderColor: "#d1d5db",
-		cursor: "pointer",
-		transition: "all 0.2s",
-		background: "white",
-	},
-	tagGridItemHover: { borderColor: "#9ca3af" },
-	tagGridItemSelected: {
-		background: "#dbeafe",
-		borderColor: "#93c5fd",
-		color: "#1e40af",
-	},
+
 	problemIndexGrid: {
 		display: "grid",
 		gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))",
