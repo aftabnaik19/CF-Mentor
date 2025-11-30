@@ -23,12 +23,7 @@ export default function AdvanceFilterPanel() {
  		setTagSearchQuery,
  		selectedContestTypes,
  		selectedProblemIndices,
- 		hideTags,
- 		setHideTags,
- 		hideSolved,
- 		setHideSolved,
- 		hideStatusColors,
- 		setHideStatusColors,
+
  		showContestTypeDropdown,
  		setShowContestTypeDropdown,
  		showProblemIndexDropdown,
@@ -269,38 +264,7 @@ export default function AdvanceFilterPanel() {
  								</div>
  							</div>
 
- 							<div style={styles.spaceY2}>
- 								<label style={styles.label}>Visibility Controls</label>
- 								<div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
- 									<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", cursor: "pointer" }}>
- 										<input
- 											type="checkbox"
- 											checked={!hideTags}
- 											onChange={() => setHideTags(!hideTags)}
- 											style={{ margin: 0 }}
- 										/>
- 										Show Tags
- 									</label>
- 									<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", cursor: "pointer" }}>
- 										<input
- 											type="checkbox"
- 											checked={!hideSolved}
- 											onChange={() => setHideSolved(!hideSolved)}
- 											style={{ margin: 0 }}
- 										/>
- 										Show Solved Problems
- 									</label>
- 									<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", cursor: "pointer" }}>
- 										<input
- 											type="checkbox"
- 											checked={!hideStatusColors}
- 											onChange={() => setHideStatusColors(!hideStatusColors)}
- 											style={{ margin: 0 }}
- 										/>
- 										Show Status Colors
- 									</label>
- 								</div>
- 							</div>
+
 						</div>
 
 						{selectedTags.length > 0 && (

@@ -1,11 +1,12 @@
 import AdvanceFilterPanel from "../components/AdvanceFilterPanel";
+import { SettingsPanel } from "../components/SettingsPanel";
 import { mountComponent, unmountComponent } from "../utils/ComponentUtils.tsx";
 const CONTAINER_ID = "cf-mentor-advance-filters-panel-host";
 const SETTINGS_SIDEBOX_SELECTOR = "#change-hide-tag-status";
 
 let originalContent: string | null = null;
-let hiddenSidebox: HTMLElement | null = null;
-let originalSideboxDisplay: string = "";
+let settingsSidebox: HTMLElement | null = null;
+let originalSettingsContent: string | null = null;
 
 function isProblemsetPage(): boolean {
 	const path = window.location.pathname;
@@ -41,14 +42,15 @@ export function mountAdvanceFilterPanel() {
 		// Mount into shadow root
 		mountComponent(shadowMount, <AdvanceFilterPanel />);
 
-		// Hide the settings sidebox
+		// Mount Settings Panel
 		const settingsInput = document.querySelector(SETTINGS_SIDEBOX_SELECTOR);
 		if (settingsInput) {
 			const sidebox = settingsInput.closest(".roundbox.sidebox") as HTMLElement;
 			if (sidebox) {
-				hiddenSidebox = sidebox;
-				originalSideboxDisplay = sidebox.style.display;
-				sidebox.style.display = "none";
+				settingsSidebox = sidebox;
+				originalSettingsContent = sidebox.innerHTML;
+				sidebox.innerHTML = ""; // Clear original content
+				mountComponent(sidebox, <SettingsPanel />);
 			}
 		}
 	}
@@ -72,11 +74,12 @@ export function unmountAdvanceFilterPanel() {
 			originalContent = null;
 		}
 
-		// Restore the settings sidebox
-		if (hiddenSidebox) {
-			hiddenSidebox.style.display = originalSideboxDisplay;
-			hiddenSidebox = null;
-			originalSideboxDisplay = "";
+		// Restore Settings Panel
+		if (settingsSidebox && originalSettingsContent) {
+			unmountComponent(settingsSidebox);
+			settingsSidebox.innerHTML = originalSettingsContent;
+			settingsSidebox = null;
+			originalSettingsContent = null;
 		}
 	}
 }
