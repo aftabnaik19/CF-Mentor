@@ -1,8 +1,6 @@
- 
 import { useConnectionStore } from "@/shared/stores/connectionStore";
 
-import { DropdownSelector } from "./components/DropdownSelector";
-import { ProblemIndexSelector } from "./components/ProblemIndexSelector";
+import { Dropdown } from "./components/Dropdown";
 import { TagsSelector } from "./components/TagsSelector";
 import { useAdvancedFilter } from "./hooks/useAdvanceFilter";
 import { styles } from "./styles";
@@ -175,48 +173,138 @@ export default function AdvanceFilterPanel() {
 								</div>
 							</div>
 
-							<DropdownSelector
+							<Dropdown
+								title="Contest Type"
 								isOpen={showContestTypeDropdown}
 								setIsOpen={setShowContestTypeDropdown}
-								title="Contest Type"
-								selectedItems={selectedContestTypes}
-								items={availableContestTypes.map((type) => ({
-									value: type,
-									label: type,
-									description: type, // Added missing property
-								}))}
-								onItemToggle={handleContestTypeToggle}
+								selectedCount={selectedContestTypes.length}
 								hoverState={hoverState}
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
-							/>
+							>
+								{availableContestTypes.map((type) => (
+									<div
+										key={type}
+										onClick={() => handleContestTypeToggle(type)}
+										style={{
+											...styles.checkboxItem,
+											...(hoverState[`Contest Type-${type}`] &&
+												styles.checkboxItemHover),
+										}}
+										onMouseEnter={() => handleMouseEnter(`Contest Type-${type}`)}
+										onMouseLeave={() => handleMouseLeave(`Contest Type-${type}`)}
+									>
+										<input
+											type="checkbox"
+											id={type}
+											style={styles.checkbox}
+											checked={selectedContestTypes.includes(type)}
+											readOnly
+										/>
+										<div>
+											<label
+												style={{ fontWeight: "500", cursor: "pointer" }}
+											>
+												{type}
+											</label>
+											<p
+												style={{
+													fontSize: "0.85rem",
+													color: "#6b7280",
+													margin: 0,
+												}}
+											>
+												{type}
+											</p>
+										</div>
+									</div>
+								))}
+							</Dropdown>
 
-							<ProblemIndexSelector
+							<Dropdown
+								title="Problem Index"
 								isOpen={showProblemIndexDropdown}
 								setIsOpen={setShowProblemIndexDropdown}
-								selectedIndices={selectedProblemIndices}
-								onIndexToggle={handleProblemIndexToggle}
-								problemIndices={availableProblemIndices}
+								selectedCount={selectedProblemIndices.length}
 								hoverState={hoverState}
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
-							/>
+							>
+								<div style={styles.problemIndexGrid}>
+									{availableProblemIndices.map((problemIndex) => (
+										<div
+											key={problemIndex.value}
+											onClick={() => handleProblemIndexToggle(problemIndex.value)}
+											style={{
+												...styles.problemIndexItem,
+												...(selectedProblemIndices.includes(problemIndex.value) &&
+													styles.problemIndexItemSelected),
+												...(hoverState[`index-${problemIndex.value}`] &&
+													!selectedProblemIndices.includes(problemIndex.value) &&
+													styles.problemIndexItemHover),
+											}}
+											onMouseEnter={() =>
+												handleMouseEnter(`index-${problemIndex.value}`)
+											}
+											onMouseLeave={() =>
+												handleMouseLeave(`index-${problemIndex.value}`)
+											}
+										>
+											<div style={{ fontWeight: "600", fontSize: "1.1rem" }}>
+												{problemIndex.label}
+											</div>
+										</div>
+									))}
+								</div>
+							</Dropdown>
 
-							<DropdownSelector
+							<Dropdown
+								title="Problem Sheets"
 								isOpen={showSheetsDropdown}
 								setIsOpen={setShowSheetsDropdown}
-								title="Problem Sheets"
-								selectedItems={selectedSheets}
-								items={availableSheetNames.map((name) => ({
-									value: name,
-									label: name,
-									description: name, // Added missing property
-								}))}
-								onItemToggle={handleSheetToggle}
+								selectedCount={selectedSheets.length}
 								hoverState={hoverState}
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
-							/>
+							>
+								{availableSheetNames.map((name) => (
+									<div
+										key={name}
+										onClick={() => handleSheetToggle(name)}
+										style={{
+											...styles.checkboxItem,
+											...(hoverState[`Problem Sheets-${name}`] &&
+												styles.checkboxItemHover),
+										}}
+										onMouseEnter={() => handleMouseEnter(`Problem Sheets-${name}`)}
+										onMouseLeave={() => handleMouseLeave(`Problem Sheets-${name}`)}
+									>
+										<input
+											type="checkbox"
+											id={name}
+											style={styles.checkbox}
+											checked={selectedSheets.includes(name)}
+											readOnly
+										/>
+										<div>
+											<label
+												style={{ fontWeight: "500", cursor: "pointer" }}
+											>
+												{name}
+											</label>
+											<p
+												style={{
+													fontSize: "0.85rem",
+													color: "#6b7280",
+													margin: 0,
+												}}
+											>
+												{name}
+											</p>
+										</div>
+									</div>
+								))}
+							</Dropdown>
 
  							<div style={styles.spaceY2}>
  								<label style={styles.label}>Combine Tags</label>

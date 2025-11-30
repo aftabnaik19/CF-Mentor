@@ -193,16 +193,7 @@ export const styles: StyleObject = {
 		borderRadius: "6px",
 		wordBreak: "break-word",
 	},
-	scrollArea: {
-		maxHeight: "16rem",
-		overflowY: "auto",
-		padding: "0.5rem",
-		borderWidth: "1px",
-		borderStyle: "solid",
-		borderColor: "#d1d5db",
-		borderRadius: "6px",
-		background: "#f9fafb",
-	},
+	// scrollArea removed as it is unused
 	icon: {
 		width: "1.25rem",
 		height: "1.25rem",
