@@ -1,9 +1,7 @@
- 
 import { useConnectionStore } from "@/shared/stores/connectionStore";
 
-import { DropdownSelector } from "./components/DropdownSelector";
-import { ProblemIndexSelector } from "./components/ProblemIndexSelector";
-import { TagsSelector } from "./components/TagsSelector";
+import { Dropdown } from "./components/Dropdown";
+
 import { useAdvancedFilter } from "./hooks/useAdvanceFilter";
 import { styles } from "./styles";
 export default function AdvanceFilterPanel() {
@@ -17,8 +15,8 @@ export default function AdvanceFilterPanel() {
  		selectedSheets,
  		combineMode,
  		setCombineMode,
- 		isAdvancedOpen,
- 		setIsAdvancedOpen,
+ 		showTagsDropdown,
+ 		setShowTagsDropdown,
  		tagSearchQuery,
  		setTagSearchQuery,
  		selectedContestTypes,
@@ -46,6 +44,10 @@ export default function AdvanceFilterPanel() {
  		availableContestTypes,
  		availableSheetNames,
  		availableProblemIndices,
+		setSelectedTags,
+		setSelectedContestTypes,
+		setSelectedProblemIndices,
+		setSelectedSheets,
   	} = useAdvancedFilter();
 
   const handleMouseEnter = (key: string) => {
@@ -70,12 +72,7 @@ export default function AdvanceFilterPanel() {
 		return { display: "grid", gap: "1rem", gridTemplateColumns };
 	};
 
-	const getTagGridStyle = () => {
-		let gridTemplateColumns = "repeat(1, 1fr)";
-		if (windowWidth >= 1024) gridTemplateColumns = "repeat(3, 1fr)";
-		else if (windowWidth >= 768) gridTemplateColumns = "repeat(2, 1fr)";
-		return { display: "grid", gap: "0.5rem", gridTemplateColumns };
-	};
+
 
 	const rootStyle: React.CSSProperties = {
 		maxWidth: "1024px",
@@ -175,48 +172,188 @@ export default function AdvanceFilterPanel() {
 								</div>
 							</div>
 
-							<DropdownSelector
+							<Dropdown
+								title="Contest Type"
 								isOpen={showContestTypeDropdown}
 								setIsOpen={setShowContestTypeDropdown}
-								title="Contest Type"
-								selectedItems={selectedContestTypes}
-								items={availableContestTypes.map((type) => ({
-									value: type,
-									label: type,
-									description: type, // Added missing property
-								}))}
-								onItemToggle={handleContestTypeToggle}
+								selectedCount={selectedContestTypes.length}
 								hoverState={hoverState}
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
-							/>
+								onClear={() => setSelectedContestTypes([])}
+								placeholder="Any"
+							>
+								{availableContestTypes.map((type) => (
+									<div
+										key={type}
+										onClick={() => handleContestTypeToggle(type)}
+										style={{
+											...styles.checkboxItem,
+											...(hoverState[`Contest Type-${type}`] &&
+												styles.checkboxItemHover),
+										}}
+										onMouseEnter={() => handleMouseEnter(`Contest Type-${type}`)}
+										onMouseLeave={() => handleMouseLeave(`Contest Type-${type}`)}
+									>
+										<input
+											type="checkbox"
+											id={type}
+											style={styles.checkbox}
+											checked={selectedContestTypes.includes(type)}
+											readOnly
+										/>
+										<div>
+											<label
+												style={{ fontWeight: "500", cursor: "pointer" }}
+											>
+												{type}
+											</label>
+											<p
+												style={{
+													fontSize: "0.75rem",
+													color: "#6b7280",
+													margin: 0,
+												}}
+											>
+												{type}
+											</p>
+										</div>
+									</div>
+								))}
+							</Dropdown>
 
-							<ProblemIndexSelector
+							<Dropdown
+								title="Problem Index"
 								isOpen={showProblemIndexDropdown}
 								setIsOpen={setShowProblemIndexDropdown}
-								selectedIndices={selectedProblemIndices}
-								onIndexToggle={handleProblemIndexToggle}
-								problemIndices={availableProblemIndices}
+								selectedCount={selectedProblemIndices.length}
 								hoverState={hoverState}
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
-							/>
+								onClear={() => setSelectedProblemIndices([])}
+								placeholder="Any"
+							>
+								<div style={styles.problemIndexGrid}>
+									{availableProblemIndices.map((problemIndex) => (
+										<div
+											key={problemIndex.value}
+											onClick={() => handleProblemIndexToggle(problemIndex.value)}
+											style={{
+												...styles.problemIndexItem,
+												...(selectedProblemIndices.includes(problemIndex.value) &&
+													styles.problemIndexItemSelected),
+												...(hoverState[`index-${problemIndex.value}`] &&
+													!selectedProblemIndices.includes(problemIndex.value) &&
+													styles.problemIndexItemHover),
+											}}
+											onMouseEnter={() =>
+												handleMouseEnter(`index-${problemIndex.value}`)
+											}
+											onMouseLeave={() =>
+												handleMouseLeave(`index-${problemIndex.value}`)
+											}
+										>
+											<div style={{ fontWeight: "600", fontSize: "1.0rem" }}>
+												{problemIndex.label}
+											</div>
+										</div>
+									))}
+								</div>
+							</Dropdown>
 
-							<DropdownSelector
+							<Dropdown
+								title="Problem Sheets"
 								isOpen={showSheetsDropdown}
 								setIsOpen={setShowSheetsDropdown}
-								title="Problem Sheets"
-								selectedItems={selectedSheets}
-								items={availableSheetNames.map((name) => ({
-									value: name,
-									label: name,
-									description: name, // Added missing property
-								}))}
-								onItemToggle={handleSheetToggle}
+								selectedCount={selectedSheets.length}
 								hoverState={hoverState}
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
-							/>
+								onClear={() => setSelectedSheets([])}
+								placeholder="Not Selected"
+							>
+								{availableSheetNames.map((name) => (
+									<div
+										key={name}
+										onClick={() => handleSheetToggle(name)}
+										style={{
+											...styles.checkboxItem,
+											...(hoverState[`Problem Sheets-${name}`] &&
+												styles.checkboxItemHover),
+										}}
+										onMouseEnter={() => handleMouseEnter(`Problem Sheets-${name}`)}
+										onMouseLeave={() => handleMouseLeave(`Problem Sheets-${name}`)}
+									>
+										<input
+											type="checkbox"
+											id={name}
+											style={styles.checkbox}
+											checked={selectedSheets.includes(name)}
+											readOnly
+										/>
+										<div>
+											<label
+												style={{ fontWeight: "500", cursor: "pointer" }}
+											>
+												{name}
+											</label>
+											<p
+												style={{
+													fontSize: "0.75rem",
+													color: "#6b7280",
+													margin: 0,
+												}}
+											>
+												{name}
+											</p>
+										</div>
+									</div>
+								))}
+							</Dropdown>
+
+							<Dropdown
+								title="Tags"
+								isOpen={showTagsDropdown}
+								setIsOpen={setShowTagsDropdown}
+								selectedCount={selectedTags.length}
+								hoverState={hoverState}
+								handleMouseEnter={handleMouseEnter}
+								handleMouseLeave={handleMouseLeave}
+								searchable={true}
+								searchValue={tagSearchQuery}
+								onSearchChange={setTagSearchQuery}
+								onEnter={() => {
+									if (filteredTags.length > 0) {
+										handleTagToggle(filteredTags[0]);
+										setTagSearchQuery("");
+									}
+								}}
+								onClear={() => setSelectedTags([])}
+								placeholder="Any"
+							>
+								{filteredTags.map((tag) => (
+									<div
+										key={tag}
+										style={{
+											...styles.checkboxItem,
+											...(hoverState[`tag-${tag}`] && styles.checkboxItemHover),
+										}}
+										onMouseEnter={() => handleMouseEnter(`tag-${tag}`)}
+										onMouseLeave={() => handleMouseLeave(`tag-${tag}`)}
+										onClick={() => handleTagToggle(tag)}
+									>
+										<input
+											type="checkbox"
+											checked={selectedTags.includes(tag)}
+											readOnly
+											style={styles.checkbox}
+										/>
+										<span style={{ fontSize: "1.1rem", color: "#4b5563" }}>
+											{tag}
+										</span>
+									</div>
+								))}
+							</Dropdown>
 
  							<div style={styles.spaceY2}>
  								<label style={styles.label}>Combine Tags</label>
@@ -235,11 +372,11 @@ export default function AdvanceFilterPanel() {
  											readOnly
  										/>
  										<label
- 											htmlFor="and"
- 											style={{ fontSize: "0.95rem", cursor: "pointer" }}
- 										>
- 											AND
- 										</label>
+											htmlFor="and"
+											style={{ fontSize: "0.95rem", cursor: "pointer" }}
+										>
+											AND
+										</label>
  									</div>
  									<div
  										onClick={() => setCombineMode("or")}
@@ -304,102 +441,7 @@ export default function AdvanceFilterPanel() {
 							</div>
 						)}
 
-						<div>
-							<button
-								onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-								style={{
-									...styles.btn,
-									...styles.btnGhost,
-									width: "100%",
-									justifyContent: "space-between",
-									padding: "0.25rem",
-									...(hoverState.advancedBtn && styles.btnGhostHover),
-								}}
-								onMouseEnter={() => handleMouseEnter("advancedBtn")}
-								onMouseLeave={() => handleMouseLeave("advancedBtn")}
-							>
-								<div
-									style={{
-										display: "flex",
-										alignItems: "center",
-										gap: "0.5rem",
-									}}
-								>
-									<svg
-										style={styles.icon}
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-									>
-										<circle cx="12" cy="12" r="3" />
-										<path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
-									</svg>
-									<span style={{ fontSize: "0.95rem", fontWeight: "500" }}>
-										Advanced Tag Selection
-									</span>
-								</div>
-								<svg
-									style={{
-										...styles.icon,
-										width: "1.5rem",
-										height: "1.5rem",
-										transition: "transform 0.2s",
-										transform: isAdvancedOpen
-											? "rotate(180deg)"
-											: "rotate(0deg)",
-									}}
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-								>
-									<polyline points="6,9 12,15 18,9" />
-								</svg>
-							</button>
 
-							{isAdvancedOpen && (
-								<div
-									style={{
-										display: "flex",
-										flexDirection: "column",
-										gap: "1rem",
-										marginTop: "1rem",
-									}}
-								>
-									<div style={styles.separator}></div>
-									<div style={styles.spaceY2}>
-										<label style={styles.label}>Search Tags</label>
-										<input
-											placeholder="Search algorithm tags..."
-											value={tagSearchQuery}
-											onChange={(e) =>
-												setTagSearchQuery(
-													(e.target as HTMLInputElement).value,
-												)
-											}
-											style={{
-												...styles.input,
-												...(focusState.tagSearch && styles.inputFocus),
-											}}
-											onFocus={() => handleFocus("tagSearch")}
-											onBlur={() => handleBlur("tagSearch")}
-										/>
-									</div>
-									<TagsSelector
-										filteredTags={filteredTags.map((tag) => ({
-											value: tag,
-											label: tag,
-											description: "", // No description available in this dynamic setup
-										}))}
-										selectedTags={selectedTags}
-										onTagToggle={handleTagToggle}
-										hoverState={hoverState}
-										handleMouseEnter={handleMouseEnter}
-										handleMouseLeave={handleMouseLeave}
-										getTagGridStyle={getTagGridStyle}
-									/>
-								</div>
-							)}
-						</div>
 
 						<div
 							style={{ ...styles.borderT, display: "flex", gap: "0.75rem" }}

@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 
 import { useFilterStore } from "@/shared/stores/filterStore";
 import { ProblemFilter } from "@/shared/types/filters";
 import { metadataService } from "@/shared/utils/metadataService";
+import { getCurrentUserHandle } from "@/content/utils/domUtils";
+import { CFRatingChange } from "@/content/components/ContestHistorySummary/types";
 
 import { useDebounce } from "./useDebounce";
 
@@ -31,7 +33,9 @@ export const useAdvancedFilter = () => {
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [availableProblemIndices] = useState(PROBLEM_INDICES);
 
-  // Local state for UI controls, initialized from the global store
+  // Local state for UI controls
+  // We initialize from store, but we don't sync BACK from store to local state automatically
+  // to avoid fighting with the user's input.
   const [minDifficulty, setMinDifficulty] = useState<string>(
     initialFilters.cfRating?.min?.toString() || "",
   );
@@ -61,9 +65,9 @@ export const useAdvancedFilter = () => {
 
   const setHideTags = (value: boolean) => {
     setFilters({
-      ...initialFilters,
+      ...useFilterStore.getState().filters,
       displayOptions: {
-        ...initialFilters.displayOptions,
+        ...useFilterStore.getState().filters.displayOptions,
         hideTags: value,
       },
     });
@@ -71,9 +75,9 @@ export const useAdvancedFilter = () => {
 
   const setHideSolved = (value: boolean) => {
     setFilters({
-      ...initialFilters,
+      ...useFilterStore.getState().filters,
       displayOptions: {
-        ...initialFilters.displayOptions,
+        ...useFilterStore.getState().filters.displayOptions,
         hideSolved: value,
       },
     });
@@ -81,16 +85,16 @@ export const useAdvancedFilter = () => {
 
   const setHideStatusColors = (value: boolean) => {
     setFilters({
-      ...initialFilters,
+      ...useFilterStore.getState().filters,
       displayOptions: {
-        ...initialFilters.displayOptions,
+        ...useFilterStore.getState().filters.displayOptions,
         hideStatusColors: value,
       },
     });
   };
 
   // UI-specific state
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false);
+  const [showTagsDropdown, setShowTagsDropdown] = useState<boolean>(false);
   const [tagSearchQuery, setTagSearchQuery] = useState<string>("");
   const [showContestTypeDropdown, setShowContestTypeDropdown] =
     useState<boolean>(false);
@@ -112,25 +116,47 @@ export const useAdvancedFilter = () => {
     });
   }, []);
 
+  // Memoize the state object to prevent useDebounce from resetting on every render (e.g. hover updates)
+  const filterState = useMemo(() => ({
+    minDifficulty,
+    maxDifficulty,
+    selectedTags,
+    selectedSheets,
+    combineMode,
+    selectedContestTypes,
+    selectedProblemIndices,
+  }), [
+    minDifficulty,
+    maxDifficulty,
+    selectedTags,
+    selectedSheets,
+    combineMode,
+    selectedContestTypes,
+    selectedProblemIndices,
+  ]);
+
   // Debounce all filter inputs to avoid rapid updates
-  const debouncedState = useDebounce(
-    {
-      minDifficulty,
-      maxDifficulty,
-      selectedTags,
-      selectedSheets,
-      combineMode,
-      selectedContestTypes,
-      selectedProblemIndices,
-    },
-    500,
-  );
+  const debouncedState = useDebounce(filterState, 500);
+
+  // Use a ref to track the previous debounced state to avoid unnecessary updates
+  const prevDebouncedStateRef = useRef(debouncedState);
 
   useEffect(() => {
-    const newFilters: ProblemFilter = { ...initialFilters }; // Start with current filters to preserve display options
+    // Check if the state actually changed
+    if (JSON.stringify(prevDebouncedStateRef.current) === JSON.stringify(debouncedState)) {
+      return;
+    }
+    prevDebouncedStateRef.current = debouncedState;
+
+    const currentFilters = useFilterStore.getState().filters;
+    const newFilters: ProblemFilter = { 
+        ...currentFilters, // Preserve existing filters (especially displayOptions)
+        // We will overwrite the specific filter sections below
+    }; 
 
     const min = parseInt(debouncedState.minDifficulty, 10);
     const max = parseInt(debouncedState.maxDifficulty, 10);
+    
     if (!isNaN(min) || !isNaN(max)) {
       newFilters.cfRating = {
         min: isNaN(min) ? undefined : min,
@@ -152,7 +178,7 @@ export const useAdvancedFilter = () => {
     if (debouncedState.selectedSheets.length > 0) {
       newFilters.sheets = {
         values: debouncedState.selectedSheets,
-        mode: "or", // Assuming sheets are always OR
+        mode: "or", 
       };
     } else {
         delete newFilters.sheets;
@@ -161,7 +187,7 @@ export const useAdvancedFilter = () => {
     if (debouncedState.selectedContestTypes.length > 0) {
       newFilters.contestType = {
         values: debouncedState.selectedContestTypes,
-        mode: "or", // Assuming contest types are always OR
+        mode: "or",
       };
     } else {
         delete newFilters.contestType;
@@ -175,40 +201,8 @@ export const useAdvancedFilter = () => {
         delete newFilters.problemIndex;
     }
 
-    // Prevent infinite loop by only setting filters if they've changed.
-    // We compare JSON stringified versions excluding displayOptions to avoid conflicts if needed,
-    // but since we are merging, a direct comparison is safer if we trust the merge.
-    // However, since we are now modifying newFilters based on debounced state, we should just check if the *filter* parts changed.
-    
-    // Simplification: Just set the filters. The debounce handles the rapid firing.
-    // The store update will trigger a re-render, but since we read directly from store for display options,
-    // and local state for others, it should be stable.
-    
-    const currentFilters = useFilterStore.getState().filters;
-    
-    // We need to ensure we don't overwrite displayOptions with stale data if they changed elsewhere
-    // But 'initialFilters' in the dependency array ensures we have the latest.
-    // Wait, 'initialFilters' is from the store hook, so it updates on store change.
-    // If we include it in dependency array, we might loop if we setFilters -> store updates -> hook updates -> effect runs.
-    // We need to be careful.
-    
-    // Strategy: Only update if the *debounced* parts are different from what's in the store.
-    
-    let hasChanges = false;
-    
-    // Helper to compare
-    const isDifferent = (a: any, b: any) => JSON.stringify(a) !== JSON.stringify(b);
-
-    if (isDifferent(newFilters.cfRating, currentFilters.cfRating)) hasChanges = true;
-    if (isDifferent(newFilters.tags, currentFilters.tags)) hasChanges = true;
-    if (isDifferent(newFilters.sheets, currentFilters.sheets)) hasChanges = true;
-    if (isDifferent(newFilters.contestType, currentFilters.contestType)) hasChanges = true;
-    if (isDifferent(newFilters.problemIndex, currentFilters.problemIndex)) hasChanges = true;
-
-    if (hasChanges) {
-      setFilters(newFilters);
-    }
-  }, [debouncedState, setFilters]); // Removed initialFilters from dependency to avoid loop
+    setFilters(newFilters);
+  }, [debouncedState, setFilters]);
 
   // Effect to listen for window resize
   useEffect(() => {
@@ -222,43 +216,43 @@ export const useAdvancedFilter = () => {
     tag.toLowerCase().includes(tagSearchQuery.toLowerCase()),
   );
 
-  const handleTagToggle = (tagValue: string) => {
+  const handleTagToggle = useCallback((tagValue: string) => {
     setSelectedTags((prev) =>
       prev.includes(tagValue)
         ? prev.filter((t) => t !== tagValue)
         : [...prev, tagValue],
     );
-  };
+  }, []);
 
-  const handleSheetToggle = (sheetValue: string) => {
+  const handleSheetToggle = useCallback((sheetValue: string) => {
     setSelectedSheets((prev) =>
       prev.includes(sheetValue)
         ? prev.filter((s) => s !== sheetValue)
         : [...prev, sheetValue],
     );
-  };
+  }, []);
 
-  const handleContestTypeToggle = (contestType: string) => {
+  const handleContestTypeToggle = useCallback((contestType: string) => {
     setSelectedContestTypes((prev) =>
       prev.includes(contestType)
         ? prev.filter((c) => c !== contestType)
         : [...prev, contestType],
     );
-  };
+  }, []);
 
-  const handleProblemIndexToggle = (problemIndex: string) => {
+  const handleProblemIndexToggle = useCallback((problemIndex: string) => {
     setSelectedProblemIndices((prev) =>
       prev.includes(problemIndex)
         ? prev.filter((p) => p !== problemIndex)
         : [...prev, problemIndex],
     );
-  };
+  }, []);
 
-  const removeTag = (tagValue: string) => {
+  const removeTag = useCallback((tagValue: string) => {
     setSelectedTags((prev) => prev.filter((t) => t !== tagValue));
-  };
+  }, []);
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setMinDifficulty("");
     setMaxDifficulty("");
     setSelectedTags([]);
@@ -267,13 +261,51 @@ export const useAdvancedFilter = () => {
     setSelectedProblemIndices([]);
     setCombineMode("and");
     
-    // Reset display options directly
-    setFilters({}); 
-  };
+    // We do NOT call setFilters({}) here because that would wipe displayOptions.
+    // The useEffect will pick up the empty state changes and update the store,
+    // preserving the displayOptions because we spread ...currentFilters in the effect.
+  }, []);
 
-  const handleAutoRecommend = () => {
-    console.log("Auto recommend triggered");
-  };
+  const handleAutoRecommend = useCallback(async () => {
+    const handle = getCurrentUserHandle();
+    if (!handle) {
+      alert("No user logged in");
+      return;
+    }
+
+    try {
+      const response = await new Promise<{
+        success: boolean;
+        rating?: CFRatingChange[];
+        error?: string;
+      }>((resolve) => {
+        chrome.runtime.sendMessage(
+          { type: "fetch-user-data", handle },
+          (response) => {
+            resolve(response);
+          },
+        );
+      });
+
+      if (response.success && response.rating && response.rating.length > 0) {
+        const currentRating = response.rating[response.rating.length - 1].newRating || 0;
+        
+        if (currentRating > 0) {
+          // Apply recommended filters
+          setMinDifficulty((currentRating - 100).toString());
+          setMaxDifficulty((currentRating + 300).toString());
+          setSelectedContestTypes(["Edu", "Div. 2"]);
+          setSelectedProblemIndices(["C", "D"]);
+          setSelectedSheets(["acd", "cp31"]);
+        }
+      } else {
+        console.error("Failed to fetch user rating or no rating data found.");
+        // Fallback or alert if needed, but for now just logging error
+      }
+    } catch (error) {
+      console.error("Error in auto recommend:", error);
+    }
+  }, []);
 
   return {
     minDifficulty,
@@ -286,18 +318,18 @@ export const useAdvancedFilter = () => {
     setSelectedSheets,
     combineMode,
     setCombineMode,
-    isAdvancedOpen,
-    setIsAdvancedOpen,
+    showTagsDropdown,
+    setShowTagsDropdown,
     tagSearchQuery,
     setTagSearchQuery,
     selectedContestTypes,
     setSelectedContestTypes,
     selectedProblemIndices,
-    setSelectedProblemIndices,
     hideTags,
     setHideTags,
     hideSolved,
     setHideSolved,
+    setSelectedProblemIndices,
     hideStatusColors,
     setHideStatusColors,
     showContestTypeDropdown,

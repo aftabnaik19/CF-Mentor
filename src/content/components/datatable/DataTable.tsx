@@ -86,6 +86,14 @@ const ProblemDataTable: React.FC = () => {
 					}
 					return p;
 				});
+				// Sort by Contest ID (Desc) then Problem Index (Asc)
+				processedProblems.sort((a, b) => {
+					if (b.contestId !== a.contestId) {
+						return b.contestId - a.contestId;
+					}
+					return a.index.localeCompare(b.index, undefined, { numeric: true });
+				});
+
 				console.log('Problems loaded:', processedProblems.length);
 				setProblems(processedProblems);
 				setLoading(false);
@@ -191,7 +199,7 @@ const ProblemDataTable: React.FC = () => {
 						>
 							{row.name}
 						</a>
-						{displayOptions.hideTags ? null : (
+						{(!displayOptions.hideTags || row.userVerdict === "OK") && (
 							<span
 								style={{
 									color: "#888",
