@@ -35,7 +35,7 @@ export const SettingsPanel: React.FC = () => {
         <input
           id="change-hide-solved-status"
           type="checkbox"
-          checked={!hideSolved}
+          checked={hideSolved}
           onChange={() => setHideSolved(!hideSolved)}
         />
         <label

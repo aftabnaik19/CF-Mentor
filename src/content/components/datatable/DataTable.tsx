@@ -191,7 +191,7 @@ const ProblemDataTable: React.FC = () => {
 						>
 							{row.name}
 						</a>
-						{displayOptions.hideTags ? null : (
+						{(!displayOptions.hideTags || row.userVerdict === "OK") && (
 							<span
 								style={{
 									color: "#888",
