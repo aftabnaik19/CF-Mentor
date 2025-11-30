@@ -1,7 +1,7 @@
 import React from 'react';
 
 type StyleObject = {
-  [key: string]: React.CSSProperties;
+	[key: string]: React.CSSProperties;
 };
 
 // Centralized style object for all inline styles
@@ -113,39 +113,6 @@ export const styles: StyleObject = {
 		color: "#1e40af",
 		gap: "0.25rem",
 	},
-	dropdown: { position: "relative", width: "100%" },
-	dropdownContent: {
-		position: "absolute",
-		top: "calc(100% + 4px)",
-		left: 0,
-		right: 0,
-		background: "white",
-		borderWidth: "1px",
-		borderStyle: "solid",
-		borderColor: "#d1d5db",
-		borderRadius: "6px",
-		boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-		zIndex: 10,
-		maxHeight: "16rem",
-		overflowY: "auto",
-		padding: "0.5rem",
-		boxSizing: "border-box",
-	},
-	checkboxItem: {
-		display: "flex",
-		alignItems: "flex-start",
-		gap: "0.75rem",
-		padding: "0.5rem",
-		borderRadius: "4px",
-		cursor: "pointer",
-	},
-	checkboxItemHover: { backgroundColor: "#f3f4f6" },
-	checkbox: {
-		width: "1rem",
-		height: "1rem",
-		marginTop: "0.2rem",
-		flexShrink: 0,
-	},
 	tagGridItem: {
 		padding: "0.5rem",
 		borderRadius: "6px",
@@ -162,27 +129,11 @@ export const styles: StyleObject = {
 		borderColor: "#93c5fd",
 		color: "#1e40af",
 	},
-	problemIndexGrid: {
-		display: "grid",
-		gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))",
-		gap: "0.5rem",
-	},
-	problemIndexItem: {
-		padding: "0.5rem",
-		borderRadius: "6px",
-		borderWidth: "1px",
-		borderStyle: "solid",
-		borderColor: "#d1d5db",
-		cursor: "pointer",
-		transition: "all 0.2s",
-		textAlign: "center",
-		background: "white",
-	},
-	problemIndexItemHover: { borderColor: "#9ca3af" },
-	problemIndexItemSelected: {
-		background: "#dbeafe",
-		borderColor: "#93c5fd",
-		color: "#1e40af",
+	checkbox: {
+		width: "1rem",
+		height: "1rem",
+		marginTop: "0.2rem",
+		flexShrink: 0,
 	},
 	separator: { height: "1px", background: "#e5e7eb", margin: "1rem 0" },
 	filterSummary: {
@@ -224,7 +175,7 @@ export const styles: StyleObject = {
 	radioItem: {
 		display: "flex",
 		alignItems: "center",
-gap: "0.5rem",
+		gap: "0.5rem",
 		cursor: "pointer",
 	},
 	radio: { width: "1rem", height: "1rem" },

@@ -92,11 +92,7 @@ export const useAdvancedFilter = () => {
   // UI-specific state
   const [isAdvancedOpen, setIsAdvancedOpen] = useState<boolean>(false);
   const [tagSearchQuery, setTagSearchQuery] = useState<string>("");
-  const [showContestTypeDropdown, setShowContestTypeDropdown] =
-    useState<boolean>(false);
-  const [showProblemIndexDropdown, setShowProblemIndexDropdown] =
-    useState<boolean>(false);
-  const [showSheetsDropdown, setShowSheetsDropdown] = useState<boolean>(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [hoverState, setHoverState] = useState<Record<string, boolean>>({});
   const [focusState, setFocusState] = useState<Record<string, boolean>>({});
   const [windowWidth, setWindowWidth] = useState<number>(window.innerWidth);
@@ -137,7 +133,7 @@ export const useAdvancedFilter = () => {
         max: isNaN(max) ? undefined : max,
       };
     } else {
-        delete newFilters.cfRating;
+      delete newFilters.cfRating;
     }
 
     if (debouncedState.selectedTags.length > 0) {
@@ -146,7 +142,7 @@ export const useAdvancedFilter = () => {
         mode: debouncedState.combineMode,
       };
     } else {
-        delete newFilters.tags;
+      delete newFilters.tags;
     }
 
     if (debouncedState.selectedSheets.length > 0) {
@@ -155,7 +151,7 @@ export const useAdvancedFilter = () => {
         mode: "or", // Assuming sheets are always OR
       };
     } else {
-        delete newFilters.sheets;
+      delete newFilters.sheets;
     }
 
     if (debouncedState.selectedContestTypes.length > 0) {
@@ -164,7 +160,7 @@ export const useAdvancedFilter = () => {
         mode: "or", // Assuming contest types are always OR
       };
     } else {
-        delete newFilters.contestType;
+      delete newFilters.contestType;
     }
 
     if (debouncedState.selectedProblemIndices.length > 0) {
@@ -172,30 +168,30 @@ export const useAdvancedFilter = () => {
         values: debouncedState.selectedProblemIndices,
       };
     } else {
-        delete newFilters.problemIndex;
+      delete newFilters.problemIndex;
     }
 
     // Prevent infinite loop by only setting filters if they've changed.
     // We compare JSON stringified versions excluding displayOptions to avoid conflicts if needed,
     // but since we are merging, a direct comparison is safer if we trust the merge.
     // However, since we are now modifying newFilters based on debounced state, we should just check if the *filter* parts changed.
-    
+
     // Simplification: Just set the filters. The debounce handles the rapid firing.
     // The store update will trigger a re-render, but since we read directly from store for display options,
     // and local state for others, it should be stable.
-    
+
     const currentFilters = useFilterStore.getState().filters;
-    
+
     // We need to ensure we don't overwrite displayOptions with stale data if they changed elsewhere
     // But 'initialFilters' in the dependency array ensures we have the latest.
     // Wait, 'initialFilters' is from the store hook, so it updates on store change.
     // If we include it in dependency array, we might loop if we setFilters -> store updates -> hook updates -> effect runs.
     // We need to be careful.
-    
+
     // Strategy: Only update if the *debounced* parts are different from what's in the store.
-    
+
     let hasChanges = false;
-    
+
     // Helper to compare
     const isDifferent = (a: any, b: any) => JSON.stringify(a) !== JSON.stringify(b);
 
@@ -266,9 +262,9 @@ export const useAdvancedFilter = () => {
     setSelectedContestTypes([]);
     setSelectedProblemIndices([]);
     setCombineMode("and");
-    
+
     // Reset display options directly
-    setFilters({}); 
+    setFilters({});
   };
 
   const handleAutoRecommend = () => {
@@ -300,12 +296,8 @@ export const useAdvancedFilter = () => {
     setHideSolved,
     hideStatusColors,
     setHideStatusColors,
-    showContestTypeDropdown,
-    setShowContestTypeDropdown,
-    showProblemIndexDropdown,
-    setShowProblemIndexDropdown,
-    showSheetsDropdown,
-    setShowSheetsDropdown,
+    activeDropdown,
+    setActiveDropdown,
     hoverState,
     setHoverState,
     focusState,
