@@ -1,11 +1,15 @@
 import AdvanceFilterPanel from "../components/AdvanceFilterPanel";
 import { mountComponent, unmountComponent } from "../utils/ComponentUtils.tsx";
 const CONTAINER_ID = "cf-mentor-advance-filters-panel-host";
+const SETTINGS_SIDEBOX_SELECTOR = "#change-hide-tag-status";
 
 let originalContent: string | null = null;
+let hiddenSidebox: HTMLElement | null = null;
+let originalSideboxDisplay: string = "";
 
-function isProblemsetPage(url: string): boolean {
-	return /^https:\/\/codeforces\.com\/problemset/.test(url);
+function isProblemsetPage(): boolean {
+	const path = window.location.pathname;
+	return path === "/problemset" || path === "/problemset/";
 }
 
 export function mountAdvanceFilterPanel() {
@@ -13,7 +17,7 @@ export function mountAdvanceFilterPanel() {
 		".roundbox.sidebox._FilterByTagsFrame_main.borderTopRound",
 	) as HTMLElement | null;
 
-	const isOnProblemsetPage = isProblemsetPage(window.location.href);
+	const isOnProblemsetPage = isProblemsetPage();
 	if (
 		targetDiv &&
 		isOnProblemsetPage &&
@@ -36,6 +40,17 @@ export function mountAdvanceFilterPanel() {
 
 		// Mount into shadow root
 		mountComponent(shadowMount, <AdvanceFilterPanel />);
+
+		// Hide the settings sidebox
+		const settingsInput = document.querySelector(SETTINGS_SIDEBOX_SELECTOR);
+		if (settingsInput) {
+			const sidebox = settingsInput.closest(".roundbox.sidebox") as HTMLElement;
+			if (sidebox) {
+				hiddenSidebox = sidebox;
+				originalSideboxDisplay = sidebox.style.display;
+				sidebox.style.display = "none";
+			}
+		}
 	}
 }
 
@@ -55,6 +70,13 @@ export function unmountAdvanceFilterPanel() {
 		if (targetDiv && originalContent) {
 			targetDiv.innerHTML = originalContent;
 			originalContent = null;
+		}
+
+		// Restore the settings sidebox
+		if (hiddenSidebox) {
+			hiddenSidebox.style.display = originalSideboxDisplay;
+			hiddenSidebox = null;
+			originalSideboxDisplay = "";
 		}
 	}
 }

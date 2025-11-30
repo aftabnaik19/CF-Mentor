@@ -79,7 +79,7 @@ async function initializeComponents() {
 	}
 
 	// Data table replacement on problemset page
-	if (flags.dataTable) {
+	if (flags.advancedFiltering) {
 		mountDataTable();
 	} else {
 		unmountDataTable();

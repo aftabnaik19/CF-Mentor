@@ -15,8 +15,7 @@ type ToggleItem = {
 const TOGGLES: ToggleItem[] = [
   { key: "problemAssistant", label: "Problem Assistant", description: "Bookmarks, notes, stopwatch on problem page" },
   { key: "stopwatch", label: "Stopwatch", description: "Show stopwatch inside Problem Assistant" },
-  { key: "advancedFiltering", label: "Advanced Filtering", description: "Replace filter-by-tags on Problemset" },
-  { key: "dataTable", label: "Enhanced Data Table", description: "Replace problemset table with richer view" },
+  { key: "advancedFiltering", label: "Advance Filtering for Problemset", description: "Replace filter-by-tags and enhance data table" },
   { key: "contestHistorySummary", label: "Contest History Summary", description: "Show division-wise averages on profile page" },
   { key: "maxRatedHeatmap", label: "Max Rated Heatmap", description: "Show max problem rating instead of count on profile heatmap" },
 ];
@@ -33,7 +32,6 @@ const Popup = () => {
         problemAssistant: true,
         stopwatch: true,
         advancedFiltering: true,
-        dataTable: true,
         contestHistorySummary: true,
         maxRatedHeatmap: true,
       };

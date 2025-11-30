@@ -6,7 +6,6 @@ export type FeatureKey =
   | "problemAssistant" // bookmark + notes + stopwatch panel
   | "stopwatch"
   | "advancedFiltering"
-  | "dataTable"
   | "contestHistorySummary" // profile page: division-wise summary of past k contests
   | "maxRatedHeatmap"; // profile page: show max rating heatmap instead of count
 
@@ -16,7 +15,6 @@ const DEFAULT_FLAGS: FeatureFlags = {
   problemAssistant: true,
   stopwatch: true,
   advancedFiltering: true,
-  dataTable: true,
   contestHistorySummary: true,
   maxRatedHeatmap: false,
 };
