@@ -12,7 +12,7 @@ export const SettingsPanel: React.FC = () => {
   } = useAdvancedFilter();
 
   return (
-    <div className="roundbox sidebox borderTopRound" style={{}}>
+    <>
       <div className="caption titled">
         → Settings
         <div className="top-links"></div>
@@ -59,6 +59,6 @@ export const SettingsPanel: React.FC = () => {
           Show status colors
         </label>
       </div>
-    </div>
+    </>
   );
 };
