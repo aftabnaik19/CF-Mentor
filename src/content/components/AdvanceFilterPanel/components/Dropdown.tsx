@@ -15,6 +15,7 @@ interface DropdownProps {
   onSearchChange?: (value: string) => void;
   onEnter?: () => void;
   onClear?: () => void;
+  placeholder?: string;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -31,6 +32,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   onSearchChange,
   onEnter,
   onClear,
+  placeholder,
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -56,8 +58,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
   }, [isOpen, setIsOpen]);
 
   return (
-    <div style={styles.spaceY2} ref={dropdownRef}>
-      <label style={styles.label}>{title}</label>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }} ref={dropdownRef}>
+      <label style={{ ...styles.label, marginBottom: "0.2rem" }}>{title}</label>
       <div style={styles.dropdown}>
         <div
           style={{
@@ -90,7 +92,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
               placeholder={
                 selectedCount > 0
                   ? `${selectedCount} selected`
-                  : `Select ${title.toLowerCase()}`
+                  : placeholder || `Select ${title.toLowerCase()}`
               }
               style={{
                 border: "none",
@@ -109,7 +111,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
             <span style={{ flex: 1, textAlign: "left" }}>
               {selectedCount > 0
                 ? `${selectedCount} item${selectedCount > 1 ? "s" : ""} selected`
-                : `Select ${title.toLowerCase()}`}
+                : placeholder || `Select ${title.toLowerCase()}`}
             </span>
           )}
           

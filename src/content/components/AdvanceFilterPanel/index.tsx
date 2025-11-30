@@ -181,6 +181,7 @@ export default function AdvanceFilterPanel() {
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
 								onClear={() => setSelectedContestTypes([])}
+								placeholder="Any"
 							>
 								{availableContestTypes.map((type) => (
 									<div
@@ -209,7 +210,7 @@ export default function AdvanceFilterPanel() {
 											</label>
 											<p
 												style={{
-													fontSize: "0.85rem",
+													fontSize: "0.75rem",
 													color: "#6b7280",
 													margin: 0,
 												}}
@@ -230,6 +231,7 @@ export default function AdvanceFilterPanel() {
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
 								onClear={() => setSelectedProblemIndices([])}
+								placeholder="Any"
 							>
 								<div style={styles.problemIndexGrid}>
 									{availableProblemIndices.map((problemIndex) => (
@@ -251,7 +253,7 @@ export default function AdvanceFilterPanel() {
 												handleMouseLeave(`index-${problemIndex.value}`)
 											}
 										>
-											<div style={{ fontWeight: "600", fontSize: "1.1rem" }}>
+											<div style={{ fontWeight: "600", fontSize: "1.0rem" }}>
 												{problemIndex.label}
 											</div>
 										</div>
@@ -268,6 +270,7 @@ export default function AdvanceFilterPanel() {
 								handleMouseEnter={handleMouseEnter}
 								handleMouseLeave={handleMouseLeave}
 								onClear={() => setSelectedSheets([])}
+								placeholder="Not Selected"
 							>
 								{availableSheetNames.map((name) => (
 									<div
@@ -296,7 +299,7 @@ export default function AdvanceFilterPanel() {
 											</label>
 											<p
 												style={{
-													fontSize: "0.85rem",
+													fontSize: "0.75rem",
 													color: "#6b7280",
 													margin: 0,
 												}}
@@ -304,6 +307,50 @@ export default function AdvanceFilterPanel() {
 												{name}
 											</p>
 										</div>
+									</div>
+								))}
+							</Dropdown>
+
+							<Dropdown
+								title="Tags"
+								isOpen={showTagsDropdown}
+								setIsOpen={setShowTagsDropdown}
+								selectedCount={selectedTags.length}
+								hoverState={hoverState}
+								handleMouseEnter={handleMouseEnter}
+								handleMouseLeave={handleMouseLeave}
+								searchable={true}
+								searchValue={tagSearchQuery}
+								onSearchChange={setTagSearchQuery}
+								onEnter={() => {
+									if (filteredTags.length > 0) {
+										handleTagToggle(filteredTags[0]);
+										setTagSearchQuery("");
+									}
+								}}
+								onClear={() => setSelectedTags([])}
+								placeholder="Any"
+							>
+								{filteredTags.map((tag) => (
+									<div
+										key={tag}
+										style={{
+											...styles.checkboxItem,
+											...(hoverState[`tag-${tag}`] && styles.checkboxItemHover),
+										}}
+										onMouseEnter={() => handleMouseEnter(`tag-${tag}`)}
+										onMouseLeave={() => handleMouseLeave(`tag-${tag}`)}
+										onClick={() => handleTagToggle(tag)}
+									>
+										<input
+											type="checkbox"
+											checked={selectedTags.includes(tag)}
+											readOnly
+											style={styles.checkbox}
+										/>
+										<span style={{ fontSize: "1.1rem", color: "#4b5563" }}>
+											{tag}
+										</span>
 									</div>
 								))}
 							</Dropdown>
@@ -325,11 +372,11 @@ export default function AdvanceFilterPanel() {
  											readOnly
  										/>
  										<label
- 											htmlFor="and"
- 											style={{ fontSize: "0.95rem", cursor: "pointer" }}
- 										>
- 											AND
- 										</label>
+											htmlFor="and"
+											style={{ fontSize: "0.95rem", cursor: "pointer" }}
+										>
+											AND
+										</label>
  									</div>
  									<div
  										onClick={() => setCombineMode("or")}
@@ -394,48 +441,7 @@ export default function AdvanceFilterPanel() {
 							</div>
 						)}
 
-							<Dropdown
-								title="Tags"
-								isOpen={showTagsDropdown}
-								setIsOpen={setShowTagsDropdown}
-								selectedCount={selectedTags.length}
-								hoverState={hoverState}
-								handleMouseEnter={handleMouseEnter}
-								handleMouseLeave={handleMouseLeave}
-								searchable={true}
-								searchValue={tagSearchQuery}
-								onSearchChange={setTagSearchQuery}
-								onEnter={() => {
-									if (filteredTags.length > 0) {
-										handleTagToggle(filteredTags[0]);
-										setTagSearchQuery("");
-									}
-								}}
-								onClear={() => setSelectedTags([])}
-							>
-								{filteredTags.map((tag) => (
-									<div
-										key={tag}
-										style={{
-											...styles.checkboxItem,
-											...(hoverState[`tag-${tag}`] && styles.checkboxItemHover),
-										}}
-										onMouseEnter={() => handleMouseEnter(`tag-${tag}`)}
-										onMouseLeave={() => handleMouseLeave(`tag-${tag}`)}
-										onClick={() => handleTagToggle(tag)}
-									>
-										<input
-											type="checkbox"
-											checked={selectedTags.includes(tag)}
-											readOnly
-											style={styles.checkbox}
-										/>
-										<span style={{ fontSize: "0.9rem", color: "#4b5563" }}>
-											{tag}
-										</span>
-									</div>
-								))}
-							</Dropdown>
+
 
 						<div
 							style={{ ...styles.borderT, display: "flex", gap: "0.75rem" }}
