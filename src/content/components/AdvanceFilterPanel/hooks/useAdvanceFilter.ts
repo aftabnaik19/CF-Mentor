@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useFilterStore } from "@/shared/stores/filterStore";
 import { ProblemFilter } from "@/shared/types/filters";
 import { metadataService } from "@/shared/utils/metadataService";
+import { getCurrentUserHandle } from "@/content/utils/domUtils";
+import { CFRatingChange } from "@/content/components/ContestHistorySummary/types";
 
 import { useDebounce } from "./useDebounce";
 
@@ -264,9 +266,46 @@ export const useAdvancedFilter = () => {
     // preserving the displayOptions because we spread ...currentFilters in the effect.
   }, []);
 
-  const handleAutoRecommend = () => {
-    console.log("Auto recommend triggered");
-  };
+  const handleAutoRecommend = useCallback(async () => {
+    const handle = getCurrentUserHandle();
+    if (!handle) {
+      alert("No user logged in");
+      return;
+    }
+
+    try {
+      const response = await new Promise<{
+        success: boolean;
+        rating?: CFRatingChange[];
+        error?: string;
+      }>((resolve) => {
+        chrome.runtime.sendMessage(
+          { type: "fetch-user-data", handle },
+          (response) => {
+            resolve(response);
+          },
+        );
+      });
+
+      if (response.success && response.rating && response.rating.length > 0) {
+        const currentRating = response.rating[response.rating.length - 1].newRating || 0;
+        
+        if (currentRating > 0) {
+          // Apply recommended filters
+          setMinDifficulty((currentRating - 100).toString());
+          setMaxDifficulty((currentRating + 300).toString());
+          setSelectedContestTypes(["Edu", "Div. 2"]);
+          setSelectedProblemIndices(["C", "D"]);
+          setSelectedSheets(["acd", "cp31"]);
+        }
+      } else {
+        console.error("Failed to fetch user rating or no rating data found.");
+        // Fallback or alert if needed, but for now just logging error
+      }
+    } catch (error) {
+      console.error("Error in auto recommend:", error);
+    }
+  }, []);
 
   return {
     minDifficulty,
