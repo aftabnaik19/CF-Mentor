@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { type SummaryRow, useContestSummary } from "./useContestSummary.ts";
+import StrongWeakTopics from "../StrongWeakTopics";
 
 function useHandleFromUrl() {
   const path = window.location.pathname;
@@ -259,6 +260,8 @@ export default function ContestHistorySummary() {
             <div className="cfm-note">
               Tip: click a division row to toggle per-letter breakdown. Use the View toggle to switch % vs counts.
             </div>
+            
+            <StrongWeakTopics handle={handle} />
           </div>
         )}
       </div>
@@ -273,10 +276,8 @@ function signed(x: number): string {
 
 function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return "—";
-  const s = Math.floor(sec % 60);
   const m = Math.floor((sec / 60) % 60);
   const h = Math.floor(sec / 3600);
   const pad = (x: number) => (x < 10 ? `0${x}` : `${x}`);
-  if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
-  return `${m}:${pad(s)}`;
+  return `${h}:${pad(m)}`;
 }

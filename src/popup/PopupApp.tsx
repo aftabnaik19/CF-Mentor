@@ -18,6 +18,7 @@ const TOGGLES: ToggleItem[] = [
   { key: "advancedFiltering", label: "Advance Filtering for Problemset", description: "Replace filter-by-tags and enhance data table" },
   { key: "contestHistorySummary", label: "Contest History Summary", description: "Show division-wise averages on profile page" },
   { key: "maxRatedHeatmap", label: "Max Rated Heatmap", description: "Show max problem rating instead of count on profile heatmap" },
+  { key: "strongWeakTopics", label: "Strong/Weak Topics", description: "Show strong and weak topics on profile page" },
 ];
 
 const Popup = () => {
@@ -34,6 +35,7 @@ const Popup = () => {
         advancedFiltering: true,
         contestHistorySummary: true,
         maxRatedHeatmap: true,
+        strongWeakTopics: true,
       };
       setFlags({ ...defaults, ...(stored ?? {}) });
     });

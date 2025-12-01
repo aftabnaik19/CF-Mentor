@@ -22,6 +22,7 @@ import {
 	unmountNewMaxRatedHeatmap,
 } from "./mount/NewMaxRatedHeatmap";
 
+
 let lastFlags: Awaited<ReturnType<typeof getFeatureFlags>> | null = null;
 
 // --- Health Check for Extension Reloads ---
@@ -98,6 +99,8 @@ async function initializeComponents() {
 	} else {
 		unmountNewMaxRatedHeatmap();
 	}
+
+
 
 	// Remember for next pass
 	lastFlags = flags;
