@@ -55,3 +55,42 @@ export const extractProblemTags = (): string[] => {
 	}
 	return tags;
 };
+// Get problem name from the page
+export const getProblemName = (): string | null => {
+	const titleElement = document.querySelector(".problem-statement .title");
+	if (titleElement) {
+		// Title format is usually "A. Problem Name"
+		return titleElement.textContent?.trim() ?? null;
+	}
+	return null;
+};
+
+// Inject an item into the "Contest materials" sidebar box
+export const injectContestMaterialItem = (html: string, id: string) => {
+	// Find the "Contest materials" box
+	// It usually has class "roundbox sidebox sidebar-menu" and contains "Contest materials" caption
+	const sideboxes = document.querySelectorAll(".roundbox.sidebox.sidebar-menu");
+	let targetBox: Element | null = null;
+
+	for (const box of Array.from(sideboxes)) {
+		const caption = box.querySelector(".caption");
+		if (caption && caption.textContent?.includes("Contest materials")) {
+			targetBox = box;
+			break;
+		}
+	}
+
+	if (!targetBox) return;
+
+	// Check if item already exists
+	if (document.getElementById(id)) return;
+
+	// Find the UL
+	const ul = targetBox.querySelector("ul");
+	if (ul) {
+		const li = document.createElement("li");
+		li.id = id;
+		li.innerHTML = html;
+		ul.appendChild(li);
+	}
+};

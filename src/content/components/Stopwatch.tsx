@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 interface StopwatchProps {
   problemKey: string | null;
+  onStatusChange?: (msg: string) => void;
+  onAlert?: (msg: string) => void;
 }
 
 function formatDuration(ms: number): string {
@@ -20,7 +22,7 @@ function formatDuration(ms: number): string {
   return `${totalHours} hour${totalHours !== 1 ? 's' : ''}`;
 }
 
-const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
+const Stopwatch: React.FC<StopwatchProps> = ({ problemKey, onStatusChange, onAlert }) => {
   const [elapsed, setElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -191,7 +193,14 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
     }
   }, [problemKey]);
 
-  // Handle timer updates
+  // Notification thresholds
+  const NOTIFICATIONS = [
+    { time: 15000, message: "Hint is available" },
+    { time: 30000, message: "Editorial is available" },
+    { time: 60000, message: "Check Solution" },
+  ];
+
+  // Handle timer updates and notifications
   useEffect(() => {
     if (!isTimeUpdationStopped && isRunning && !isPaused) {
       if (intervalRef.current)
@@ -201,7 +210,26 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
 
         const currentTime = Date.now();
         const totalElapsed = currentTime - firstSeenTimeRef.current - totalPauseTimeRef.current;
-        setElapsed(Math.max(0, totalElapsed));
+        const newElapsed = Math.max(0, totalElapsed);
+        
+        setElapsed(newElapsed);
+
+        // Check for notifications
+        NOTIFICATIONS.forEach(note => {
+          // Trigger if we just crossed the threshold (within last 100ms tick)
+          if (newElapsed >= note.time && newElapsed - 100 < note.time) {
+             // We need a way to signal parent. 
+             // Since we can't easily add props without breaking interface in this tool call,
+             // I will dispatch a custom event for now, or I should have updated the interface first.
+             // Actually, I'll update the interface in the next step or use a custom event.
+             // Let's use a custom event for decoupling if I can't change props easily in one go.
+             // But changing props is better. I'll assume I can update the parent in the next step.
+             // For this file, I'll add the prop to the interface.
+             if (onStatusChange) onStatusChange(note.message);
+             if (onAlert) onAlert(note.message);
+          }
+        });
+
       }, 100);
     } else {
       if (intervalRef.current) {
@@ -217,6 +245,48 @@ const Stopwatch: React.FC<StopwatchProps> = ({ problemKey }) => {
       }
     };
   }, [isRunning, isPaused, isTimeUpdationStopped]);
+
+  // Auto-pause logic
+  useEffect(() => {
+    if (!isRunning || isPaused || !problemKey) return;
+
+    const checkSubmission = async () => {
+      try {
+        // Extract contestId and index from problemKey (format: contestId-index)
+        // problemKey is like "1234-A"
+        const [contestId, index] = problemKey.split("-");
+        if (!contestId || !index) return;
+
+        // We need the handle. Assuming we can get it from DOM or storage.
+        // For now, let's try to find it in the DOM as we did in useStrongWeakAnalysis
+        const handleLink = document.querySelector("#header a[href^='/profile/']");
+        const handle = handleLink ? (handleLink as HTMLElement).innerText : null;
+
+        if (!handle) return;
+
+        const res = await fetch(`https://codeforces.com/api/user.status?handle=${handle}&from=1&count=5`);
+        const data = await res.json();
+        if (data.status === "OK") {
+          const solved = data.result.some((sub: any) => 
+            sub.contestId == contestId && 
+            sub.problem.index == index && 
+            sub.verdict === "OK"
+          );
+
+          if (solved) {
+            handlePauseResume(); // Pause
+            if (onStatusChange) onStatusChange("Problem Solved!");
+            alert("Problem Solved! Timer paused.");
+          }
+        }
+      } catch (e) {
+        console.error("Auto-pause check failed", e);
+      }
+    };
+
+    const pollInterval = setInterval(checkSubmission, 60000); // Check every minute
+    return () => clearInterval(pollInterval);
+  }, [isRunning, isPaused, problemKey]);
 
   // Save state periodically
   useEffect(() => {

@@ -14,6 +14,7 @@ const ProblemAssistantPanel: React.FC = () => {
   const [bookmarked, setBookmarked] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [statusMessage, setStatusMessage] = useState("Time is running..!");
 
   // Determine current problem key
   const problemInfo = domUtils.getCurrentProblemInfo();
@@ -96,6 +97,29 @@ const ProblemAssistantPanel: React.FC = () => {
       }
     })();
   }, [PROBLEM_KEY]);
+
+  // Monitor status message to inject "Understand Technique" button
+  useEffect(() => {
+    if (statusMessage === "Check Solution") {
+      const problemInfo = domUtils.getCurrentProblemInfo();
+      const problemName = domUtils.getProblemName();
+      const rating = domUtils.extractProblemRating() || "unknown";
+      
+      if (problemInfo && problemName) {
+        const query = `Explain the solution for Codeforces problem ${problemName} (${problemInfo.contestId}${problemInfo.problemIdx}) and provide 4-5 similar problems with rating ${rating} for practice.`;
+        const encodedQuery = encodeURIComponent(query);
+        const url = `https://chatgpt.com/?q=${encodedQuery}`;
+        
+        const html = `
+          <span>
+            <a href="${url}" target="_blank" title="Ask ChatGPT">Understand Technique <span class="resource-locale" style="font-size: 0.8em; color: #888;">(AI)</span></a>
+          </span>
+        `;
+        
+        domUtils.injectContestMaterialItem(html, "cfm-understand-technique-btn");
+      }
+    }
+  }, [statusMessage]);
 
   // Toggle bookmark without confirm; tooltip on hover explains retention
   const handleBookmarkToggle = async () => {
@@ -244,12 +268,16 @@ const ProblemAssistantPanel: React.FC = () => {
             <>
               <tr>
                 <td className="left" style={{ padding: "0em 1em" }}>
-                  <Stopwatch problemKey={PROBLEM_KEY} />
+                  <Stopwatch 
+                    problemKey={PROBLEM_KEY} 
+                    onStatusChange={setStatusMessage}
+                    onAlert={(msg) => alert(msg)}
+                  />
                 </td>
               </tr>
               <tr>
                 <td className="left dark" style={{ padding: "0.5em 1em" }}>
-                  <span className="contest-state-regular">Time is running..! </span>
+                  <span className="contest-state-regular">{statusMessage}</span>
                 </td>
               </tr>
             </>

@@ -52,6 +52,23 @@ classDiagram
         +warn(message: string): void
     }
 
+    class Stopwatch {
+        -elapsed: number
+        -isRunning: boolean
+        +start(): void
+        +pause(): void
+        +reset(): void
+        +checkNotifications(): void
+        +checkAutoPause(): void
+    }
+
+    class StrongWeakAnalysis {
+        +fetchData(handle: string): void
+        +calculateTopics(): Topic[]
+        +getStrongTopics(): Topic[]
+        +getWeakTopics(): Topic[]
+    }
+
     DataFetcher --> ProblemService
     ProblemService --> FilterStore
     FilterStore --> MetadataService
@@ -59,4 +76,6 @@ classDiagram
     DataFetcher --> IndexedDB
     Logger --> DataFetcher
     Logger --> ProblemService
+    Stopwatch --> Logger
+    StrongWeakAnalysis --> DataFetcher
 ```

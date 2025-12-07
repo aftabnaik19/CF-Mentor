@@ -18,6 +18,8 @@ graph TD
         UC7[Manage Settings]
         UC8[Track Progress]
         UC9[View Performance Insights]
+        UC10[Analyze Strong/Weak Topics]
+        UC11[Understand Technique via AI]
     end
 
     U --> UC1
@@ -29,6 +31,8 @@ graph TD
     U --> UC7
     U --> UC8
     U --> UC9
+    U --> UC10
+    U --> UC11
 
     UC1 --> CF
     UC2 --> CF
@@ -36,6 +40,7 @@ graph TD
     UC6 --> CF
     UC8 --> CF
     UC9 --> CF
+    UC10 --> CF
 
     UC1 --> BG
     UC2 --> BG
@@ -44,4 +49,7 @@ graph TD
     UC6 --> BG
     UC8 --> BG
     UC9 --> BG
+    UC10 --> BG
+    
+    UC11 --> BG
 ```

@@ -15,6 +15,7 @@ graph TD
     subgraph WebServices
         CF[Codeforces Website]
         API[CF-Mentor API Server]
+        AI[ChatGPT]
     end
 
     subgraph LocalStorage
@@ -25,10 +26,12 @@ graph TD
     UB --> POP
     UB --> CS
     UB --> CF
+    UB --> AI
 
     POP --> BG
     CS --> BG
     CS --> CF
+    CS -.-> AI
 
     BG --> API
     BG --> IDB

@@ -30,4 +30,12 @@ sequenceDiagram
     U->>CS: Click bookmark
     CS->>BG: Save bookmark
     BG->>BG: Store in chrome.storage
+    BG->>BG: Store in chrome.storage
+
+    Note over U,CS: Strong/Weak Topics Analysis
+    U->>CS: Open Profile Page
+    CS->>API: Fetch User Info & Submissions
+    API-->>CS: Return Data
+    CS->>CS: Calculate Strong/Weak Topics
+    CS->>CS: Render Matrix in Stalk Modal
 ```

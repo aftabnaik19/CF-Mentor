@@ -27,4 +27,12 @@ graph TD
     N -->|No| O[Sort by relevance]
     O --> P[Return top recommendations]
     P --> Q[Display to user]
+
+    subgraph UnderstandTechnique
+        S1[Start Stopwatch] --> S2{Time > 60s?}
+        S2 -->|Yes| S3[Show 'Understand Technique' Button]
+        S3 --> S4[User Clicks Button]
+        S4 --> S5[Open ChatGPT with Prompt]
+        S5 --> S6[Explain Solution & Find Similar Problems]
+    end
 ```

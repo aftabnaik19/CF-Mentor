@@ -8,6 +8,8 @@ graph TD
         FP[Filter Panel Component]
         PAP[Problem Assistant Panel]
         CHS[Contest History Summary]
+        SWT[Strong/Weak Topics]
+        UT[Understand Technique Button]
     end
 
     subgraph CoreServices
@@ -24,13 +26,14 @@ graph TD
 
     subgraph DataStorage
         IDB[(IndexedDB)]
-        CHS[(Chrome Storage)]
+        CHS_STORE[(Chrome Storage)]
     end
 
     subgraph Utilities
         BS[Bookmark Storage]
         MS[Metadata Service]
         LOG[Logger]
+        DU[DOM Utils]
     end
 
     POP --> FFS
@@ -57,4 +60,9 @@ graph TD
     FFS --> POP
     FFS --> PAP
     FFS --> CHS
+    FFS --> SWT
+    
+    CHS --> SWT
+    PAP --> UT
+    UT --> DU
 ```
