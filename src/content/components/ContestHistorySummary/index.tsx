@@ -100,7 +100,14 @@ export default function ContestHistorySummary() {
 
       <div>
         {!handle && <div style={{ color: "#666", padding: 10 }}>Couldn’t determine handle from URL.</div>}
-        {handle && loading && <div style={{ color: "#666", padding: 10 }}>Loading summary for {handle}…</div>}
+        {handle && loading && (
+          <div style={{ color: "#666", padding: 10 }}>
+            Loading summary for {handle}…<br />
+            <span style={{ fontSize: "0.9em", color: "#888" }}>
+              This will take a longer time for users with large submissions history, please wait for a while or come back later.
+            </span>
+          </div>
+        )}
         {handle && error && (
           <div style={{ color: "#d32f2f", padding: 10 }}>
             Failed to fetch data: {error}
@@ -132,120 +139,128 @@ export default function ContestHistorySummary() {
                 </thead>
                 <tbody>
                   {summary.length === 0 && (
-                     <tr>
-                       <td colSpan={6} style={{ textAlign: "center", padding: 20, color: "#888" }}>
-                         No contests found in the last {k} for this handle.
-                       </td>
-                     </tr>
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: "center", padding: 20, color: "#888" }}>
+                        No contests found in the last {k} for this handle.
+                      </td>
+                    </tr>
                   )}
                   {summary.map((row: SummaryRow) => (
                     <React.Fragment key={row.division}>
-                       <tr
-                         className="expandable"
-                         onClick={() => setExpandedDivisions((prev) => ({ ...prev, [row.division]: !prev[row.division] }))}
-                         tabIndex={0}
-                         role="button"
-                         onKeyDown={(e) => {
-                           if (e.key === "Enter" || e.key === " ") {
-                             e.preventDefault();
-                             setExpandedDivisions((prev) => ({ ...prev, [row.division]: !prev[row.division] }));
-                           }
-                         }}
-                       >
-                         <td>
-                           <span className={`cfm-chevron ${expandedDivisions[row.division] ? "expanded" : ""}`}>▶</span>
-                           <span>{row.division}</span>
-                         </td>
-                         <td className="numeric">{row.contests}</td>
-                         <td className="numeric">{row.avgAttempted != null ? row.avgAttempted.toFixed(2) : "—"}</td>
-                         <td className="numeric">{row.avgSolved != null ? row.avgSolved.toFixed(2) : "—"}</td>
-                         <td className="numeric" style={{ color: row.avgRatingDelta && row.avgRatingDelta > 0 ? "green" : row.avgRatingDelta && row.avgRatingDelta < 0 ? "gray" : "inherit" }}>
-                            {row.avgRatingDelta != null ? signed(row.avgRatingDelta) : "—"}
-                         </td>
-                         <td className="numeric">{row.avgRank != null ? row.avgRank.toFixed(0) : "—"}</td>
-                       </tr>
+                      <tr
+                        className="expandable"
+                        onClick={() => setExpandedDivisions((prev) => ({ ...prev, [row.division]: !prev[row.division] }))}
+                        tabIndex={0}
+                        role="button"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setExpandedDivisions((prev) => ({ ...prev, [row.division]: !prev[row.division] }));
+                          }
+                        }}
+                      >
+                        <td>
+                          <span className={`cfm-chevron ${expandedDivisions[row.division] ? "expanded" : ""}`}>▶</span>
+                          <span>{row.division}</span>
+                        </td>
+                        <td className="numeric">{row.contests}</td>
+                        <td className="numeric">{row.avgAttempted != null ? row.avgAttempted.toFixed(2) : "—"}</td>
+                        <td className="numeric">{row.avgSolved != null ? row.avgSolved.toFixed(2) : "—"}</td>
+                        <td className="numeric" style={{ color: row.avgRatingDelta && row.avgRatingDelta > 0 ? "green" : row.avgRatingDelta && row.avgRatingDelta < 0 ? "gray" : "inherit" }}>
+                          {row.avgRatingDelta != null ? signed(row.avgRatingDelta) : "—"}
+                        </td>
+                        <td className="numeric">{row.avgRank != null ? row.avgRank.toFixed(0) : "—"}</td>
+                      </tr>
                       {expandedDivisions[row.division] && (
                         <tr>
-                            <td colSpan={6} style={{ padding: 0 }}>
-                             <div className="cfm-subtable-container">
-                               <table className="cfm-subtable">
-                                 <colgroup>
-                                   <col style={{ width: "20%" }} />
-                                   {Array.from({ length: 7 }).map((_, i) => (
-                                     <col key={i} style={{ width: `${(80 / 7).toFixed(3)}%` }} />
-                                   ))}
-                                 </colgroup>
-                                 <thead>
-                                   <tr>
-                                     <th className="row-label">
-                                       {viewMode === "percent"
-                                         ? `Avg. of past ${row.contests}`
-                                         : `Total of past ${row.contests}`}
-                                       </th>
-                                     {["A","B","C","D","E","F","G"].map((L) => (
-                                       <th key={L}>{L}</th>
-                                     ))}
-                                   </tr>
-                                 </thead>
-                                 <tbody>
-                                   {viewMode === "percent" && (
-                                     <>
-                                       <tr>
-                                         <td className="row-label">Attempt (%)</td>
-                                         {["A","B","C","D","E","F","G"].map((L) => (
-                                           <td key={L}>
-                                             {letterByDivision[row.division]?.attemptPct?.[L] != null ? `${letterByDivision[row.division]!.attemptPct[L]!.toFixed(1)}%` : "—"}
-                                           </td>
-                                         ))}
-                                       </tr>
-                                       <tr>
-                                         <td className="row-label">Acceptance (%)</td>
-                                         {["A","B","C","D","E","F","G"].map((L) => (
-                                           <td key={L}>
-                                             {letterByDivision[row.division]?.acceptancePct?.[L] != null ? `${letterByDivision[row.division]!.acceptancePct[L]!.toFixed(1)}%` : "—"}
-                                           </td>
-                                         ))}
-                                       </tr>
-                                     </>
-                                   )}
-                                   {viewMode === "counts" && (
-                                     <>
-                                       <tr>
-                                         <td className="row-label">Attempt count</td>
-                                         {["A","B","C","D","E","F","G"].map((L) => (
-                                           <td key={L}>
-                                             {letterByDivision[row.division]?.attemptCount?.[L] ?? "—"}
-                                           </td>
-                                         ))}
-                                       </tr>
-                                       <tr>
-                                         <td className="row-label">Acceptance count</td>
-                                         {["A","B","C","D","E","F","G"].map((L) => (
-                                           <td key={L}>
-                                             {letterByDivision[row.division]?.acceptanceCount?.[L] ?? "—"}
-                                           </td>
-                                         ))}
-                                       </tr>
-                                     </>
-                                   )}
-                                   {/* Time rows shown in both views */}
-                                   <tr>
-                                     <td className="row-label">Avg time to solve</td>
-                                     {["A","B","C","D","E","F","G"].map((L) => (
-                                       <td key={L}>
-                                         {letterByDivision[row.division]?.indivTimeAvgSec?.[L] != null ? formatTime(letterByDivision[row.division]!.indivTimeAvgSec[L]!) : "—"}
-                                       </td>
-                                     ))}
-                                   </tr>
-                                   <tr>
-                                     <td className="row-label">Avg cumulative time</td>
-                                     {["A","B","C","D","E","F","G"].map((L) => (
-                                       <td key={L}>
-                                         {letterByDivision[row.division]?.cumulTimeAvgSec?.[L] != null ? formatTime(letterByDivision[row.division]!.cumulTimeAvgSec[L]!) : "—"}
-                                       </td>
-                                     ))}
-                                   </tr>
-                                 </tbody>
+                          <td colSpan={6} style={{ padding: 0 }}>
+                            <div className="cfm-subtable-container">
+                              <table className="cfm-subtable">
+                                <colgroup>
+                                  <col style={{ width: "20%" }} />
+                                  {Array.from({ length: 7 }).map((_, i) => (
+                                    <col key={i} style={{ width: `${(80 / 7).toFixed(3)}%` }} />
+                                  ))}
+                                </colgroup>
+                                <thead>
+                                  <tr>
+                                    <th className="row-label">
+                                      {viewMode === "percent"
+                                        ? `Avg. of past ${row.contests}`
+                                        : `Total of past ${row.contests}`}
+                                    </th>
+                                    {["A", "B", "C", "D", "E", "F", "G"].map((L) => (
+                                      <th key={L}>{L}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {viewMode === "percent" && (
+                                    <>
+                                      <tr>
+                                        <td className="row-label">Attempt (%)</td>
+                                        {["A", "B", "C", "D", "E", "F", "G"].map((L) => (
+                                          <td key={L}>
+                                            {letterByDivision[row.division]?.attemptPct?.[L] != null ? `${letterByDivision[row.division]!.attemptPct[L]!.toFixed(1)}%` : "—"}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                      <tr>
+                                        <td className="row-label">Acceptance (%)</td>
+                                        {["A", "B", "C", "D", "E", "F", "G"].map((L) => (
+                                          <td key={L}>
+                                            {letterByDivision[row.division]?.acceptancePct?.[L] != null ? `${letterByDivision[row.division]!.acceptancePct[L]!.toFixed(1)}%` : "—"}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    </>
+                                  )}
+                                  {viewMode === "counts" && (
+                                    <>
+                                      <tr>
+                                        <td className="row-label">Attempt count</td>
+                                        {["A", "B", "C", "D", "E", "F", "G"].map((L) => (
+                                          <td key={L}>
+                                            {letterByDivision[row.division]?.attemptCount?.[L] ?? "—"}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                      <tr>
+                                        <td className="row-label">Acceptance count</td>
+                                        {["A", "B", "C", "D", "E", "F", "G"].map((L) => (
+                                          <td key={L}>
+                                            {letterByDivision[row.division]?.acceptanceCount?.[L] ?? "—"}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    </>
+                                  )}
+                                  {/* Time rows shown in both views */}
+                                  <tr>
+                                    <td className="row-label">Avg time to solve</td>
+                                    {["A", "B", "C", "D", "E", "F", "G"].map((L) => (
+                                      <td key={L}>
+                                        {letterByDivision[row.division]?.indivTimeAvgSec?.[L] != null ? (
+                                          <span title={formatTimeTooltip(letterByDivision[row.division]!.indivTimeAvgSec[L]!)}>
+                                            {formatTimeDisplay(letterByDivision[row.division]!.indivTimeAvgSec[L]!)}
+                                          </span>
+                                        ) : "—"}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                  <tr>
+                                    <td className="row-label">Avg cumulative time</td>
+                                    {["A", "B", "C", "D", "E", "F", "G"].map((L) => (
+                                      <td key={L}>
+                                        {letterByDivision[row.division]?.cumulTimeAvgSec?.[L] != null ? (
+                                          <span title={formatTimeTooltip(letterByDivision[row.division]!.cumulTimeAvgSec[L]!)}>
+                                            {formatTimeDisplay(letterByDivision[row.division]!.cumulTimeAvgSec[L]!)}
+                                          </span>
+                                        ) : "—"}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                </tbody>
                               </table>
                             </div>
                           </td>
@@ -271,12 +286,19 @@ function signed(x: number): string {
   return x > 0 ? `+${v}` : v;
 }
 
-function formatTime(sec: number): string {
+function formatTimeDisplay(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return "—";
+  const m = Math.floor((sec / 60) % 60);
+  const h = Math.floor(sec / 3600);
+  const pad = (x: number) => (x < 10 ? `0${x}` : `${x}`);
+  return `${pad(h)}:${pad(m)}`;
+}
+
+function formatTimeTooltip(sec: number): string {
+  if (!Number.isFinite(sec) || sec < 0) return "";
   const s = Math.floor(sec % 60);
   const m = Math.floor((sec / 60) % 60);
   const h = Math.floor(sec / 3600);
   const pad = (x: number) => (x < 10 ? `0${x}` : `${x}`);
-  if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
-  return `${m}:${pad(s)}`;
+  return `${pad(h)} hours, ${pad(m)} mins and ${pad(s)} seconds`;
 }

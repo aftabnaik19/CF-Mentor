@@ -12,7 +12,6 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
 	const [contestsConsidered, setContestsConsidered] = useState(0);
 	const [details, setDetails] = useState<Array<{ id: number; name: string; division: string; attempted: number; solved: number }>>([]);
 	const [letterByDivision, setLetterByDivision] = useState<Record<string, LetterMetrics>>({});
-	const [base, setBase] = useState<{ bg?: DataResponsePayload; rating?: CFRatingChange[]; submissions?: CFSubmission[]; handle?: string } | null>(null);
 
 	// Global base cache to avoid re-fetching on remount (e.g., modal open/close)
 	type AppGlobal = typeof globalThis & {
@@ -23,49 +22,70 @@ export function useContestSummary({ handle, k, by = "count" }: HookArgs) {
 	const g = globalThis as AppGlobal;
 	const baseCacheRef = g.__cfSummaryBaseCacheRef || (g.__cfSummaryBaseCacheRef = new Map());
 
- 	// Fetch heavy data only when handle changes (or first load)
- 	useEffect(() => {
- 		let cancelled = false;
- 			async function run() {
- 			if (!handle) return;
- 			setLoading(true);
- 			setError(null);
- 			setSummary([]);
- 			setUnknownMetaCount(0);
- 			setLetterByDivision({});
- 			try {
- 					// Use cached base if available
- 					const cached = baseCacheRef.get(handle);
- 					if (cached) {
- 						if (!cancelled) setBase({ bg: cached.bg, rating: cached.rating, submissions: cached.submissions, handle });
- 						return;
- 					}
- 					const bg = await connectAndFetchData();
- 					// Fetch user data via background script
- 					const userDataResponse = await new Promise<{ success: boolean; rating?: CFRatingChange[]; submissions?: CFSubmission[]; error?: string }>((resolve) => {
- 						chrome.runtime.sendMessage({ type: "fetch-user-data", handle }, (response) => {
- 							resolve(response);
- 						});
- 					});
- 					if (!userDataResponse || !userDataResponse.success) {
- 						throw new Error(userDataResponse?.error || "Failed to fetch user data");
- 					}
- 					const ratingHistory = userDataResponse.rating as CFRatingChange[];
- 					const submissions = userDataResponse.submissions as CFSubmission[];
- 					if (cancelled) return;
- 					const packed = { bg, rating: ratingHistory, submissions };
- 					baseCacheRef.set(handle, packed);
- 					setBase({ ...packed, handle });
- 			} catch (e) {
- 				const msg = e instanceof Error ? e.message : String(e);
- 				if (!cancelled) setError(msg);
- 			} finally {
- 				if (!cancelled) setLoading(false);
- 			}
- 		}
- 		run();
- 		return () => { cancelled = true; };
- 	}, [handle, baseCacheRef]);
+	// Initialize base from cache if available to avoid loading state
+	const [base, setBase] = useState<{ bg?: DataResponsePayload; rating?: CFRatingChange[]; submissions?: CFSubmission[]; handle?: string } | null>(() => {
+		if (!handle) return null;
+		const cached = baseCacheRef.get(handle);
+		return cached ? { ...cached, handle } : null;
+	});
+
+	// Fetch heavy data only when handle changes (or first load)
+	useEffect(() => {
+		let cancelled = false;
+		async function run() {
+			if (!handle) return;
+			// If we already have data for this handle (from cache init or previous fetch), skip
+			if (base && base.handle === handle) return;
+
+			setLoading(true);
+			setError(null);
+			setSummary([]);
+			setUnknownMetaCount(0);
+			setLetterByDivision({});
+			try {
+				// Double check cache in case it was set after init? (Unlikely needed if logic is correct but safe)
+				const cached = baseCacheRef.get(handle);
+				if (cached) {
+					if (!cancelled) setBase({ bg: cached.bg, rating: cached.rating, submissions: cached.submissions, handle });
+					return;
+				}
+				const bg = await connectAndFetchData();
+				// Fetch user data via background script
+				const userDataResponse = await new Promise<{ success: boolean; rating?: CFRatingChange[]; submissions?: CFSubmission[]; error?: string }>((resolve) => {
+					chrome.runtime.sendMessage({ type: "fetch-user-data", handle }, (response) => {
+						resolve(response);
+					});
+				});
+				if (!userDataResponse || !userDataResponse.success) {
+					// Retry once if failed? User mentioned "retry".
+					// For now, simpler: throw error.
+					throw new Error(userDataResponse?.error || "Failed to fetch user data");
+				}
+				const ratingHistory = userDataResponse.rating as CFRatingChange[];
+				const submissions = userDataResponse.submissions as CFSubmission[];
+				if (cancelled) return;
+				const packed = { bg, rating: ratingHistory, submissions };
+				baseCacheRef.set(handle, packed);
+				setBase({ ...packed, handle });
+			} catch (e) {
+				const msg = e instanceof Error ? e.message : String(e);
+				if (!cancelled) setError(msg);
+			} finally {
+				if (!cancelled) setLoading(false);
+			}
+		}
+		run();
+		return () => { cancelled = true; };
+	}, [handle, baseCacheRef]); // Removed 'base' from dependency to avoid loop, but we check base inside. 
+	// Actually, if we include 'base', and we setBase, it re-runs. 
+	// But the check `if (base && base.handle === handle) return` handles it.
+	// HOWEVER, `base` is an object, identity changes.
+	// Better to NOT include `base` in dependencies, as this effect is solely for FETCHING based on `handle`.
+	// We rely on the initial state or internal logic.
+	// BUT `base` in line 18 comes from closure. We need it fresh?
+	// No, we can trust that if we set it, we don't need to run this effect again.
+	// So [handle] is enough.
+
 
 	// Compute summaries when k or base data changes; do NOT re-fetch APIs
 	useEffect(() => {
