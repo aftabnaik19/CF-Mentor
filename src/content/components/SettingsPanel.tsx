@@ -19,13 +19,13 @@ export const SettingsPanel: React.FC = () => {
       </div>
       <div className="smaller" style={{ margin: "1em" }}>
         <input
-          id="change-hide-tag-status"
+          id="cf-mentor-hide-tag-status"
           type="checkbox"
           checked={!hideTags}
           onChange={() => setHideTags(!hideTags)}
         />
         <label
-          htmlFor="change-hide-tag-status"
+          htmlFor="cf-mentor-hide-tag-status"
           style={{ verticalAlign: "top", marginLeft: "0.5em", cursor: "pointer" }}
         >
           Show tags for unsolved problems
@@ -33,13 +33,13 @@ export const SettingsPanel: React.FC = () => {
       </div>
       <div className="smaller" style={{ margin: "1em" }}>
         <input
-          id="change-hide-solved-status"
+          id="cf-mentor-hide-solved-status"
           type="checkbox"
           checked={hideSolved}
           onChange={() => setHideSolved(!hideSolved)}
         />
         <label
-          htmlFor="change-hide-solved-status"
+          htmlFor="cf-mentor-hide-solved-status"
           style={{ verticalAlign: "top", marginLeft: "0.5em", cursor: "pointer" }}
         >
           Hide solved problems
@@ -47,13 +47,13 @@ export const SettingsPanel: React.FC = () => {
       </div>
       <div className="smaller" style={{ margin: "1em" }}>
         <input
-          id="change-hide-status-colors"
+          id="cf-mentor-hide-status-colors"
           type="checkbox"
           checked={!hideStatusColors}
           onChange={() => setHideStatusColors(!hideStatusColors)}
         />
         <label
-          htmlFor="change-hide-status-colors"
+          htmlFor="cf-mentor-hide-status-colors"
           style={{ verticalAlign: "top", marginLeft: "0.5em", cursor: "pointer" }}
         >
           Show status colors
