@@ -76,7 +76,7 @@ const getMonthName = (monthIndex: number): string => {
 
 // --- Component ---
 
-const NewMaxRatedHeatmap: React.FC<{ 
+const NewMaxRatedHeatmap: React.FC<{
   initialStats: FooterStats | null;
   initialYear: string;
   availableYears: YearOption[];
@@ -121,8 +121,8 @@ const NewMaxRatedHeatmap: React.FC<{
 
   // Process data for heatmap
   const { heatmapData } = useMemo(() => {
-    const dateMap = new Map<string, { 
-      maxRating: number; 
+    const dateMap = new Map<string, {
+      maxRating: number;
       count: number;
       attempted: number;
       accepted: number;
@@ -135,9 +135,9 @@ const NewMaxRatedHeatmap: React.FC<{
     submissions.forEach(sub => {
       const date = new Date(sub.creationTimeSeconds * 1000);
       const dateKey = formatDate(date);
-      
-      const current = dateMap.get(dateKey) || { 
-        maxRating: 0, 
+
+      const current = dateMap.get(dateKey) || {
+        maxRating: 0,
         count: 0,
         attempted: 0,
         accepted: 0,
@@ -164,7 +164,7 @@ const NewMaxRatedHeatmap: React.FC<{
           current.unratedAttempts++;
         }
       }
-      
+
       dateMap.set(dateKey, current);
     });
 
@@ -188,28 +188,29 @@ const NewMaxRatedHeatmap: React.FC<{
     const gridStartDate = new Date(startDate);
     gridStartDate.setDate(gridStartDate.getDate() - gridStartDate.getDay()); // Go back to Sunday
 
-    const gridData: { 
-      date: Date; 
-      dateKey: string; 
-      maxRating: number; 
+    const gridData: {
+      date: Date;
+      dateKey: string;
+      maxRating: number;
       count: number;
       attempted: number;
       accepted: number;
       ratingBreakdown: Record<number, number>;
       unratedAc: number;
       unratedAttempts: number;
+      inRange: boolean;
     }[][] = [];
-    
+
     let currentWeek: typeof gridData[0] = [];
-    
+
     const iterDate = new Date(gridStartDate);
     let loopCount = 0;
     while (iterDate <= endDate || currentWeek.length > 0) {
       if (loopCount++ > 1000) break;
 
       const dateKey = formatDate(iterDate);
-      const data = dateMap.get(dateKey) || { 
-        maxRating: 0, 
+      const data = dateMap.get(dateKey) || {
+        maxRating: 0,
         count: 0,
         attempted: 0,
         accepted: 0,
@@ -217,11 +218,18 @@ const NewMaxRatedHeatmap: React.FC<{
         unratedAc: 0,
         unratedAttempts: 0
       };
-      
+
+      const iterMidnight = new Date(iterDate).setHours(0, 0, 0, 0);
+      const startMidnight = new Date(startDate).setHours(0, 0, 0, 0);
+      const endMidnight = new Date(endDate).setHours(0, 0, 0, 0);
+
+      const inRange = iterMidnight >= startMidnight && iterMidnight <= endMidnight;
+
       currentWeek.push({
         date: new Date(iterDate),
         dateKey,
-        ...data
+        ...data,
+        inRange
       });
 
       if (currentWeek.length === 7) {
@@ -230,7 +238,7 @@ const NewMaxRatedHeatmap: React.FC<{
       }
 
       iterDate.setDate(iterDate.getDate() + 1);
-      
+
       if (iterDate > endDate && currentWeek.length === 0) break;
     }
 
@@ -244,24 +252,18 @@ const NewMaxRatedHeatmap: React.FC<{
     if (day.maxRating > 0) {
       return getColorForRating(day.maxRating);
     }
-    // Fallback for unrated activity
     if (day.unratedAc > 0) {
-      // Gradient from dark gray to black based on AC count (1 to 5+)
-      // Distinct from standard 'gray' (Newbie) which is lighter.
       if (day.unratedAc >= 5) return '#000000';
-      
-      const intensity = day.unratedAc; // 1 to 4
-      // 1 -> #666666, 4 -> #1A1A1A
+      const intensity = day.unratedAc;
       if (intensity === 1) return '#666666';
       if (intensity === 2) return '#4D4D4D';
       if (intensity === 3) return '#333333';
       if (intensity === 4) return '#1A1A1A';
     }
     if (day.unratedAttempts > 0 || (day.attempted > 0 && day.maxRating === 0)) {
-      // 0 AC but >0 attempts (unrated or rated failures)
-      return '#e0e0e0'; // Faint gray
+      return '#e0e0e0';
     }
-    return '#EBEDF0'; // Empty
+    return '#EBEDF0';
   };
 
   const [tooltip, setTooltip] = useState<{
@@ -272,9 +274,8 @@ const NewMaxRatedHeatmap: React.FC<{
   }>({ visible: false, x: 0, y: 0, content: null });
 
   const getTooltipContent = (day: typeof heatmapData[0][0]) => {
-    // Sort ratings descending
     const ratings = Object.keys(day.ratingBreakdown).map(Number).sort((a, b) => b - a);
-    
+
     return (
       <div style={{ textAlign: 'left' }}>
         <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{day.dateKey}</div>
@@ -328,7 +329,6 @@ const NewMaxRatedHeatmap: React.FC<{
   };
 
 
-  // Render
   if (loading) return null;
 
   return (
@@ -355,11 +355,11 @@ const NewMaxRatedHeatmap: React.FC<{
       )}
       <div className="_UserActivityFrame_frame">
         <div className="roundbox userActivityRoundBox borderTopRound borderBottomRound" style={{ padding: '10px' }}>
-          
+
           {/* Header */}
           <div className="_UserActivityFrame_header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span 
-              className="_UserActivityFrame_caption" 
+            <span
+              className="_UserActivityFrame_caption"
               style={{ fontWeight: 'bold', color: '#444', cursor: 'help' }}
               onMouseEnter={handleHeaderMouseEnter}
               onMouseMove={handleMouseMove}
@@ -371,8 +371,8 @@ const NewMaxRatedHeatmap: React.FC<{
             <div style={{ display: 'flex', gap: '10px' }}>
               <div className="_UserActivityFrame_selector weeks52">
                 <label>
-                  <select 
-                    name="yearSelect" 
+                  <select
+                    name="yearSelect"
                     style={{ fontSize: '1em' }}
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
@@ -400,19 +400,21 @@ const NewMaxRatedHeatmap: React.FC<{
                 {heatmapData.map((week, weekIndex) => (
                   <g key={weekIndex} transform={`translate(${weekIndex * 13}, 0)`}>
                     {week.map((day, dayIndex) => (
-                      <rect
-                        key={day.dateKey}
-                        className="day"
-                        width="11"
-                        height="11"
-                        y={dayIndex * 13}
-                        fill={getCellColor(day)}
-                        data-date={day.dateKey}
-                        data-items={day.count}
-                        onMouseEnter={(e) => handleMouseEnter(e, day)}
-                        onMouseMove={handleMouseMove}
-                        onMouseLeave={handleMouseLeave}
-                      />
+                      day.inRange ? (
+                        <rect
+                          key={day.dateKey}
+                          className="day"
+                          width="11"
+                          height="11"
+                          y={dayIndex * 13}
+                          fill={getCellColor(day)}
+                          data-date={day.dateKey}
+                          data-items={day.count}
+                          onMouseEnter={(e) => handleMouseEnter(e, day)}
+                          onMouseMove={handleMouseMove}
+                          onMouseLeave={handleMouseLeave}
+                        />
+                      ) : null
                     ))}
                   </g>
                 ))}
@@ -420,12 +422,12 @@ const NewMaxRatedHeatmap: React.FC<{
                 {/* Month Labels */}
                 {heatmapData.map((week, i) => {
                   const firstDay = week[0].date;
-                  if (firstDay.getDate() <= 7 && (i === 0 || heatmapData[i-1][0].date.getMonth() !== firstDay.getMonth())) {
-                     return (
-                       <text key={`month-${i}`} x={i * 13} y="-5" className="month" style={{ fontSize: '10px', fill: '#767676' }}>
-                         {getMonthName(firstDay.getMonth())}
-                       </text>
-                     );
+                  if (firstDay.getDate() <= 7 && (i === 0 || heatmapData[i - 1][0].date.getMonth() !== firstDay.getMonth())) {
+                    return (
+                      <text key={`month-${i}`} x={i * 13} y="-5" className="month" style={{ fontSize: '10px', fill: '#767676' }}>
+                        {getMonthName(firstDay.getMonth())}
+                      </text>
+                    );
                   }
                   return null;
                 })}
@@ -440,53 +442,53 @@ const NewMaxRatedHeatmap: React.FC<{
 
           {/* Footer */}
           {initialStats && (
-          <div className="_UserActivityFrame_footer">
+            <div className="_UserActivityFrame_footer">
               <div className="_UserActivityFrame_countersRow">
-                  <div className="_UserActivityFrame_counter">
-                      <div className="_UserActivityFrame_counterValue">{initialStats.allTime.value}</div>
-                      <div className="_UserActivityFrame_counterDescription">
-                          {initialStats.allTime.desc}
-                      </div>
+                <div className="_UserActivityFrame_counter">
+                  <div className="_UserActivityFrame_counterValue">{initialStats.allTime.value}</div>
+                  <div className="_UserActivityFrame_counterDescription">
+                    {initialStats.allTime.desc}
                   </div>
+                </div>
 
-                  <div className="_UserActivityFrame_counter">
-                      <div className="_UserActivityFrame_counterValue">{initialStats.lastYear.value}</div>
-                      <div className="_UserActivityFrame_counterDescription">
-                          {initialStats.lastYear.desc}
-                      </div>
+                <div className="_UserActivityFrame_counter">
+                  <div className="_UserActivityFrame_counterValue">{initialStats.lastYear.value}</div>
+                  <div className="_UserActivityFrame_counterDescription">
+                    {initialStats.lastYear.desc}
                   </div>
+                </div>
 
-                  <div className="_UserActivityFrame_counter">
-                      <div className="_UserActivityFrame_counterValue">{initialStats.lastMonth.value}</div>
-                      <div className="_UserActivityFrame_counterDescription">
-                          {initialStats.lastMonth.desc}
-                      </div>
+                <div className="_UserActivityFrame_counter">
+                  <div className="_UserActivityFrame_counterValue">{initialStats.lastMonth.value}</div>
+                  <div className="_UserActivityFrame_counterDescription">
+                    {initialStats.lastMonth.desc}
                   </div>
+                </div>
               </div>
 
               <div className="_UserActivityFrame_countersRow">
-                  <div className="_UserActivityFrame_counter">
-                      <div className="_UserActivityFrame_counterValue">{initialStats.maxStreak.value}</div>
-                      <div className="_UserActivityFrame_counterDescription">
-                          {initialStats.maxStreak.desc}
-                      </div>
+                <div className="_UserActivityFrame_counter">
+                  <div className="_UserActivityFrame_counterValue">{initialStats.maxStreak.value}</div>
+                  <div className="_UserActivityFrame_counterDescription">
+                    {initialStats.maxStreak.desc}
                   </div>
+                </div>
 
-                  <div className="_UserActivityFrame_counter">
-                      <div className="_UserActivityFrame_counterValue">{initialStats.lastYearStreak.value}</div>
-                      <div className="_UserActivityFrame_counterDescription">
-                          {initialStats.lastYearStreak.desc}
-                      </div>
+                <div className="_UserActivityFrame_counter">
+                  <div className="_UserActivityFrame_counterValue">{initialStats.lastYearStreak.value}</div>
+                  <div className="_UserActivityFrame_counterDescription">
+                    {initialStats.lastYearStreak.desc}
                   </div>
+                </div>
 
-                  <div className="_UserActivityFrame_counter">
-                      <div className="_UserActivityFrame_counterValue">{initialStats.lastMonthStreak.value}</div>
-                      <div className="_UserActivityFrame_counterDescription">
-                          {initialStats.lastMonthStreak.desc}
-                      </div>
+                <div className="_UserActivityFrame_counter">
+                  <div className="_UserActivityFrame_counterValue">{initialStats.lastMonthStreak.value}</div>
+                  <div className="_UserActivityFrame_counterDescription">
+                    {initialStats.lastMonthStreak.desc}
                   </div>
+                </div>
               </div>
-          </div>
+            </div>
           )}
 
         </div>
@@ -533,7 +535,7 @@ export const mountNewMaxRatedHeatmap = () => {
     const yearSelect = originalContainer.querySelector('select[name="yearSelect"]') as HTMLSelectElement;
     let initialYear = "last";
     let availableYears: YearOption[] = [{ value: "last", label: "Last Year" }];
-    
+
     if (yearSelect) {
       initialYear = yearSelect.value;
       availableYears = Array.from(yearSelect.options).map(opt => ({
@@ -544,7 +546,7 @@ export const mountNewMaxRatedHeatmap = () => {
 
     originalDisplay = (originalContainer as HTMLElement).style.display;
     (originalContainer as HTMLElement).style.display = 'none';
-    
+
     // Create container for our heatmap immediately after the original
     const container = document.createElement('div');
     container.id = 'cf-mentor-max-rated-heatmap-container';
@@ -552,8 +554,8 @@ export const mountNewMaxRatedHeatmap = () => {
 
     heatmapRoot = ReactDOM.createRoot(container);
     heatmapRoot.render(
-      <NewMaxRatedHeatmap 
-        initialStats={scrapedStats} 
+      <NewMaxRatedHeatmap
+        initialStats={scrapedStats}
         initialYear={initialYear}
         availableYears={availableYears}
       />
