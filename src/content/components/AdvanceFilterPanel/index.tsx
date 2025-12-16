@@ -84,6 +84,18 @@ export default function AdvanceFilterPanel() {
 
 	return (
 		<div style={rootStyle}>
+			<style>
+				{`
+					.hide-spinners::-webkit-outer-spin-button, 
+					.hide-spinners::-webkit-inner-spin-button {
+						-webkit-appearance: none;
+						margin: 0;
+					}
+					.hide-spinners[type=number] {
+						-moz-appearance: textfield;
+					}
+				`}
+			</style>
 			<div style={styles.card}>
 				<div style={styles.cardHeader}>
 					<h2 style={styles.cardTitle}>
@@ -142,10 +154,11 @@ export default function AdvanceFilterPanel() {
 									}
 									style={{
 										...styles.input,
-										width: "6rem",
+										width: "8rem",
 										textAlign: "center",
 										...(focusState.minDiff && styles.inputFocus),
 									}}
+									className="hide-spinners"
 									min="800"
 									max="3500"
 									onFocus={() => handleFocus("minDiff")}
@@ -161,10 +174,11 @@ export default function AdvanceFilterPanel() {
 									}
 									style={{
 										...styles.input,
-										width: "6rem",
+										width: "8rem",
 										textAlign: "center",
 										...(focusState.maxDiff && styles.inputFocus),
 									}}
+									className="hide-spinners"
 									min="800"
 									max="3500"
 									onFocus={() => handleFocus("maxDiff")}
