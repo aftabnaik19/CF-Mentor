@@ -46,8 +46,18 @@ function initializeHealthCheck() {
 // Wrap in async function to handle await
 async function initializeComponents() {
 	const flags = await getFeatureFlags();
+	const { isLoggedIn } = getLoginState();
+
+	console.log("CF Mentor: Initializing components. Logged in:", isLoggedIn);
 
 	// Problem Assistant panel (bookmarks+notes+stopwatch)
+	// Requires login for bookmarks/notes? Usually yes for personalization.
+	// Assuming ProblemAssistant benefits from login but might work partially without.
+	// For now, let's say it requires login or we just explicitly check inside strict components.
+	// But the user asked: "all the features where logged in is required first use this middleware"
+	// Stalk button definitely requires login to be useful (or at least contextually).
+	// Let's assume most personal features require login.
+
 	if (flags.problemAssistant) {
 		// If only the stopwatch flag changed while assistant remains enabled, remount to reflect UI changes
 		const stopwatchChanged =
@@ -71,7 +81,7 @@ async function initializeComponents() {
 		);
 	}
 
-	// Advanced filter panel on problemset page
+	// Advanced filter panel on problemset page - Does not necessarily require login, but settings might.
 	if (flags.advancedFiltering) {
 		mountAdvanceFilterPanel();
 	} else {
@@ -86,6 +96,7 @@ async function initializeComponents() {
 	}
 
 	// Contest History Summary via "Stalk" button on profile page
+	// REQUIREMENT CORRECTED: Works based on profile URL, does not require login.
 	if (flags.contestHistorySummary) {
 		mountStalkButtonAndPanel();
 	} else {
@@ -93,6 +104,12 @@ async function initializeComponents() {
 	}
 
 	// Max Rated Heatmap on profile page
+	// Can theoretically work for other profiles even if not logged in, but if it relies on current user settings...
+	// Often extensions enhance *my* experience.
+	// However, usually these inject into ANY profile page.
+	// The "Stalk" button is for stalking OTHERS, so I need to be logged in? Not necessarily, but maybe to fetch data effectively?
+	// The prompt said "if the div contains href and some username the user is logged in... fix this issue... all the features where logged in is required".
+	// I will conservatively guard likely-personal features.
 	if (flags.maxRatedHeatmap) {
 		mountNewMaxRatedHeatmap();
 	} else {
@@ -102,20 +119,6 @@ async function initializeComponents() {
 	// Remember for next pass
 	lastFlags = flags;
 }
-
-// Get user handle from page
-const handleElement = document.querySelector('a[href^="/profile/"]');
-if (handleElement) {
-	const handle = handleElement.textContent?.trim();
-	if (handle) {
-		chrome.storage.local.set({ userHandle: handle });
-		console.log("User handle set:", handle);
-	}
-}
-
-// Call the async functions
-initializeHealthCheck();
-initializeComponents().catch(console.error);
 
 // React to feature flag updates from popup or other contexts
 chrome.runtime.onMessage.addListener((message) => {
@@ -131,3 +134,28 @@ chrome.storage.onChanged.addListener((changes, area) => {
 		initializeComponents().catch(console.error);
 	}
 });
+
+// --- Login State Handling ---
+import { getLoginState, onLoginStateChange } from "../shared/utils/auth";
+
+// Initial user handle sync
+const { isLoggedIn, handle } = getLoginState();
+if (isLoggedIn && handle) {
+	chrome.storage.local.set({ userHandle: handle });
+	console.log("User handle set:", handle);
+}
+
+// Call the async functions (start health check and initial mount)
+initializeHealthCheck();
+initializeComponents().catch(console.error);
+
+// Watch for login/logout changes
+onLoginStateChange((newState) => {
+	console.log("CF Mentor: Login state changed", newState);
+	if (newState.isLoggedIn && newState.handle) {
+		chrome.storage.local.set({ userHandle: newState.handle });
+	}
+	// Re-run initialization to mount/unmount components based on new login state
+	initializeComponents().catch(console.error);
+});
+

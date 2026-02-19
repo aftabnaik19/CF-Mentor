@@ -6,7 +6,6 @@ const SETTINGS_SIDEBOX_SELECTOR = "#change-hide-tag-status";
 
 let originalContent: string | null = null;
 let settingsSidebox: HTMLElement | null = null;
-let originalSettingsContent: string | null = null;
 
 function isProblemsetPage(): boolean {
 	const path = window.location.pathname;
@@ -48,9 +47,18 @@ export function mountAdvanceFilterPanel() {
 			const sidebox = settingsInput.closest(".roundbox.sidebox") as HTMLElement;
 			if (sidebox) {
 				settingsSidebox = sidebox;
-				originalSettingsContent = sidebox.innerHTML;
-				sidebox.innerHTML = ""; // Clear original content
-				mountComponent(sidebox, <SettingsPanel />);
+
+				// Hide all current children
+				Array.from(sidebox.children).forEach((child) => {
+					(child as HTMLElement).style.display = "none";
+				});
+
+				// Create a container for our settings panel
+				const host = document.createElement("div");
+				host.id = "cf-mentor-settings-host";
+				sidebox.appendChild(host);
+
+				mountComponent(host, <SettingsPanel />);
 			}
 		}
 	}
@@ -75,11 +83,21 @@ export function unmountAdvanceFilterPanel() {
 		}
 
 		// Restore Settings Panel
-		if (settingsSidebox && originalSettingsContent) {
-			unmountComponent(settingsSidebox);
-			settingsSidebox.innerHTML = originalSettingsContent;
+		if (settingsSidebox) {
+			unmountComponent(settingsSidebox); // Unmount React component
+
+			// Remove the container we added
+			const container = document.getElementById("cf-mentor-settings-host");
+			if (container) {
+				container.remove();
+			}
+
+			// Show all original children
+			Array.from(settingsSidebox.children).forEach((child) => {
+				(child as HTMLElement).style.display = "";
+			});
+
 			settingsSidebox = null;
-			originalSettingsContent = null;
 		}
 	}
 }
