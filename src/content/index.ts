@@ -143,6 +143,16 @@ const { isLoggedIn, handle } = getLoginState();
 if (isLoggedIn && handle) {
 	chrome.storage.local.set({ userHandle: handle });
 	console.log("User handle set:", handle);
+} else {
+	// If not logged in, ensure no stale handle exists in storage
+	chrome.storage.local.get("userHandle", (result) => {
+		if (result.userHandle) {
+			console.log("Found stale userHandle in storage while logged out. Clearing...");
+			chrome.storage.local.remove("userHandle");
+			// Trigger fetch to ensure clean state
+			chrome.runtime.sendMessage({ action: "fetchData" });
+		}
+	});
 }
 
 // Call the async functions (start health check and initial mount)
@@ -155,6 +165,12 @@ onLoginStateChange((newState) => {
 	if (newState.isLoggedIn && newState.handle) {
 		chrome.storage.local.set({ userHandle: newState.handle });
 		// Trigger a background fetch to ensure we have the new user's specific data (e.g. verdicts)
+		chrome.runtime.sendMessage({ action: "fetchData" });
+	} else {
+		// Logged out
+		chrome.storage.local.remove("userHandle");
+		console.log("User logged out, cleared handle.");
+		// Trigger fetch to clear user-specific data (verdicts)
 		chrome.runtime.sendMessage({ action: "fetchData" });
 	}
 	// Re-run initialization to mount/unmount components based on new login state
