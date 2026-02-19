@@ -84,23 +84,31 @@ const NewMaxRatedHeatmap: React.FC<{
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>(initialYear);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
       const handle = getHandleFromUrl();
-      if (!handle) return;
+      if (!handle) {
+        setError("Could not determine user handle.");
+        setLoading(false);
+        return;
+      }
 
       try {
         const response = await new Promise<{ success: boolean; submissions?: Submission[]; error?: string } | undefined>((resolve) => {
           chrome.runtime.sendMessage({ type: "fetch-user-data", handle }, resolve);
         });
 
-        if (response && response.success && response.submissions) {
+        if (response?.success && response.submissions) {
           setSubmissions(response.submissions);
+        } else {
+          setError(response?.error || "Failed to load data.");
         }
       } catch (err) {
         console.error("Failed to fetch user data", err);
+        setError("Network or script error.");
       } finally {
         setLoading(false);
       }
@@ -328,8 +336,25 @@ const NewMaxRatedHeatmap: React.FC<{
     setTooltip(prev => ({ ...prev, visible: false }));
   };
 
+  if (error) {
+    return (
+      <div className="_UserActivityFrame_frame">
+        <div className="roundbox userActivityRoundBox borderTopRound borderBottomRound" style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
+          Error loading heatmap: {error}
+        </div>
+      </div>
+    );
+  }
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="_UserActivityFrame_frame">
+        <div className="roundbox userActivityRoundBox borderTopRound borderBottomRound" style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+          Loading contest history...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import * as bookmarkStorage from "../utils/bookmarkStorage";
 import * as domUtils from "../utils/domUtils";
+import { getLoginState } from "../../shared/utils/auth";
 import DifficultySelector from "./DifficultySelector.tsx";
 import Notes from "./Notes";
 import Stopwatch from "./Stopwatch";
@@ -189,16 +190,23 @@ const ProblemAssistantPanel: React.FC = () => {
                   role="button"
                   tabIndex={0}
                   className="contest-state-phase"
-                  title="Removing the bookmark will not remove difficulty or notes"
+                  title={!getLoginState().isLoggedIn ? "Please login at codeforces.com to bookmark" : "Removing the bookmark will not remove difficulty or notes"}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "0.4em",
-                    cursor: "pointer",
+                    cursor: !getLoginState().isLoggedIn ? "not-allowed" : "pointer",
                     whiteSpace: "nowrap",
-                    color: bookmarked ? "#4CAF50" : "inherit",
+                    color: !getLoginState().isLoggedIn ? "#999" : (bookmarked ? "#4CAF50" : "inherit"),
+                    opacity: !getLoginState().isLoggedIn ? 0.6 : 1,
                   }}
-                  onClick={handleBookmarkToggle}
+                  onClick={async () => {
+                    if (!getLoginState().isLoggedIn) {
+                      alert("Please login to Codeforces to use bookmarks.");
+                      return;
+                    }
+                    await handleBookmarkToggle();
+                  }}
                 >
                   {bookmarked ? "Bookmarked!" : "Bookmark Problem"}
                   <img
@@ -209,13 +217,21 @@ const ProblemAssistantPanel: React.FC = () => {
                   />
                 </span>
                 <span
+                  title={!getLoginState().isLoggedIn ? "Please login at codeforces.com to add notes/difficulty" : "Toggle details"}
                   style={{
                     flex: 1,
                     display: "flex",
                     justifyContent: "flex-end",
-                    cursor: "pointer",
+                    cursor: !getLoginState().isLoggedIn ? "not-allowed" : "pointer",
+                    opacity: !getLoginState().isLoggedIn ? 0.3 : 1,
                   }}
-                  onClick={toggleDropdown}
+                  onClick={() => {
+                    if (!getLoginState().isLoggedIn) {
+                      alert("Please login to Codeforces to use this feature.");
+                      return;
+                    }
+                    toggleDropdown();
+                  }}
                 >
                   {showDropdown ? "▲" : "▼"}
                 </span>

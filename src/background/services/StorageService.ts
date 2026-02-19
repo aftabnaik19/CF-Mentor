@@ -96,6 +96,20 @@ export class StorageService {
     }
   }
 
+  async clearUserCache(handle: string): Promise<void> {
+    console.log(`Clearing cache for user: ${handle}`);
+    const allCache = await getData<{ key: string }>(MENTOR_STORE.USER_CACHE);
+    // Assuming keys are like "user_status_{handle}" or "user_rating_{handle}"
+    const userKeys = allCache
+      .filter((entry) => entry.key.includes(handle))
+      .map((entry) => entry.key);
+
+    if (userKeys.length > 0) {
+      await deleteData(MENTOR_STORE.USER_CACHE, userKeys);
+      console.log(`Cleared ${userKeys.length} cache entries for ${handle}`);
+    }
+  }
+
   // --- Specific Helpers ---
 
   async getUserBookmarks(handle: string): Promise<BookmarkStorage> {

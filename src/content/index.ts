@@ -154,6 +154,8 @@ onLoginStateChange((newState) => {
 	console.log("CF Mentor: Login state changed", newState);
 	if (newState.isLoggedIn && newState.handle) {
 		chrome.storage.local.set({ userHandle: newState.handle });
+		// Trigger a background fetch to ensure we have the new user's specific data (e.g. verdicts)
+		chrome.runtime.sendMessage({ action: "fetchData" });
 	}
 	// Re-run initialization to mount/unmount components based on new login state
 	initializeComponents().catch(console.error);

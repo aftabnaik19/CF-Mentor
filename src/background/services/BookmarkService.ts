@@ -29,30 +29,34 @@ export class BookmarkService {
     handle: string,
     bookmark: BookmarkedProblem
   ): Promise<void> {
-    const data = await storageService.getUserBookmarks(handle);
-    const key = this.getProblemKey(bookmark.contestId, bookmark.problemIdx);
-    
-    // Preserve original bookmarkedAt if updating
-    const existing = data.bookmarkedProblems[key];
-    const now = Date.now();
-    
-    data.bookmarkedProblems[key] = {
-      ...bookmark,
-      bookmarkedAt: existing?.bookmarkedAt || now,
-      lastUpdated: now,
-    };
+    await navigator.locks.request(`bookmark_update_${handle}`, async () => {
+      const data = await storageService.getUserBookmarks(handle);
+      const key = this.getProblemKey(bookmark.contestId, bookmark.problemIdx);
 
-    await storageService.saveUserBookmarks(handle, data);
+      // Preserve original bookmarkedAt if updating
+      const existing = data.bookmarkedProblems[key];
+      const now = Date.now();
+
+      data.bookmarkedProblems[key] = {
+        ...bookmark,
+        bookmarkedAt: existing?.bookmarkedAt || now,
+        lastUpdated: now,
+      };
+
+      await storageService.saveUserBookmarks(handle, data);
+    });
   }
 
   async removeBookmark(handle: string, contestId: string, problemIdx: string): Promise<void> {
-    const data = await storageService.getUserBookmarks(handle);
-    const key = this.getProblemKey(contestId, problemIdx);
-    
-    if (key in data.bookmarkedProblems) {
-      delete data.bookmarkedProblems[key];
-      await storageService.saveUserBookmarks(handle, data);
-    }
+    await navigator.locks.request(`bookmark_update_${handle}`, async () => {
+      const data = await storageService.getUserBookmarks(handle);
+      const key = this.getProblemKey(contestId, problemIdx);
+
+      if (key in data.bookmarkedProblems) {
+        delete data.bookmarkedProblems[key];
+        await storageService.saveUserBookmarks(handle, data);
+      }
+    });
   }
 }
 
