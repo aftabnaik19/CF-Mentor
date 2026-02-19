@@ -1,28 +1,12 @@
-import { EXTENSION_CONFIG } from "../shared/constants/config";
 import { MentorData, Problem } from "../shared/types/mentor";
 import { getData, MENTOR_STORE, saveAllData } from "../shared/utils/indexedDb";
-import { storageService } from "./services/StorageService";
-import { CFSubmission } from "@/content/components/ContestHistorySummary/types";
-
-async function fetchUserSubmissions(handle: string) {
-	const url = `https://codeforces.com/api/user.status?handle=${encodeURIComponent(handle)}&from=1&count=10000`;
-	console.log('Fetching user submissions for', handle);
-	const response = await fetch(url);
-	if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-	const data = await response.json();
-	if (data.status !== 'OK') throw new Error('API error');
-	console.log('Fetched', data.result.length, 'submissions');
-	return data.result;
-}
+import { apiService } from "./services/ApiService";
 
 export async function fetchAndStoreData() {
 	try {
 		console.log("Attempting to fetch data from API...");
-		const response = await fetch(EXTENSION_CONFIG.API.MENTOR_API_URL);
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-		const data: MentorData = await response.json();
+		const data: MentorData = await apiService.getMentorData();
+
 		console.log(
 			`Raw data received: ${data.problems?.length} problems, ${data.contests?.length} contests, ${data.sheets?.length} sheets, ${data.sheetsProblems?.length} sheetsProblems.`
 		);
@@ -34,25 +18,8 @@ export async function fetchAndStoreData() {
 		const result = await chrome.storage.local.get('userHandle');
 		if (result.userHandle) {
 			try {
-				// Check cache using StorageService (IndexedDB)
-				const cacheKey = `user_status_${result.userHandle}`;
-				const cachedEntry = await storageService.getCachedEntry<CFSubmission[]>(cacheKey);
-				let submissions: CFSubmission[];
-				
-				if (cachedEntry && Date.now() - cachedEntry.timestamp < 3600000) { // 1 hour TTL for this specific check? Or align with 1 day?
-					// The original code had 1 hour TTL (3600000ms). The new requirement is 1 day.
-					// However, MessageService uses 1 day. Let's stick to 1 day for consistency as per requirements.
-					// Actually, let's use the same TTL logic.
-					console.log('Using cached user submissions');
-					submissions = cachedEntry.data;
-				} else {
-					console.log('Fetching fresh user submissions');
-					// We can reuse the fetch logic or call MessageService? 
-					// MessageService is for messages. Let's keep the fetch here but save to new cache.
-					// Actually, fetchUserSubmissions returns any[], we should type it.
-					submissions = await fetchUserSubmissions(result.userHandle);
-					await storageService.setCached(cacheKey, submissions);
-				}
+				const submissions = await apiService.getUserSubmissions(result.userHandle);
+
 				const verdictMap = new Map();
 				for (const sub of submissions) {
 					const key = sub.problem.contestId + sub.problem.index;
