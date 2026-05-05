@@ -32,6 +32,20 @@ export async function computeSummaries(
 		}
 	});
 
+	// Helper to normalize division names
+	const normalizeDivision = (type: string): string => {
+		const t = type.trim();
+		if (t.includes("Div. 1") && t.includes("Div. 2")) return "Div. 1 + Div. 2";
+		if (t.includes("Hello") || t.includes("Good Bye") || t.includes("Goodbye")) return "Div. 1 + Div. 2";
+		if (t.includes("Global")) return "Global";
+		if (t.includes("Educational") || t.includes("Edu")) return "Div. 2 (Educational)";
+		if (t.includes("Div. 1")) return "Div. 1";
+		if (t.includes("Div. 2")) return "Div. 2";
+		if (t.includes("Div. 3")) return "Div. 3";
+		if (t.includes("Div. 4")) return "Div. 4";
+		return t; // Fallback
+	};
+
 	const ratedAll = base.rating || [];
 	let selectedRatings: CFRatingChange[];
 	const nowSec = Math.floor(Date.now() / 1000);
@@ -44,7 +58,7 @@ export async function computeSummaries(
 			if ((r.ratingUpdateTimeSeconds || 0) >= cutoff) {
 				const c = allContestsMap.get(r.contestId);
 				if (!c) continue;
-				const div = c.type;
+				const div = normalizeDivision(c.type);
 				if (!tempByDiv.has(div)) tempByDiv.set(div, []);
 				tempByDiv.get(div)!.push(r);
 			}
@@ -60,7 +74,7 @@ export async function computeSummaries(
 		for (const r of ratedAll) {
 			const c = allContestsMap.get(r.contestId);
 			if (!c) continue;
-			const div = c.type;
+			const div = normalizeDivision(c.type);
 			if (!byDiv.has(div)) byDiv.set(div, []);
 			byDiv.get(div)!.push(r);
 		}
@@ -78,19 +92,6 @@ export async function computeSummaries(
 
 	const contestIds = contestIdsSet;
 	// Build meta per contest
-	// Helper to normalize division names
-	const normalizeDivision = (type: string): string => {
-		const t = type.trim();
-		if (t.includes("Div. 1") && t.includes("Div. 2")) return "Div. 1 + Div. 2";
-		if (t.includes("Hello") || t.includes("Good Bye") || t.includes("Goodbye")) return "Div. 1 + Div. 2";
-		if (t.includes("Global")) return "Global";
-		if (t.includes("Educational") || t.includes("Edu")) return "Div. 2 (Educational)";
-		if (t.includes("Div. 1")) return "Div. 1";
-		if (t.includes("Div. 2")) return "Div. 2";
-		if (t.includes("Div. 3")) return "Div. 3";
-		if (t.includes("Div. 4")) return "Div. 4";
-		return t; // Fallback
-	};
 
 	const divisionOrder: Record<string, number> = {
 		"Global": 1,
