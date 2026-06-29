@@ -1,4 +1,4 @@
- 
+
 import "./PopupApp.css";
 
 import { useEffect, useState } from "react";
@@ -64,8 +64,12 @@ const Popup = () => {
     });
   };
 
+  const handleConnectClick=()=>{
+    
+  };
+
   return (
-  <div className="popup-container" style={{ minWidth: 260 }}>
+    <div className="popup-container" style={{ minWidth: 260 }}>
       <div className="popup-header">
         <div className="popup-title-text">CF Mentor</div>
       </div>
@@ -99,6 +103,30 @@ const Popup = () => {
           <button className="cf-button" onClick={handleFetchClick} disabled={saving}>
             {saving ? "Saving..." : "Fetch and Log Data"}
           </button>
+          <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
+
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px' }}>
+              Codeforces Sheet Sync
+            </h3>
+
+            <button
+              onClick={handleConnectClick}
+              style={{
+                backgroundColor: '#425b8f', // Matches the blue in your screenshot
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 15px',
+                width: '100%',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'normal'
+              }}
+            >
+              Connect Google Sheets
+            </button>
+
+          </div>
         </div>
       ) : (
         <div className="popup-loading">Loading settings...</div>
