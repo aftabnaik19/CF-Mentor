@@ -1,5 +1,6 @@
 import { MESSAGE_TYPES } from "@/shared/constants/messages";
 import { BookmarkedProblem } from "@/shared/types/bookmark";
+import { Problem } from "../../shared/types/mentor";
 
 import {
   extractProblemRating,
@@ -46,27 +47,28 @@ export const getCurrentProblemBookmark = async (): Promise<BookmarkedProblem | n
   return sendMessage<BookmarkedProblem | null>(MESSAGE_TYPES.GET_BOOKMARK, { problemInfo, handle });
 };
 
-export const bookmarkCurrentProblem = async (
-  difficultyRating: number | null = null,
+export const bookmarkCurrentProblem = async (difficultyRating: number | null = null,
   notes: string | null = null,
-  timeRequiredSeconds: number | null = null
-): Promise<void> => {
+  timeRequiredSeconds: number | null = null) => {
   const problemInfo = getCurrentProblemInfo();
   const handle = getCurrentUserHandle();
   if (!problemInfo || !handle) {
     throw new Error("Could not get problem info or user handle from page.");
   }
-
+  const dbProblem = await sendMessage<Problem | null>(
+    "GET_PROBLEM_FROM_DB",
+    { contestId: problemInfo.contestId, index: problemInfo.problemIdx }
+  );
   const payload = {
     handle,
     problemInfo,
     difficultyRating,
     notes,
     timeRequiredSeconds,
-    problemRating: extractProblemRating(),
-    problemTags: extractProblemTags(),
+    problemRating: dbProblem && dbProblem.cfRating > 0 ? `*${dbProblem.cfRating}` : extractProblemRating(), // fallback - change done by claude
+    problemTags: dbProblem?.tags ?? extractProblemTags(),                         // fallback
   };
-
+  console.log(payload);
   await sendMessage(MESSAGE_TYPES.ADD_OR_UPDATE_BOOKMARK, payload);
 };
 
@@ -81,27 +83,27 @@ export const removeCurrentProblemBookmark = async (): Promise<void> => {
 export const updateCurrentProblemBookmark = async (
   updates: Partial<Pick<BookmarkedProblem, "difficultyRating" | "notes" | "timeRequiredSeconds">>
 ): Promise<void> => {
-    const problemInfo = getCurrentProblemInfo();
-    const handle = getCurrentUserHandle();
-    if (!problemInfo || !handle) return;
+  const problemInfo = getCurrentProblemInfo();
+  const handle = getCurrentUserHandle();
+  if (!problemInfo || !handle) return;
 
-    // This is a bit tricky since the background script handles the full update.
-    // We can send the updates and let the background script merge them.
-    // For now, we will re-implement this using the more granular ADD_OR_UPDATE_BOOKMARK
-    const currentBookmark = await getCurrentProblemBookmark();
-    if (!currentBookmark) return;
+  // This is a bit tricky since the background script handles the full update.
+  // We can send the updates and let the background script merge them.
+  // For now, we will re-implement this using the more granular ADD_OR_UPDATE_BOOKMARK
+  const currentBookmark = await getCurrentProblemBookmark();
+  if (!currentBookmark) return;
 
-    const payload = {
-        handle,
-        problemInfo,
-        difficultyRating: updates.difficultyRating ?? currentBookmark.difficultyRating,
-        notes: updates.notes ?? currentBookmark.notes,
-        timeRequiredSeconds: updates.timeRequiredSeconds ?? currentBookmark.timeRequiredSeconds,
-        problemRating: currentBookmark.problemRating,
-        problemTags: currentBookmark.problemTags,
-    };
+  const payload = {
+    handle,
+    problemInfo,
+    difficultyRating: updates.difficultyRating ?? currentBookmark.difficultyRating,
+    notes: updates.notes ?? currentBookmark.notes,
+    timeRequiredSeconds: updates.timeRequiredSeconds ?? currentBookmark.timeRequiredSeconds,
+    problemRating: currentBookmark.problemRating,
+    problemTags: currentBookmark.problemTags,
+  };
 
-    await sendMessage(MESSAGE_TYPES.ADD_OR_UPDATE_BOOKMARK, payload);
+  await sendMessage(MESSAGE_TYPES.ADD_OR_UPDATE_BOOKMARK, payload);
 };
 
 export const getBookmarkedProblemsArray = async (): Promise<BookmarkedProblem[]> => {
@@ -116,15 +118,15 @@ export const getBookmarkedProblemsArray = async (): Promise<BookmarkedProblem[]>
 // but they will not work correctly without being moved to the background script.
 
 export const searchBookmarks = async (): Promise<BookmarkedProblem[]> => {
-    console.warn("searchBookmarks is not implemented with the service worker yet.");
-    return [];
+  console.warn("searchBookmarks is not implemented with the service worker yet.");
+  return [];
 }
 
 export const exportBookmarks = async (): Promise<string> => {
-    console.warn("exportBookmarks is not implemented with the service worker yet.");
-    return "";
+  console.warn("exportBookmarks is not implemented with the service worker yet.");
+  return "";
 }
 
 export const importBookmarks = async (): Promise<void> => {
-    console.warn("importBookmarks is not implemented with the service worker yet.");
+  console.warn("importBookmarks is not implemented with the service worker yet.");
 }
