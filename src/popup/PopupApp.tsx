@@ -109,6 +109,9 @@ const Popup = () => {
 
    const handleConnectClick = async () => {
     try {
+      const connectButton = document.getElementById("connect-google-sheets-button") as HTMLButtonElement;
+      connectButton.disabled = true;
+      connectButton.textContent = "Connecting...";
       // 1. Get the VIP pass
       const token = await authenticateWithGoogle();
       if (!token) return;
@@ -139,12 +142,8 @@ const Popup = () => {
       const allBookmarksArray = Object.values(storageObject.bookmarkedProblems || {});
       console.log(allBookmarksArray);
 
-
-      // Grab just the first 40 problems for instant load
-      const initialBatch = allBookmarksArray.slice(0, 40);
-
       // This fills in any missing problemRating/problemTags that weren't captured at bookmark time
-      const enrichedBatch = await enrichBookmarksWithMetadata(initialBatch);
+      const enrichedBatch = await enrichBookmarksWithMetadata(allBookmarksArray);
       console.log("Enriched bookmarks:", enrichedBatch);
 
       // 6. Write data to the sheet
@@ -154,6 +153,8 @@ const Popup = () => {
         console.log(`No bookmarks found for handle: ${handle}`);
       }
 
+      connectButton.disabled = false;
+      connectButton.textContent = "Connect Google Sheets";
       // 7. Open the sheet so the user can see their data immediately
       chrome.tabs.create({ url: sheetDetails.spreadsheetUrl });
 
@@ -205,6 +206,7 @@ const Popup = () => {
 
             <button
               onClick={handleConnectClick}
+              id = "connect-google-sheets-button"
               style={{
                 backgroundColor: '#425b8f', // Matches the blue in your screenshot
                 color: 'white',
