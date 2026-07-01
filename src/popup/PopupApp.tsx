@@ -9,6 +9,7 @@ import { authenticateWithGoogle } from "./service/googleCloudAuthentication";
 import { createGoogleSheet, exportBookmarksToSheet } from "./service/createAndFillGoogleSheet";
 import { MESSAGE_TYPES } from "@/shared/constants/messages";
 import type { Problem } from "@/shared/types/mentor";
+import { useRef } from 'react'; 
 
 type ToggleItem = {
   key: keyof FeatureFlags;
@@ -66,6 +67,7 @@ const TOGGLES: ToggleItem[] = [
 const Popup = () => {
   const [flags, setFlags] = useState<FeatureFlags | null>(null);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load flags from storage
   useEffect(() => {
@@ -107,7 +109,7 @@ const Popup = () => {
     });
   };
 
-   const handleConnectClick = async () => {
+  const handleConnectClick = async () => {
     try {
       const connectButton = document.getElementById("connect-google-sheets-button") as HTMLButtonElement;
       connectButton.disabled = true;
@@ -163,6 +165,13 @@ const Popup = () => {
     }
   };
 
+  const handleExport = async () => {
+      
+  };
+  const handleImport = async ()=>{
+
+  };
+
   return (
     <div className="popup-container" style={{ minWidth: 260 }}>
       <div className="popup-header">
@@ -206,7 +215,7 @@ const Popup = () => {
 
             <button
               onClick={handleConnectClick}
-              id = "connect-google-sheets-button"
+              id="connect-google-sheets-button"
               style={{
                 backgroundColor: '#425b8f', // Matches the blue in your screenshot
                 color: 'white',
@@ -221,6 +230,42 @@ const Popup = () => {
             >
               Connect Google Sheets
             </button>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '10px',
+                marginTop: '10px'
+              }}
+            >
+              {/* Export Button */}
+              <button
+                onClick={handleExport}
+                style={{ flex: 1,backgroundColor: '#425b8f',color : 'white' }}
+                className="your-existing-classes"
+              >
+                Export Bookmarks
+              </button>
+
+              {/* Import Button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{ flex: 1,backgroundColor: '#425b8f',color:'white'}}
+                className="your-existing-classes"
+              >
+                Import Bookmarks
+              </button>
+
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                accept=".cfbackup"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleImport}
+              />
+            </div>
 
           </div>
         </div>
