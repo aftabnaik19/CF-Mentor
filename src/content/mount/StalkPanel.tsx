@@ -5,7 +5,11 @@ const BTN_ID = "cf-mentor-stalk-btn";
 const MODAL_ID = "cf-mentor-stalk-modal";
 
 function isProfilePage(url: string): boolean {
-  return /^https:\/\/codeforces\.com\/profile\//.test(url);
+  // return /^https:\/\/codeforces\.com\/profile\//.test(url);
+
+  // now include more urls from the profile page..
+  return /^https:\/\/codeforces\.com\/(profile|groups\/with|contests\/writer|contests\/with|submissions|teams\/with|blog)\//.test(url);
+
 }
 
 /**
@@ -14,15 +18,23 @@ function isProfilePage(url: string): boolean {
  */
 function findProfileMenuContainer(): HTMLUListElement | null {
   // Prefer the UL.list that holds the tabs
-  const direct = document.querySelector("#pageContent .second-level-menu-list") as HTMLUListElement | null;
+  const direct = document.querySelector(
+    "#pageContent .second-level-menu-list",
+  ) as HTMLUListElement | null;
   if (direct) return direct;
-  const wrapper = document.querySelector("#pageContent .second-level-menu") as HTMLElement | null;
+  const wrapper = document.querySelector(
+    "#pageContent .second-level-menu",
+  ) as HTMLElement | null;
   if (wrapper) {
-    const ul = wrapper.querySelector(".second-level-menu-list") as HTMLUListElement | null;
+    const ul = wrapper.querySelector(
+      ".second-level-menu-list",
+    ) as HTMLUListElement | null;
     if (ul) return ul;
   }
   // Broader fallbacks for different CF layouts
-  const any = document.querySelector(".second-level-menu-list") as HTMLUListElement | null;
+  const any = document.querySelector(
+    ".second-level-menu-list",
+  ) as HTMLUListElement | null;
   if (any) return any;
   return null;
 }
@@ -54,7 +66,7 @@ function ensureModalHost(): { host: HTMLElement; mountPoint: HTMLElement } {
 
 function styleTag() {
   const style = document.createElement("style");
-   style.textContent = `
+  style.textContent = `
 /* Codeforces-inspired Modern styles */
 .cfm-overlay {
   position: fixed;
@@ -340,11 +352,15 @@ function openModal() {
   mountPoint.replaceChildren(overlay);
 
   // ESC to close
-  const esc = (e: KeyboardEvent) => { if (e.key === "Escape") closeModal(); };
+  const esc = (e: KeyboardEvent) => {
+    if (e.key === "Escape") closeModal();
+  };
   document.addEventListener("keydown", esc, { once: true });
 
   // Click outside to close
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeModal();
+  });
 
   // Mount React content
   mountComponent(reactMount, <ContestHistorySummary />);
@@ -353,9 +369,13 @@ function openModal() {
 function closeModal() {
   const host = document.getElementById(MODAL_ID) as HTMLElement | null;
   if (!host || !host.shadowRoot) return;
-  const mountPoint = host.shadowRoot.getElementById("cfm-mount") as HTMLElement | null;
+  const mountPoint = host.shadowRoot.getElementById(
+    "cfm-mount",
+  ) as HTMLElement | null;
   if (!mountPoint) return;
-  const reactMount = mountPoint.querySelector(".cfm-card .cfm-body > div") as HTMLElement | null;
+  const reactMount = mountPoint.querySelector(
+    ".cfm-card .cfm-body > div",
+  ) as HTMLElement | null;
   if (reactMount) {
     unmountComponent(reactMount);
   }
@@ -375,7 +395,10 @@ export function mountStalkButtonAndPanel() {
   anchor.href = "#";
   // Match CF menu: anchors inside li inherit styles; no extra classes needed
   anchor.removeAttribute("class");
-  anchor.addEventListener("click", (e) => { e.preventDefault(); openModal(); });
+  anchor.addEventListener("click", (e) => {
+    e.preventDefault();
+    openModal();
+  });
 
   // Insert as a list item in the UL so CF CSS applies identically
   const li = document.createElement("li");
@@ -385,6 +408,7 @@ export function mountStalkButtonAndPanel() {
 
 export function unmountStalkButtonAndPanel() {
   const btn = document.getElementById(BTN_ID);
+
   if (btn) btn.remove();
   const host = document.getElementById(MODAL_ID) as HTMLElement | null;
   if (host) host.remove();
