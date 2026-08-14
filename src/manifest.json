@@ -5,7 +5,8 @@
   "description": "The CF-Mentor helps select problems best suited for your rating growth.",
   "permissions": [
     "storage",
-    "alarms"
+    "alarms",
+     "identity"
   ],
   "host_permissions": [
     "https://api.cf-mentor.me/*"
@@ -14,13 +15,20 @@
     "default_title": "Personalized CF Mentor",
     "default_popup": "src/popup/index.html"
   },
-  "content_scripts": [
+  "content_scripts": [    
     {
       "matches": [
         "https://codeforces.com/problemset*",
         "https://codeforces.com/problemset/problem/*",
         "https://codeforces.com/contest/*/problem/*",
-        "https://codeforces.com/profile/*"
+        "https://codeforces.com/profile/*",
+
+        "https://codeforces.com/groups/with/*",
+        "https://codeforces.com/contests/writer/*",
+        "https://codeforces.com/contests/with/*",
+        "https://codeforces.com/submissions/*",
+        "https://codeforces.com/teams/with/*",
+        "https://codeforces.com/blog/*"
       ],
       "js": [
         "src/content/index.ts"
@@ -47,5 +55,11 @@
     "32": "src/assets/icons/icon32.png",
     "48": "src/assets/icons/icon48.png",
     "128": "src/assets/icons/icon128.png"
+  },
+  "oauth2": {
+    "client_id": "177921062754-olib20e8u716f4a386coarnktana1dm6.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/spreadsheets"
+    ]
   }
 }
