@@ -4,10 +4,11 @@ import { type SummaryRow, useContestSummary } from "./useContestSummary.ts";
 
 function useHandleFromUrl() {
   const path = window.location.pathname;
-  const parts = path.split("/");
-  const idx = parts.indexOf("profile");
-  if (idx >= 0 && parts[idx + 1]) return decodeURIComponent(parts[idx + 1]);
-  return null;
+  const parts = path.split("/").filter(Boolean);
+  // changes made to support more urls (to get the user handle) from the profile page, not just /profile/handle
+  if(parts.length == 0)
+    return null;
+  return decodeURIComponent(parts[parts.length - 1]);
 }
 
 export default function ContestHistorySummary() {
