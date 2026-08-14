@@ -10,6 +10,8 @@ import { createGoogleSheet, exportBookmarksToSheet } from "./service/createAndFi
 import { MESSAGE_TYPES } from "@/shared/constants/messages";
 import type { Problem } from "@/shared/types/mentor";
 
+import { BookmarkBackupService } from "./service/bookMarksBackUpService";
+
 type ToggleItem = {
   key: keyof FeatureFlags;
   label: string;
@@ -66,6 +68,9 @@ const TOGGLES: ToggleItem[] = [
 const Popup = () => {
   const [flags, setFlags] = useState<FeatureFlags | null>(null);
   const [saving, setSaving] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
+  const [showDropZone, setShowDropZone] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Load flags from storage
   useEffect(() => {
@@ -81,6 +86,7 @@ const Popup = () => {
       setFlags({ ...defaults, ...(stored ?? {}) });
     });
   }, []);
+
 
   const saveFlags = (next: FeatureFlags) => {
     setSaving(true);
@@ -107,8 +113,11 @@ const Popup = () => {
     });
   };
 
-   const handleConnectClick = async () => {
+  const handleConnectClick = async () => {
     try {
+      const connectButton = document.getElementById("connect-google-sheets-button") as HTMLButtonElement;
+      connectButton.disabled = true;
+      connectButton.textContent = "Connecting...";
       // 1. Get the VIP pass
       const token = await authenticateWithGoogle();
       if (!token) return;
@@ -139,12 +148,8 @@ const Popup = () => {
       const allBookmarksArray = Object.values(storageObject.bookmarkedProblems || {});
       console.log(allBookmarksArray);
 
-
-      // Grab just the first 40 problems for instant load
-      const initialBatch = allBookmarksArray.slice(0, 40);
-
       // This fills in any missing problemRating/problemTags that weren't captured at bookmark time
-      const enrichedBatch = await enrichBookmarksWithMetadata(initialBatch);
+      const enrichedBatch = await enrichBookmarksWithMetadata(allBookmarksArray);
       console.log("Enriched bookmarks:", enrichedBatch);
 
       // 6. Write data to the sheet
@@ -154,12 +159,84 @@ const Popup = () => {
         console.log(`No bookmarks found for handle: ${handle}`);
       }
 
+      connectButton.disabled = false;
+      connectButton.textContent = "Connect Google Sheets";
       // 7. Open the sheet so the user can see their data immediately
       chrome.tabs.create({ url: sheetDetails.spreadsheetUrl });
 
     } catch (error) {
       console.error("Sync workflow failed:", error);
     }
+  };
+
+  // 2. Helper function to show a message and clear it after 4 seconds
+  const showMessage = (text: string, type: 'error' | 'success') => {
+    setStatusMsg({ text, type });
+    setTimeout(() => setStatusMsg(null), 4000);
+  };
+
+  const handleExport = async () => {
+    try {
+      const handleResult = await chrome.storage.local.get('userHandle');
+      const handle = handleResult.userHandle;
+
+      if (!handle) {
+        showMessage("No Codeforces handle found! Please make sure you are logged in.", "error");
+        return;
+      }
+
+      await BookmarkBackupService.exportBookmarksToUser(handle);
+      showMessage("Backup exported successfully!", "success");
+
+    } catch (error) {
+      console.error("Export Failed:", error);
+      showMessage("An error occurred while exporting the backup.", "error");
+    }
+  };
+
+  const handleImportFile = async (file: File) => {
+    try {
+      if (!file.name.endsWith('.cfbackup')) {
+        showMessage("Please drop a .cfbackup file.", "error");
+        return;
+      }
+
+      const handleResult = await chrome.storage.local.get('userHandle');
+      const handle = handleResult.userHandle;
+
+      if (!handle) {
+        showMessage("No Codeforces handle found! Please make sure you are logged in.", "error");
+        return;
+      }
+
+      await BookmarkBackupService.importBookmarksFromUser(file, handle);
+      showMessage("Bookmarks successfully restored!", "success");
+      setShowDropZone(false);
+
+    } catch (error: any) {
+      console.error("Import Failed:", error);
+      showMessage(`Import Failed: ${error.message}`, "error");
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleImportFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
   };
 
   return (
@@ -197,16 +274,17 @@ const Popup = () => {
           <button className="cf-button" onClick={handleFetchClick} disabled={saving}>
             {saving ? "Saving..." : "Fetch and Log Data"}
           </button>
-          <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
 
+          <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'sans-serif' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px' }}>
               Codeforces Sheet Sync
             </h3>
 
             <button
               onClick={handleConnectClick}
+              id="connect-google-sheets-button"
               style={{
-                backgroundColor: '#425b8f', // Matches the blue in your screenshot
+                backgroundColor: '#425b8f',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
@@ -220,6 +298,88 @@ const Popup = () => {
               Connect Google Sheets
             </button>
 
+            {/* --- THE NEW MESSAGE BANNER --- */}
+            {statusMsg && (
+              <div style={{
+                padding: '8px',
+                marginTop: '10px',
+                borderRadius: '4px',
+                textAlign: 'center',
+                fontSize: '12px',
+                color: statusMsg.type === 'error' ? '#721c24' : '#155724',
+                backgroundColor: statusMsg.type === 'error' ? '#f8d7da' : '#d4edda',
+                border: `1px solid ${statusMsg.type === 'error' ? '#f5c6cb' : '#c3e6cb'}`
+              }}>
+                {statusMsg.text}
+              </div>
+            )}
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '10px',
+                marginTop: '10px'
+              }}
+            >
+              {/* Export Button */}
+              <button
+                id="export-bookmarks-button"
+                onClick={handleExport}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#425b8f',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '8px 0',
+                  cursor: 'pointer'
+                }}
+              >
+                Export
+              </button>
+
+              {/* Import Button — toggles drop zone instead of opening file picker */}
+              <button
+                id="import-bookmarks-button"
+                onClick={() => setShowDropZone(!showDropZone)}
+                style={{
+                  flex: 1,
+                  backgroundColor: showDropZone ? '#2d3f63' : '#425b8f',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '8px 0',
+                  cursor: 'pointer'
+                }}
+              >
+                {showDropZone ? 'Cancel' : 'Import'}
+              </button>
+            </div>
+
+            {/* Drag-and-drop zone for importing bookmarks */}
+            {showDropZone && (
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                style={{
+                  marginTop: '12px',
+                  padding: '20px 10px',
+                  border: `2px dashed ${isDragOver ? '#6c8ebf' : '#555'}`,
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  backgroundColor: isDragOver ? 'rgba(66, 91, 143, 0.15)' : 'rgba(255,255,255,0.05)',
+                  transition: 'all 0.2s ease',
+                  cursor: 'default'
+                }}
+              >
+                <div style={{ fontSize: '24px', marginBottom: '6px' }}>📂</div>
+                <div style={{ fontSize: '12px', color: '#000000' }}>
+                  Drag & drop your <strong>.cfbackup</strong> file here
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -228,8 +388,5 @@ const Popup = () => {
     </div>
   );
 };
-
 /* removed PopupCard in favor of a flat layout */
 export default Popup;
-
-
