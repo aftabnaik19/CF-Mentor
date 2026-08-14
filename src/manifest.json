@@ -5,7 +5,8 @@
   "description": "The CF-Mentor helps select problems best suited for your rating growth.",
   "permissions": [
     "storage",
-    "alarms"
+    "alarms",
+     "identity"
   ],
   "host_permissions": [
     "https://api.cf-mentor.me/*"
@@ -47,5 +48,11 @@
     "32": "src/assets/icons/icon32.png",
     "48": "src/assets/icons/icon48.png",
     "128": "src/assets/icons/icon128.png"
+  },
+  "oauth2": {
+    "client_id": "177921062754-olib20e8u716f4a386coarnktana1dm6.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/spreadsheets"
+    ]
   }
 }
