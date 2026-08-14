@@ -3,6 +3,8 @@ import { bookmarkService } from "./BookmarkService";
 import { schedulerService } from "./SchedulerService";
 import { storageService } from "./StorageService";
 import { apiService } from "./ApiService";
+import { getData, MENTOR_STORE } from "../../shared/utils/indexedDb";
+import { Problem } from "../../shared/types/mentor";
 
 export class MessageService {
   constructor() {
@@ -37,6 +39,25 @@ export class MessageService {
       }
 
       const { type, payload } = request;
+
+      // Handle IndexedDB problem lookup (not a bookmark message)
+      if (type === MESSAGE_TYPES.GET_PROBLEM_FROM_DB) {
+        const { contestId, index } = payload;
+        console.log(`[GET_PROBLEM_FROM_DB] Looking up contestId=${contestId} (type: ${typeof contestId}), index=${index}`);
+        const problems = await getData<Problem>(MENTOR_STORE.PROBLEMS);
+        console.log(`[GET_PROBLEM_FROM_DB] Total problems in DB: ${problems.length}`);
+        // Sample first few to see the data format
+        if (problems.length > 0) {
+          const sample = problems[0];
+          console.log(`[GET_PROBLEM_FROM_DB] Sample problem: contestId=${sample.contestId} (type: ${typeof sample.contestId}), index=${sample.index}`);
+        }
+        const match = problems.find(
+          p => p.contestId === Number(contestId) && p.index.toUpperCase() === String(index).toUpperCase()
+        );
+        console.log(`[GET_PROBLEM_FROM_DB] Match found:`, match ? `${match.contestId}${match.index} (cfRating=${match.cfRating}, tags=${match.tags})` : 'null');
+        sendResponse(match || null);
+        return;
+      }
 
       if (this.isBookmarkMessage(type)) {
         await this.handleBookmarkMessage(type, payload, sendResponse);
