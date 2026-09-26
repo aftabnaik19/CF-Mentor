@@ -2,6 +2,7 @@ import { MentorData, Problem } from "../shared/types/mentor";
 import { getData, MENTOR_STORE, saveAllData } from "../shared/utils/indexedDb";
 import { apiService } from "./services/ApiService";
 
+
 export async function fetchAndStoreData() {
 	try {
 		console.log("Attempting to fetch data from API...");
